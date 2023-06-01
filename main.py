@@ -1,48 +1,71 @@
-from strategies import *
-from functions import *
+import ctypes
+import sys
+import os
+import getopt
+import time
 
-####################################################################################################################
+from engine import settings, ScreenManager, SmartTrader
 
-# set trading variables
-PERCENTAGE_OP = 0.1
-PERCENTAGE_TP = 1
-PERCENTAGE_SL = 3
-MARTINGALE_MAX = 0
-MARTINGALE_SWITCHING = True
-MARTINGALE_VALUE = 2.25
 
-####################################################################################################################
+def execute(broker, i_monitor, i_region):
+    sm = ScreenManager.ScreenManager()
+    region = sm.get_region(i_monitor=i_monitor, i_region=i_region)
 
-# get current balance
-balance = get_balance()
+    strader = SmartTrader.SmartTrader(broker=broker, region=region)
 
-print("\n============================================\n")
-print("BINOBOT is Starting...")
-print("By: Christensen Mario Frans")
-print(f"\n{'STARTING BALANCE:':20}", 'Rp. 'f'{balance:,}')
-print("\n============================================\n")
+    strader.start()
 
-# set target balance using current balance
-balance_tp = int(balance + balance * (PERCENTAGE_TP/100))
-balance_sl = int(balance - balance * (PERCENTAGE_SL/100))
+    print(strader.__dict__)
+    print('rsi: ' + strader.rsi[0])
 
-# set open position amount
-op = int(balance * (PERCENTAGE_OP/100))
-if op<14000: op = 14000
 
-# list to store open position & martingale values
-op_list = [op]
+def main(argsv):
+    broker_id = i_monitor = i_region = None
 
-# calculate martingale up to level 9
-if MARTINGALE_VALUE==0: 
-    for i in range(9): op_list.append( int(sum(op_list) * 100/80) )
-else:
-    for i in range(9): op_list.append( int(op_list[i]*MARTINGALE_VALUE) )
+    os.system('title STrader')
 
-####################################################################################################################
+    try:
+        opts, args = getopt.getopt(argsv,
+                                   'hb:m:r:',
+                                   ['help', 'broker=', 'monitor=', 'region='])
+    except getopt.GetoptError:
+        print('\nException: One or more arguments were not expected.')
+        print_help()
+        sys.exit(400)
 
-# golden_moment_strategy(balance, balance_tp, balance_sl, op_list, MARTINGALE_MAX, MARTINGALE_SWITCHING)
-# random_strategy(balance, balance_tp, balance_sl, op_list, MARTINGALE_MAX, MARTINGALE_SWITCHING)
+    for opt, arg in opts:
+        if opt in ['-h', '--help']:
+            print_help()
+            sys.exit()
+        elif opt in ['-b', '--broker']:
+            broker_id = str(arg)
+        elif opt in ['-m', '--monitor']:
+            i_monitor = int(arg) - 1
+        elif opt in ['-r', '--region']:
+            i_region = int(arg) - 1
 
-####################################################################################################################
- 
+    if broker_id is not None and i_monitor is not None and i_region is not None:
+
+        if broker_id in settings.BROKERS.keys():
+            broker = settings.BROKERS[broker_id]
+            execute(broker=broker, i_monitor=i_monitor, i_region=i_region)
+
+        else:
+            print('\nException: Broker [%s] is not supported yet. '
+                  'Please, choose one of these: [%s]' % (broker_id, settings.BROKERS.keys()))
+
+    else:
+        print('\nException: One or more arguments are missing.')
+        print_help()
+        sys.exit(400)
+
+
+def print_help():
+    print('\nUsage examples:')
+    print('  . python.exe %s --monitor <monitor_id> --region <region_id>' % os.path.basename(__file__))
+    print('  . python.exe %s --monitor 1 --region 3' % os.path.basename(__file__))
+    print('  . python.exe %s -m 1 -r 2' % os.path.basename(__file__))
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

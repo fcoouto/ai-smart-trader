@@ -1,0 +1,8 @@
+pandas
+numpy
+opencv-python
+pyautogui
+pynput
+pytesseract
+pyperclip
+screeninfo

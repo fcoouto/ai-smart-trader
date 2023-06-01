@@ -1,0 +1,23 @@
+strategy,side,size,open time,trade 1,trade 2,trade 3
+asb,up,1.0,XXX,loss,loss,loss
+asb,up,1.0,XXX,loss,gain
+asb,up,1.0,XXX,gain
+ema_rsi,up,1.0,2023-05-30 01:14:59,loss,loss,gain
+ema_rsi,down,1.0,2023-05-30 14:42:59,loss,gain
+ema_rsi,down,1.0,2023-05-30 16:21:59,gain
+asb,up,1.0,XXX,gain
+asb,up,2.0,XXX,draw,loss,loss
+asb,up,1.0,XXX,loss
+asb,up,1.0,XXX,gain
+asb,up,1.0,XXX,loss
+asb,up,1.0,XXX,loss,gain
+asb,up,1.0,XXX,loss
+asb,up,1.0,XXX,loss
+asb,up,1.0,XXX,loss
+ema_rsi,up,1.0,2023-05-30 18:31:59,gain
+asb,up,1.0,XXX,loss
+asb,up,1.0,XXX,loss,gain
+asb,up,1.0,XXX,gain
+ema_rsi,down,20.0,2023-05-30 20:32:59,loss,gain
+ema_rsi,down,20.0,2023-05-30 20:43:59,gain
+ema_rsi,up,1.0,2023-05-30 20:12:59,loss,loss,loss
