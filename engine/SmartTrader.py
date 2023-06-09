@@ -13,7 +13,6 @@ import random
 import re
 
 pyautogui.FAILSAFE = True
-pyautogui.PAUSE = 0.5
 pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
 
 tmsg = utils.tmsg()
@@ -23,55 +22,84 @@ logger = Logger()
 class SmartTrader:
     broker = None
     region = None
+    mode = None
+    session = {
+        'token_refresh_time': None
+    }
 
     balance = None
-    trade_amount = None
-    expiry_time = None
+    initial_trade_size = None
+    trade_size = None
+    cumulative_losses = 0.00
 
-    asset = None
+    expiry_time = None
     payout = None
     datetime = []
+
+    asset = None
     open = []
     high = []
     low = []
     close = []
     change = []
+    change_pct = []
+
     ema_72 = []
     rsi = []
 
     position_history = []
 
     # ongoing_positions = {
-    #     'ema_rsi': {'asset': 'ABC',
-    #                 'strategy_id': 'asb',
+    #     'ema_rsi_8020': {'asset': 'ABC',
+    #                 'strategy_id': 'ema_rsi_8020',
     #                 'open_time': 'XXX',
+    #                 'open_price': 1.20,
     #                 'side': 'down',
     #                 'result': None,
     #                 'trades': [{'open_time': 'XXX',
     #                             'side': 'up',
-    #                             'trade_amount': 1,
+    #                             'trade_size': 1,
     #                             'result': None}]}
     # }
     ongoing_positions = {}
 
-    auto_mode = False
-    dry_run_mode = False
+    is_automation_running = False
     awareness = {
         'balance_equal_to_zero': None,
         'balance_less_than_min_balance': None,
         'payout_low': None,
-        'trade_amount_too_high': None
     }
 
-    def __init__(self, broker, region):
+    def __init__(self, broker, region, initial_trade_size):
         self.broker = broker
         self.region = region
+        self.initial_trade_size = initial_trade_size
 
-        if not self.is_logged_in:
-            # log in
-            pass
+        # self.execute_playbook(playbook_id='refresh_page')
 
-        for zone in broker['zones'].values():
+        # HERE: Select top X asset based on payout X (region)
+
+        # Setting zones
+        self.set_zones()
+
+        # Setting [trade_size]
+        self.execute_playbook(playbook_id='set_trade_size', trade_size=initial_trade_size)
+
+    def set_awareness(self, k, v):
+        if k in self.awareness:
+            self.awareness[k] = v
+        else:
+            # Key not found
+            msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                   f"- That's embarrassing. :/ "
+                   f"\n\t- I couldn't find the key [{k}] within object [self.awareness]! :/"
+                   f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
+            tmsg.input(msg=msg, clear=True)
+            exit(500)
+
+    ''' Validations '''
+    def set_zones(self):
+        for zone in self.broker['zones'].values():
             if 'is_mandatory' in zone and zone['is_mandatory']:
                 # Setting zone regions
                 zone['region'] = self.get_zone_region(context_id=self.broker['id'],
@@ -90,51 +118,73 @@ class SmartTrader:
                     self.broker['elements'][element_id]['zone'] = zone['id']
                     self.broker['elements'][element_id]['type'] = element_type
 
-                    f_read = f"read_{element_id}"
+                    self.read_element(element_id=element_id)
 
-                    if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
-                        read()
-
-    ''' Validations '''
-    def is_logged_in(self):
-        return False if self.balance is None else True
-
-    def is_trade_amount_way_too_big(self):
-        min_needed_for_martingale = self.trade_amount + \
-                                    self.trade_amount * settings.MARTINGALE_MULTIPLIER + \
-                                    self.trade_amount * settings.MARTINGALE_MULTIPLIER * 2
-
-        if min_needed_for_martingale > self.balance:
-            return False
-        return True
+        # DEBUG
+        # if settings.DEBUG_OCR:
+        #     while True:
+        #         asset = self.read_element(element_id='asset')
+        #         balance = self.read_element(element_id='balance')
+        #         payout = self.read_element(element_id='payout')
+        #         chart_data = self.read_element(element_id='chart_data')
+        #         trade_size = self.read_element(element_id='trade_size')
+        #         expiry_time = self.read_element(element_id='expiry_time')
+        #
+        #         dst_price_ema_72 = utils.distance_percent(v1=chart_data[3], v2=chart_data[6])
+        #
+        #         print(f"{asset} | "
+        #               f"{balance} | "
+        #               f"{str(trade_size)} | "
+        #               f"{payout} | "
+        #               f"{expiry_time} | "
+        #               f"{str(chart_data)}")
+        #         print(f"{dst_price_ema_72}")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
         #   . logged in?
         #   . balance?
         #   . expiry_time?
-        #   . trade_amount?
+        #   . trade_size?
         #   . payout?
 
         context = 'Validation'
 
         # Validating readability of elements within the region (user logged in)
-        self.__init__(broker=self.broker, region=self.region)
+        self.set_zones()
 
         # Validating [balance]
+        self.validate_balance(context=context)
+
+        # Validating [trade_size]
+        self.validate_trade_size(context=context)
+
+        # Validating [expiry_time]
+        self.validate_expiry_time()
+
+        # Validating [payout]
+        self.validate_payout()
+
+    def validate_balance(self, context='Validation'):
         if self.balance == 0:
             if not self.awareness['balance_equal_to_zero']:
-                msg = (f"{tmsg.warning}[WARNING]{tmsg.endc}\t"
+                msg = (f"{tmsg.warning}[WARNING]{tmsg.endc} "
                        f"{tmsg.italic}- Your current Balance is [{self.balance} USD]. "
-                       f"So I think it makes sense to activate [dry-run] mode, right? {tmsg.endc}")
-                tmsg.input(context=context, msg=msg, clear=True)
+                       f"So I think it makes sense to activate [{settings.MODE_SIMULATION}] mode, right? {tmsg.endc}")
 
-                self.awareness['balance_equal_to_zero'] = True
-                self.dry_run_mode = True
+                # Waiting PB
+                msg = f"Activating {settings.MODE_SIMULATION} mode (CTRL + C to cancel)"
+                wait_secs = settings.PROGRESS_BAR_WAITING_TIME
+                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                self.set_awareness(k='balance_equal_to_zero', v=True)
+                self.mode = settings.MODE_SIMULATION
 
         elif self.balance < settings.MIN_BALANCE:
             if not self.awareness['balance_less_than_min_balance']:
-                msg = (f"{tmsg.warning}[WARNING]{tmsg.endc}\t"
+                msg = (f"{tmsg.warning}[WARNING]{tmsg.endc} "
                        f"{tmsg.italic}- Your current Balance is [{self.balance} USD]. "
                        f"I would recommend at least [{settings.MIN_BALANCE} USD]. {tmsg.endc}")
                 tmsg.print(context=context, msg=msg, clear=True)
@@ -142,99 +192,90 @@ class SmartTrader:
                 msg = f"{tmsg.italic}\n\t- Should I continue anyway? (CTRL-C to abort) {tmsg.endc}"
                 tmsg.input(context=context, msg=msg)
 
-                self.awareness['balance_less_than_min_balance'] = True
+                self.set_awareness(k='balance_less_than_min_balance', v=True)
                 self.read_balance()
 
-        # Validating [trade_amount]
-        trade_amount_pct = self.trade_amount / self.balance
+    def validate_trade_size(self, context='Validation'):
+        if len(self.ongoing_positions) == 0 and self.initial_trade_size != self.trade_size:
+            # [trade_size] is different from [initial_trade_size]
 
-        while self.dry_run_mode is False and self.is_trade_amount_way_too_big() is False:
-            # [trade_amount] couldn't manage Martingale strategy
-
-            msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc}\t"
-                   f"{utils.tmsg.italic}- I see that Trade Amount is [{self.trade_amount} USD] and "
-                   f"your current Balance is [{self.balance} USD]. "
-                   f"That means I won't have enough balance available for martingale strategy."
-                   f"\n\t- So, here are some options:"
-                   f"\n\t\t1. 'Please, change it to an Optimal Trade Size for me' ({settings.OPTIMAL_TRADE_SIZE_PCT}%)"
-                   f"\n\t\t2. 'I'll change the [trade_amount] field myself.'"
-                   f"\n\t\t3. 'Please, activate [dry-run] mode.'{utils.tmsg.endc}")
+            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                   f"{utils.tmsg.italic}- Just noticed that Trade Size is [{self.trade_size} USD], "
+                   f"while you recommended to start with [{self.initial_trade_size} USD]. "
+                   f"\n\t  - I'll take care of that...{utils.tmsg.endc}")
             tmsg.print(context=context, msg=msg, clear=True)
 
-            msg = f"{utils.tmsg.italic}\n\t- How do you want to proceed? (1, 2 or 3) (CTRL-C to abort) {utils.tmsg.endc}"
-            inp = tmsg.input(context=context, msg=msg)
+            # Waiting PB
+            msg = "Setting Trade Size (CTRL + C to cancel)"
+            wait_secs = 1
+            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-            if str(inp) == '1':
-                optimal_trade_amount = self.balance * settings.OPTIMAL_TRADE_SIZE_PCT
-                self.execute_playbook(playbook_id='set_trade_amount', trade_amount=optimal_trade_amount)
-            if str(inp) == '2':
-                self.read_balance()
-                self.read_trade_amount()
-            else:
-                self.dry_run_mode = True
-                msg = f"{utils.tmsg.italic}\t- Ok! [dry-run] mode has been activated.{utils.tmsg.endc}"
-                tmsg.print(context=context, msg=msg)
-                sleep(1)
+            self.execute_playbook(playbook_id='set_trade_size', trade_size=self.initial_trade_size)
+            self.read_trade_size()
 
-        if not self.awareness['trade_amount_too_high'] and trade_amount_pct > settings.MAX_TRADE_SIZE_PCT:
-            # [trade_amount] is bigger than recommended
+            print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
+            sleep(1)
 
-            msg = (f"{utils.tmsg.danger}[WARNING]{utils.tmsg.endc}\t"
-                   f"{utils.tmsg.italic}- I see that Trade Amount is [{self.trade_amount} USD] and "
-                   f"your current Balance is [{self.balance} USD]. "
-                   f"That means [{trade_amount_pct} %]!"
-                   f"\n\t- I feel nervous risking that much. But anyway, that's your call:"
-                   f"\n\t\t1. 'Please, change it to an Optimal Trade Size' ({settings.OPTIMAL_TRADE_SIZE_PCT}%)"
-                   f"\n\t\t2. 'Let's continue with current size.'{utils.tmsg.endc}")
-            tmsg.print(context=context, msg=msg, clear=True)
-
-            msg = f"{utils.tmsg.italic}\n\t- How do you want to proceed? (1 or 2) (CTRL-C to abort) {utils.tmsg.endc}"
-            inp = tmsg.input(context=context, msg=msg)
-
-            if str(inp) == '1':
-                optimal_trade_amount = self.balance * settings.OPTIMAL_TRADE_SIZE_PCT
-                self.execute_playbook(playbook_id='set_trade_amount', trade_amount=optimal_trade_amount)
-            else:
-                self.awareness['trade_amount_too_high'] = True
-                msg = f"{utils.tmsg.italic}\t- Ok! Keeping it as it is.{utils.tmsg.endc}"
-                tmsg.print(context=context, msg=msg)
-                sleep(2)
-
-        # Validating [expiry_time]
+    def validate_expiry_time(self, context='Validation'):
         while self.expiry_time is not None and self.expiry_time != '01:00':
-            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc}\t"
+            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Expiry Time is currently set to [{self.expiry_time}], "
                    f"but I'm more expirienced with [01:00]."
-                   f"\n\nI'll try to change it myself, so don't worry."
-                   f"\nI'll just need your Mouse and Keyboard for a few seconds. :)'{utils.tmsg.endc}")
+                   f"\n"
+                   f"\n\t  - Let me try to change it. :){utils.tmsg.endc}")
 
             tmsg.print(context=context, msg=msg, clear=True)
 
             # Waiting PB
-            msg = "(CTRL + C to cancel)"
-            wait_secs = 10
-            items = range(0, int(wait_secs / settings.PROGRESS_BAR_SLEEP_TIME))
+            msg = "Setting Expiry Time (CTRL + C to cancel)"
+            wait_secs = 1
+            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                sleep(settings.PROGRESS_BAR_SLEEP_TIME)
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Executing playbook
             self.execute_playbook(playbook_id='set_expiry_time', expiry_time='01:00')
-
             self.read_expiry_time()
+
             if self.expiry_time == '01:00':
                 print(f"{utils.tmsg.italic}\n\t- Done! {utils.tmsg.endc}")
                 sleep(1)
 
-        # Validating [payout]
+    def validate_payout(self, context='Validation'):
         while self.payout < 75:
             if not self.awareness['payout_low']:
-                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc}\t"
+                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                        f"{utils.tmsg.italic}- Payout is currently [{self.payout}%]. "
                        f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
                 tmsg.print(context=context, msg=msg, clear=True)
 
-                input(f"{utils.tmsg.italic}\n\t- Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}")
-                self.awareness['payout_low'] = True
+                msg = f"{utils.tmsg.italic}\n\t- Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}"
+                tmsg.input(context=context, msg=msg)
+
+                self.set_awareness(k='payout_low', v=True)
+
+    def get_optimal_trade_size(self):
+        # optimal = round(self.balance * settings.OPTIMAL_TRADE_SIZE_PCT, 2)
+        # if optimal < settings.MIN_TRADE_SIZE:
+        #     optimal = settings.MIN_TRADE_SIZE
+        # return optimal
+
+        return self.initial_trade_size
+
+    def is_logged_in(self):
+        return False if self.balance is None else True
+
+    def is_alert_401_popping_up(self):
+        zone_id = 'alert_401'
+        zone_region = self.get_zone_region(context_id=self.broker['id'],
+                                           zone_id=zone_id,
+                                           confidence=0.90)
+        if zone_region:
+            # Zone [alert_401] has been found
+            # Which means session has expired.
+            return True
 
     ''' OCR '''
 
@@ -264,48 +305,56 @@ class SmartTrader:
 
                     if 'has_login_info'in zone and zone['has_login_info']:
                         msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
-                               f"Seems like you are not logged in. "
-                               f"Or maybe your session window at [{self.broker['name']}] couldn't be found on the "
-                               f"expected [monitor] and [region].\n\n"
-                               f"Could you check it out, please? :)'{utils.tmsg.endc}")
+                               f"- Seems like you are not logged in. "
+                               f"\n\t- Or maybe your session window at [{self.broker['name']}] couldn't be found on the "
+                               f"expected [monitor] and [region]."
+                               f"\n\t- In any case, I'll try to log you in now...{utils.tmsg.endc}")
                         tmsg.print(context=context, msg=msg, clear=True)
 
-                        msg = f"{utils.tmsg.italic}\n\t- Let me know when I can try again. (enter){utils.tmsg.endc}"
-                        tmsg.input(context=context, msg=msg)
-
                         # # Waiting PB
-                        # msg = "(CTRL + C to cancel)"
-                        # wait_secs = 10
-                        # items = range(0, int(wait_secs / settings.PROGRESS_BAR_SLEEP_TIME))
-                        # for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                        #     sleep(settings.PROGRESS_BAR_SLEEP_TIME)
-                        #
-                        # # Executing playbook
-                        # self.execute_playbook(playbook_id='log_in')
+                        msg = "Trying to remember the password (CTRL + C to cancel)"
+                        wait_secs = settings.PROGRESS_BAR_WAITING_TIME
+                        items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                        for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                            sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-                    elif self.auto_mode is False:
+                        # Executing playbook
+                        self.execute_playbook(playbook_id='log_in')
+
+                        msg = f"\t- Done !"
+                        tmsg.print(context=context, msg=msg)
+                        sleep(1)
+
+                    elif self.is_automation_running is False:
                         msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                               f"I couldn't find zone_region for [{zone_id}].\n"
-                               f"I see you are logged in just fine but things are not quite in place yet.\n\n"
-                               f"This message is just to let you know that I'll fix it by taking control of "
-                               f"your Mouse and Keyboard for a few seconds. :)'{utils.tmsg.endc}")
+                               f"- I couldn't find zone_region for [{zone_id}]."
+                               f"\n\t  - I see you are logged in [{self.broker['name']}] "
+                               f"but seems like things are not quite in place yet."
+                               f"\n"
+                               f"\n\t  - Let me try to fix it and I'll get back to you soon..."
+                               f"\n\t  - Ooh! I'll need Mouse and Keyboard control for a few seconds. Is that ok? :){utils.tmsg.endc}")
                         tmsg.print(context=context, msg=msg, clear=True)
 
                         # Waiting PB
-                        msg = "(CTRL + C to cancel)"
-                        wait_secs = 10
-                        items = range(0, int(wait_secs / settings.PROGRESS_BAR_SLEEP_TIME))
+                        msg = "Gathering tools for Chart Setup (CTRL + C to cancel)"
+                        wait_secs = settings.PROGRESS_BAR_WAITING_TIME
+                        items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                         for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                            sleep(settings.PROGRESS_BAR_SLEEP_TIME)
+                            sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                         # Executing playbook
-                        self.execute_playbook(playbook_id='tv_chart_setup')
+                        self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
+
+                        msg = f"\t- Done !"
+                        tmsg.print(context=context, msg=msg)
+                        sleep(1)
 
                     else:
                         msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
-                               f"I couldn't find zone_region for [{zone_id}]. "
-                               f"I see you are logged in just fine but things are not quite in place yet.\n\n"
-                               f"For this one, I'll need some human support. :){utils.tmsg.endc}")
+                               f"- I couldn't find zone_region for [{zone_id}]. "
+                               f"\n\t- I see you are logged in just fine but things are not quite in place yet."
+                               f"\n"
+                               f"\n\t- For this one, I'll need some human support. :){utils.tmsg.endc}")
                         tmsg.print(context=context, msg=msg, clear=True)
 
                         msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
@@ -318,14 +367,12 @@ class SmartTrader:
             context_id = self.broker['id']
 
         if template:
-            return '%s%s__%s.png' % (settings.SS_TEMPLATE_PATH,
-                                     context_id,
-                                     zone_id)
+            return f"{settings.PATH_SS_TEMPLATE}" \
+                   f"{context_id}__{zone_id}{settings.SS_FILE_EXTENSION}"
+
         else:
-            return '%s%s__%s__%s.png' % (settings.SS_PATH,
-                                         context_id,
-                                         zone_id,
-                                         element_id)
+            return f"{settings.PATH_SS}" \
+                   f"{context_id}__{zone_id}__{element_id}{settings.SS_FILE_EXTENSION}"
 
     def screenshot_element(self, zone_id, element_id, save_to=None):
         zone = self.broker['zones'][zone_id]
@@ -361,42 +408,47 @@ class SmartTrader:
                     bottom = height * 0.35
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
-                    left = width * 0.145
-                    top = height * 0.69
+                    left = width * 0.143
+                    top = height * 0.70
                     right = width
                     bottom = height * 0.83
                 elif element_id == 'ema_72':
-                    left = width * 0.46
-                    top = height * 0.86
+                    left = width * 0.45
+                    top = height * 0.85
                     right = width * 0.66
                     bottom = height
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
-                    left = width * 0.59
+                    left = width * 0.58
                     top = height * 0.03
                     right = width
                     bottom = height * 0.23
             elif zone_id == 'footer':
-                if element_id == 'trade_amount':
-                    left = width * 0.07
+                if element_id == 'trade_size':
+                    left = width * 0.15
                     top = height * 0.44
-                    right = width * 0.40
+                    right = width * 0.35
                     bottom = height * 0.61
+                if element_id == 'close':
+                    left = width * 0.38
+                    top = height * 0.77
+                    right = width * 0.63
+                    bottom = height
                 elif element_id == 'expiry_time':
                     left = width * 0.70
                     top = height * 0.33
-                    right = width * 0.81
-                    bottom = height * 0.45
+                    right = width * 0.82
+                    bottom = height * 0.48
                 elif element_id == 'payout':
                     left = width * 0.05
-                    top = height * 0.77
+                    top = height * 0.79
                     right = width * 0.28
-                    bottom = height * 0.96
+                    bottom = height * 0.97
 
         img = img.crop([left, top, right, bottom])
         return img
 
-    def read_element(self, zone_id, element_id, context_id=None, type='string'):
+    def ocr_read_element(self, zone_id, element_id, context_id=None, type='string'):
         # There will be 2 attempts to read the content.
 
         for attempt in range(1, 2):
@@ -411,10 +463,14 @@ class SmartTrader:
                                           element_id=element_id,
                                           save_to=ss_path)
 
-            if type == 'string':
-                config = '--psm 7 -c tessedit_char_whitelist="/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.% "'
-            elif type == 'float':
+            if type == 'float':
                 config = '--psm 7 -c tessedit_char_whitelist=0123456789.'
+            elif type == 'string':
+                config = '--psm 7 -c tessedit_char_whitelist="/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "'
+            elif type == 'string_ohlc':
+                config = '--psm 7 -c tessedit_char_whitelist="OHLC0123456789. "'
+            elif type == 'currency':
+                config = '--psm 7 -c tessedit_char_whitelist="0123456789. ABCDEFGHIJKLMNOPQRSTUVWXYZ"'
             elif type == 'int':
                 config = '--psm 7 -c tessedit_char_whitelist=0123456789'
             elif type == 'time':
@@ -427,25 +483,97 @@ class SmartTrader:
             text = pytesseract.image_to_string(image=img, config=config)
             text = text.strip()
 
-            if not text:
-                continue
+            if text:
+                return text
 
-            return text
+    def read_element(self, element_id):
+        # Error handler wrapper of each [read_{element_id}] function
+        result = None
+        tries = 0
+        is_processed = None
+
+        f_read = f"read_{element_id}"
+        if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
+            while not is_processed:
+                tries += 1
+
+                try:
+                    result = read()
+                    is_processed = True
+                except Exception as err:
+                    if tries >= settings.MAX_TRIES_READING_ELEMENT:
+                        # Something is going on here... Refresh page
+                        msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                               f"- That's weird... While reading [{element_id}], I noticed this:"
+                               f"\n"
+                               f"\n\t{type(err)}: {err}"
+                               f"\n"
+                               f"\n- The reasons for that can vary, but here are my thoughts:"
+                               f"\n\t  . Authorization expired."
+                               f"\n\t  . Broker facing performance issues."
+                               f"\n\t  . Unstable internet connection."
+                               f"\n"
+                               f"\n- I think I should try to refresh the page and see if it is still up... {utils.tmsg.endc}")
+                        tmsg.print(msg=msg, clear=True)
+
+                        # Waiting PB
+                        msg = "Refreshing Page (CTRL + C to cancel)"
+                        wait_secs = settings.PROGRESS_BAR_WAITING_TIME
+                        items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                        for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                            sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                        # Executing playbook
+                        self.execute_playbook(playbook_id='refresh_page')
+                        self.run_validation()
+
+                        result = read()
+        else:
+            # Function not found
+            msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                   f"- That's embarrassing. :/ "
+                   f"\n- I couldn't find function [{f_read}]!"
+                   f"\n- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
+            tmsg.input(msg=msg, clear=True)
+            exit(500)
+
+        return result
 
     def read_asset(self):
         element_id = 'asset'
-        value = self.read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                  element_id=element_id,
-                                  type=self.broker['elements'][element_id]['type'])
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
 
         value = re.sub("[^A-z/ ]", "", value)
 
-        if self.asset != value:
-            # Asset has changed.
-            self.reset_chart_data()
-            self.awareness['payout_low'] = None
+        if self.asset is None:
+            self.asset = value
 
-        self.asset = value
+        elif self.asset != value:
+            # Asset has changed
+
+            asset = str(self.asset).replace('/', '-').replace(' ', '_')
+            url = self.broker['url']
+            url += asset
+
+            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                   f"{utils.tmsg.italic}- hmm... Just noticed [asset] changed from [{self.asset}] to [{asset}]."
+                   f"\n\t  - I'll open [{self.asset}] again, so we can continue on the same asset."
+                   f"\n\t  - If you want to change it, please restart me.{utils.tmsg.endc}")
+            tmsg.print(msg=msg, clear=True)
+
+            # Waiting PB
+            msg = "Loading page (CTRL + C to cancel)"
+            wait_secs = 1
+            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            self.execute_playbook(playbook_id='navigate_url', url=url)
+
+            self.reset_chart_data()
+            self.set_awareness(k='payout_low', v=True)
 
         # Renaming PowerShell window name
         os.system(f'title STrader: {value}')
@@ -454,39 +582,62 @@ class SmartTrader:
 
     def read_balance(self):
         element_id = 'balance'
-        value = self.read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                  element_id=element_id,
-                                  type=self.broker['elements'][element_id]['type'])
-        self.balance = utils.str_to_float(value)
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
+
+        missing_decimal_separator = True if '.' not in value else False
+        value = utils.str_to_float(value)
+
+        if missing_decimal_separator:
+            # It's expected that [trade_size] field will always have 2 decimals
+            value = value / 100
+
+        self.balance = value
         return self.balance
 
-    def read_trade_amount(self):
-        element_id = 'trade_amount'
-        value = self.read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                  element_id=element_id,
-                                  type=self.broker['elements'][element_id]['type'])
-        self.trade_amount = utils.str_to_float(value)
-        return self.trade_amount
+    def read_trade_size(self):
+        # Disabled due to not sufficient assertive readings
+
+        element_id = 'trade_size'
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
+
+        missing_decimal_separator = True if '.' not in value else False
+        value = utils.str_to_float(value)
+
+        if missing_decimal_separator:
+            # It's expected that [trade_size] field will always have 2 decimals
+            value = value / 100
+
+        self.trade_size = value
+
+        return self.trade_size
 
     def read_chart_data(self):
         # todo: Execute concurrent processes
-        o, h, l, c, change = self.read_ohlc()
+        o, h, l, c, change, change_pct = self.read_ohlc()
+        # close = self.read_close()
         ema_72 = self.read_ema_72()
         rsi = self.read_rsi()
 
-        if gmtime().tm_sec >= 58:
+        tm_sec = gmtime().tm_sec
+        if tm_sec >= 58 or tm_sec <= 1:
             self.datetime.insert(0, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
             self.open.insert(0, o)
             self.high.insert(0, h)
             self.low.insert(0, l)
             self.close.insert(0, c)
+
             self.change.insert(0, change)
+            self.change_pct.insert(0, change_pct)
 
             self.ema_72.insert(0, ema_72)
             self.rsi.insert(0, rsi)
 
-        return [o, h, l, c, ema_72, rsi]
+        return [o, h, l, c, change, change_pct, ema_72, rsi]
 
     def reset_chart_data(self):
         self.datetime.clear()
@@ -495,20 +646,25 @@ class SmartTrader:
         self.low.clear()
         self.close.clear()
         self.change.clear()
+        self.change_pct.clear()
 
         self.ema_72.clear()
         self.rsi.clear()
 
-    def read_ohlc(self):
-        # Returns [change]
-        element_id = 'ohlc'
-        value = self.read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                  element_id=element_id,
-                                  type=self.broker['elements'][element_id]['type'])
+    def read_close(self):
+        element_id = 'close'
 
-        # Extracting only OHLC (ignoring change and change_pct)
-        # i_end = utils.find_nth(string=value, substring=' ', n=4)
-        # ohlc = value[:i_end]
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
+        return utils.str_to_float(value)
+
+    def read_ohlc(self):
+        # Returns [open, high, low, close, change]
+        element_id = 'ohlc'
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
 
         # Replacing any letter [O] by number [0]
         ohlc = value.replace('O', '0')
@@ -523,41 +679,49 @@ class SmartTrader:
         l = utils.str_to_float(l[1:])
         c = utils.str_to_float(c[1:])
         change = utils.str_to_float("%.6f" % (c - o))
+        change_pct = utils.distance_percent(v1=c, v2=o)
 
-        return [o, h, l, c, change]
+        return [o, h, l, c, change, change_pct]
 
     def read_ema_72(self):
         element_id = 'ema_72'
-        value = self.read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                  element_id=element_id,
-                                  type=self.broker['elements'][element_id]['type'])
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
         return utils.str_to_float(value)
 
     def read_rsi(self):
         element_id = 'rsi'
-        value = self.read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                  element_id=element_id,
-                                  type=self.broker['elements'][element_id]['type'])
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
         return utils.str_to_float(value)
 
     def read_expiry_time(self):
         element_id = 'expiry_time'
-        value = self.read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                  element_id=element_id,
-                                  type=self.broker['elements'][element_id]['type'])
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
 
         self.expiry_time = value
         return self.expiry_time
 
     def read_payout(self):
         element_id = 'payout'
-        value = self.read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                  element_id=element_id,
-                                  type=self.broker['elements'][element_id]['type'])
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
         value = re.sub("[^0-9]", "", value)
 
         self.payout = int(value)
         return self.payout
+
+    def read_alert_401(self):
+        element_id = 'alert_401'
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
+        return value
 
     ''' Mouse & Keyboard '''
 
@@ -589,11 +753,14 @@ class SmartTrader:
 
         elif self.broker['id'] == 'iqcent':
             if element_id == 'area_chart_background':
-                element['x'] = zone_region.left + zone_region.width
+                element['x'] = region['center_x']
                 element['y'] = zone_region.top
-            elif element_id == 'lbl_chart_asset':
-                element['x'] = zone_region.left + zone_region.width + 10
-                element['y'] = zone_region.top + 15
+            elif element_id == 'btn_login':
+                element['x'] = zone_region.left + 490
+                element['y'] = zone_region.top + 35
+            elif element_id == 'btn_login_confirm':
+                element['x'] = zone_center_x
+                element['y'] = zone_region.top + 285
             elif element_id == 'btn_chart_type_candle':
                 element['x'] = zone_region.left + 62
                 element['y'] = zone_region.top + 90
@@ -607,14 +774,23 @@ class SmartTrader:
                 element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + 135
             elif element_id == 'btn_rsi_settings':
-                element['x'] = zone_region.left + 165
-                element['y'] = zone_region.top + 228
+                element['x'] = zone_region.left + 170
+                element['y'] = zone_region.top + 225
             elif element_id == 'btn_chart_remove_indicators':
                 element['x'] = zone_center_x
-                element['y'] = zone_region.top + 130
+                element['y'] = zone_region.top + 145
             elif element_id == 'btn_chart_settings':
                 element['x'] = zone_center_x
                 element['y'] = zone_region.top + 235
+            elif element_id == 'btn_expiry_time':
+                element['x'] = zone_region.left + 460
+                element['y'] = zone_region.top + 75
+            elif element_id == 'btn_call':
+                element['x'] = zone_region.left + 100
+                element['y'] = zone_region.top + 125
+            elif element_id == 'btn_put':
+                element['x'] = zone_region.left + 510
+                element['y'] = zone_region.top + 125
             elif element_id == 'checkbox_chart_settings_bar_change_values':
                 element['x'] = zone_region.left + 80
                 element['y'] = zone_region.top + 245
@@ -630,6 +806,12 @@ class SmartTrader:
             elif element_id == 'item_color_white':
                 element['x'] = zone_region.left + 20
                 element['y'] = zone_region.top + 25
+            elif element_id == 'input_email':
+                element['x'] = zone_center_x
+                element['y'] = zone_region.top + 65
+            elif element_id == 'input_pwd':
+                element['x'] = zone_center_x
+                element['y'] = zone_region.top + 120
             elif element_id == 'input_color_opacity':
                 element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + zone_region.height
@@ -651,12 +833,18 @@ class SmartTrader:
             elif element_id == 'input_ema_settings_length':
                 element['x'] = zone_region.left + 130
                 element['y'] = zone_region.top + 130
+            elif element_id == 'input_ema_settings_precision':
+                element['x'] = zone_region.left + 140
+                element['y'] = zone_region.top + 180
             elif element_id == 'input_rsi_settings_color':
                 element['x'] = zone_region.left + 220
                 element['y'] = zone_region.top + 130
             elif element_id == 'input_rsi_settings_length':
                 element['x'] = zone_region.left + 130
                 element['y'] = zone_region.top + 130
+            elif element_id == 'input_url':
+                element['x'] = zone_region.left + zone_region.width + 50
+                element['y'] = zone_center_y
             elif element_id == 'slider_background_opacity':
                 element['x'] = zone_region.left + 260
                 element['y'] = zone_region.top + 200
@@ -678,25 +866,39 @@ class SmartTrader:
             elif element_id == 'navitem_rsi_settings_tab2':
                 element['x'] = zone_region.left + 110
                 element['y'] = zone_region.top + 65
-            elif element_id == 'trade_amount':
+            elif element_id == 'trade_size':
                 element['x'] = zone_region.left + 150
                 element['y'] = zone_region.top + 75
-            elif element_id == 'btn_expiry_time':
-                element['x'] = zone_region.left + 460
-                element['y'] = zone_region.top + 75
-            elif element_id == 'btn_up':
-                element['x'] = zone_region.left + 100
-                element['y'] = zone_region.top + 125
-            elif element_id == 'btn_down':
-                element['x'] = zone_region.left + 510
-                element['y'] = zone_region.top + 125
             elif element_id == 'dp_item_1min':
+                element['x'] = zone_center_x
+                element['y'] = zone_center_y
+            elif element_id == 'dp_item_6':
                 element['x'] = zone_center_x
                 element['y'] = zone_center_y
 
         return element
 
-    def click_element(self, element_id, clicks=1, button='left', duration=0.0):
+    def mouse_event_on_neutral_area(self, event='click', area_id='bellow_app'):
+        # Clicking on target monitor
+
+        if area_id in self.broker['neutral_zones']:
+            x = self.region['x'] + self.region['width'] * self.broker['neutral_zones'][area_id]['width_pct']
+            y = self.region['y'] + self.region['height'] * self.broker['neutral_zones'][area_id]['height_pct']
+        else:
+            # Key not found
+            msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                   f"- That's embarrassing. :/ "
+                   f"\n\t- I couldn't find area [{area_id}] within object [self.broker.neutral_zones]! :/"
+                   f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
+            tmsg.input(msg=msg, clear=True)
+            exit(500)
+
+        if event == 'click':
+            pyautogui.click(x=x, y=y)
+        else:
+            pyautogui.moveTo(x=x, y=y)
+
+    def click_element(self, element_id, clicks=1, button='left', duration=0.0, wait_when_done=0.0):
         element = self.get_element(element_id=element_id)
         pyautogui.click(x=element['x'],
                         y=element['y'],
@@ -707,7 +909,7 @@ class SmartTrader:
         # After click, wait the same amount of time used for [duration].
         # It gives time for CSS to load and transformations.
         # if [duration] is, we understand it's urgent and there can't be any wait time.
-        sleep(duration)
+        sleep(wait_when_done)
 
     def move_to_element(self, element_id, duration=0.0):
         element = self.get_element(element_id=element_id)
@@ -716,22 +918,113 @@ class SmartTrader:
                          duration=duration)
 
     def execute_playbook(self, playbook_id, **kwargs):
-        self.auto_mode = True
+        self.is_automation_running = True
         result = None
 
-        # Moving mouse to monitor (workaround for bug)
-        neutral_x = self.region['center_x']
-        neutral_y = self.region['height'] * 0.90
-        pyautogui.click(x=neutral_x, y=neutral_y)
-
+        # Looking for playbook
         f_playbook = f"playbook_{playbook_id}"
         if hasattr(self, f_playbook) and callable(playbook := getattr(self, f_playbook)):
-            result = playbook(**kwargs)
+            # Playbook has been found
+            if playbook_id in settings.PLAYBOOK_LONG_ACTION:
+                # It's a long action
 
-        # Click on PS Terminal
-        pyautogui.moveTo(x=neutral_x, y=neutral_y)
-        self.auto_mode = False
+                lock_file = f"{settings.PATH_LOCK}{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}"
+                is_done = False
+                amount_tries = 0
+
+                while is_done is False:
+                    try:
+                        # Locking it while doing stuff
+                        with open(file=lock_file, mode='x') as f:
+                            f.write(playbook_id)
+                            f.flush()
+
+                            result = playbook(**kwargs)
+                            is_done = True
+
+                        # Removing lock
+                        os.remove(lock_file)
+
+                    except FileExistsError:
+                        # This long action is waiting for another one
+                        # It likely means authentication token expired. So refresh_page on the next opportunity
+                        with open(file=lock_file, mode='r') as f:
+                            playbook_id_running = f.read()
+
+                            if playbook_id_running == 'log_in':
+                                # The other instance was logging in.
+                                # So, refreshing this one
+                                playbook = getattr(self, 'playbook_refresh_page')
+
+                        sleep(1)
+                        amount_tries += 1
+
+                        if amount_tries > 60:
+                            # Trying to delete a long_action lock file
+                            # It fixes cases where lock file is orphan (no instance accessing it anymore)
+                            try:
+                                os.remove(lock_file)
+                            except:
+                                pass
+
+            else:
+                # It's not a long action
+                result = playbook(**kwargs)
+
+        else:
+            # Playbook not found
+            msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                   f"- That's embarrassing. :/ "
+                   f"\n\t- I couldn't find the playbook [{playbook_id}]! :/"
+                   f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
+            tmsg.input(msg=msg, clear=True)
+            exit(500)
+
+        # Clicking on Neutral Area
+        self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
+
+        self.is_automation_running = False
         return result
+
+    def playbook_log_in(self):
+        self.click_element(element_id='btn_login', wait_when_done=0.500)
+
+        # Filling up credentials
+        self.click_element(element_id='input_email')
+        pyautogui.typewrite('f.couto@live.com', interval=0.05)
+        pyautogui.press('tab')
+        pyautogui.typewrite('#F1807a$Iqcent', interval=0.05)
+
+        # Confirming login
+        self.click_element(element_id='btn_login_confirm', wait_when_done=0.250)
+
+        # Waiting for authentication
+        sleep(5)
+
+    def playbook_refresh_page(self):
+        pyautogui.click(x=self.region['center_x'], y=self.region['center_y'])
+        pyautogui.hotkey('shift', 'f5')
+
+        # Resetting some awareness attributes
+        self.set_awareness('payout_low', False)
+
+        # Waiting for page to load
+        sleep(5)
+
+    def playbook_navigate_url(self, url=None):
+        # Cleaning field
+        self.click_element(element_id='input_url')
+        pyautogui.hotkey('ctrl', 'a')
+        pyautogui.press('delete')
+
+        # Typing new URL
+        pyautogui.typewrite(url, interval=0.05)
+
+        # Go
+        pyautogui.press('enter')
+
+        # Waiting for page to load
+        sleep(5)
 
     def playbook_tv_reset(self):
         # Reseting chart
@@ -745,23 +1038,28 @@ class SmartTrader:
         self.click_element(element_id='area_chart_background', button='right', duration=0.400)
         self.click_element(element_id='btn_chart_remove_indicators', duration=0.300)
 
-        # If there is no indicators on the chart, just close dropdown-menu
+        # If there are no indicators on the chart, just close dropdown-menu
         pyautogui.press('escape')
 
-    def playbook_tv_chart_setup(self):
-        # Chart Type
-        self.click_element(element_id='btn_chart_type_candle', duration=0.400)
-        sleep(3)
+    def playbook_iqcent_chart_setup(self):
+        # Refreshing page
+        self.playbook_refresh_page()
 
-        # Reseting chart
-        self.playbook_tv_reset()
+        # Chart Type
+        self.click_element(element_id='btn_chart_type_candle', wait_when_done=5.00)
 
         # Defining Chart Settings
         self.playbook_tv_set_chart_settings()
 
+        # Clicking on Neutral Area
+        self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
+
         # Defining EMA 72 up
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
         self.playbok_tv_configure_indicator_ema(length=72)
+
+        # Clicking on Neutral Area
+        self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
 
         # Defining RSI
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
@@ -769,46 +1067,46 @@ class SmartTrader:
 
     def playbook_tv_set_chart_settings(self, candle_opacity=5):
         # Opening Chart Settings
-        self.click_element(element_id='area_chart_background', button='right', duration=0.400)
-        self.click_element(element_id='btn_chart_settings', duration=0.300)
+        self.click_element(element_id='area_chart_background', button='right', wait_when_done=0.250)
+        self.click_element(element_id='btn_chart_settings', wait_when_done=0.300)
 
         # Opening Tab 1
-        self.click_element(element_id='navitem_chart_settings_tab1', duration=0.300)
+        self.click_element(element_id='navitem_chart_settings_tab1', wait_when_done=0.250)
 
-        # Configuring [candle_body] opacity
-        self.click_element(element_id='input_chart_settings_body_green', duration=0.300)
-        self.click_element(element_id='input_color_opacity', clicks=2, duration=0.300)
+        # [tab1] Configuring [candle_body] opacity
+        self.click_element(element_id='input_chart_settings_body_green', wait_when_done=0.300)
+        self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(candle_opacity))
         pyautogui.press('escape')
 
-        self.click_element(element_id='input_chart_settings_body_red', duration=0.300)
-        self.click_element(element_id='input_color_opacity', clicks=2, duration=0.300)
+        self.click_element(element_id='input_chart_settings_body_red', wait_when_done=0.300)
+        self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(candle_opacity))
         pyautogui.press('escape')
 
-        # Configuring [candle_wick] opacity
-        self.click_element(element_id='input_chart_settings_wick_green', duration=0.300)
-        self.click_element(element_id='input_color_opacity', clicks=2, duration=0.300)
+        # [tab1] Configuring [candle_wick] opacity
+        self.click_element(element_id='input_chart_settings_wick_green', wait_when_done=0.300)
+        self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(candle_opacity))
         pyautogui.press('escape')
 
-        self.click_element(element_id='input_chart_settings_wick_red', duration=0.300)
-        self.click_element(element_id='input_color_opacity', clicks=2, duration=0.300)
+        self.click_element(element_id='input_chart_settings_wick_red', wait_when_done=0.300)
+        self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(candle_opacity))
         pyautogui.press('escape')
 
         # Opening Tab 2
-        self.click_element(element_id='navitem_chart_settings_tab2', duration=0.300)
+        self.click_element(element_id='navitem_chart_settings_tab2', wait_when_done=0.250)
 
-        # Toggling [Bar Change Values]
-        self.click_element(element_id='checkbox_chart_settings_bar_change_values', duration=0.300)
+        # [tab2] Toggling [Bar Change Values]
+        self.click_element(element_id='checkbox_chart_settings_bar_change_values')
 
-        # Scrolling down
+        # [tab2] Scrolling down
         pyautogui.scroll(-500)
-        sleep(0.3)
+        sleep(0.250)
 
-        # Dragging [slider_background_opacity] handler to 100%
-        self.move_to_element(element_id='slider_background_opacity', duration=0.300)
+        # [tab2] Dragging [slider_background_opacity] handler to 100%
+        self.move_to_element(element_id='slider_background_opacity')
         pyautogui.drag(xOffset=75, duration=0.200)
 
         # Exiting Chart Settings
@@ -816,101 +1114,109 @@ class SmartTrader:
 
     def playbook_tv_add_indicator(self, hint):
         # Opening [btn_chart_indicators] element
-        self.click_element(element_id='btn_chart_indicators', duration=0.400)
+        self.click_element(element_id='btn_chart_indicators', wait_when_done=0.300)
 
         # Adding indicator
         pyautogui.typewrite(hint, interval=0.05)
         pyautogui.press('down')
         pyautogui.press('enter')
         pyautogui.press('escape')
-        sleep(0.400)
 
-    def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=5):
+    def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=5, precision=6):
         # Opening Settings
-        self.click_element(element_id='btn_ema_settings', duration=0.400)
+        self.click_element(element_id='btn_ema_settings', wait_when_done=0.300)
 
-        # Configuring settings on Tab 1
-        self.click_element(element_id='navitem_ema_settings_tab1', duration=0.300)
-        self.click_element(element_id='input_ema_settings_length', clicks=2, duration=0.300)
+        # [tab1]
+        self.click_element(element_id='navitem_ema_settings_tab1', wait_when_done=0.250)
+
+        # [tab1] Setting [length]
+        self.click_element(element_id='input_ema_settings_length', clicks=2)
         pyautogui.typewrite(str(length))
 
-        # Configuring Settings on Tab 2
-        self.click_element(element_id='navitem_ema_settings_tab2', duration=0.300)
-        self.click_element(element_id='input_ema_settings_color', duration=0.300)
-        self.click_element(element_id=f'item_color_{color}', duration=0.300)
-        self.click_element(element_id='input_color_opacity', clicks=2, duration=0.300)
+        # [tab2]
+        self.click_element(element_id='navitem_ema_settings_tab2', wait_when_done=0.250)
+
+        # [tab2] Setting [color]
+        self.click_element(element_id='input_ema_settings_color', wait_when_done=0.250)
+        self.click_element(element_id=f'item_color_{color}')
+        self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(opacity))
         pyautogui.press('escape')
 
+        # [tab2] Setting [precision]
+        self.click_element(element_id='input_ema_settings_precision', wait_when_done=0.250)
+        self.click_element(element_id=f'dp_item_{precision}')
+
         # Leaving Settings and Selection
-        pyautogui.press('escape')
-        pyautogui.press('escape')
+        pyautogui.press(['escape', 'escape'], interval=0.100)
 
     def playbok_tv_configure_indicator_rsi(self, length, color='white', opacity=5):
         # Opening Settings
-        self.click_element(element_id='btn_rsi_settings', duration=0.400)
+        self.click_element(element_id='btn_rsi_settings', wait_when_done=0.300)
 
-        # Configuring settings on Tab 1
-        self.click_element(element_id='navitem_rsi_settings_tab1', duration=0.300)
-        self.click_element(element_id='input_rsi_settings_length', clicks=2, duration=0.300)
+        # [tab1]
+        self.click_element(element_id='navitem_rsi_settings_tab1', wait_when_done=0.250)
+
+        # [tab1] Setting [length]
+        self.click_element(element_id='input_rsi_settings_length', clicks=2)
         pyautogui.typewrite(str(length))
 
-        # Configuring Settings on Tab 2
-        self.click_element(element_id='navitem_rsi_settings_tab2', duration=0.300)
+        # [tab2]
+        self.click_element(element_id='navitem_rsi_settings_tab2', wait_when_done=0.250)
 
-        # Setting [color]
-        self.click_element(element_id='input_rsi_settings_color', duration=0.300)
-        self.click_element(element_id=f'item_color_{color}', clicks=2, duration=0.300)
-        self.click_element(element_id='input_color_opacity', clicks=2, duration=0.300)
+        # [tab2] Setting [color]
+        self.click_element(element_id='input_rsi_settings_color', wait_when_done=0.250)
+        self.click_element(element_id=f'item_color_{color}')
+        self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(opacity))
         pyautogui.press('escape')
 
-        # Setting [upper_limit]
-        self.click_element(element_id='checkbox_rsi_settings_upper_limit', duration=0.300)
-        pyautogui.typewrite('80')
+        # [tab2] Toggle [upper_limit]
+        self.click_element(element_id='checkbox_rsi_settings_upper_limit')
 
-        # Setting [lower_limit]
-        self.click_element(element_id='checkbox_rsi_settings_lower_limit', duration=0.300)
-        pyautogui.typewrite('20')
+        # [tab2] Toggle [lower_limit]
+        self.click_element(element_id='checkbox_rsi_settings_lower_limit')
 
-        # Toggle [hlines_bg]
-        self.click_element(element_id='checkbox_rsi_settings_hlines_bg', duration=0.300)
+        # [tab2] Toggle [hlines_bg]
+        self.click_element(element_id='checkbox_rsi_settings_hlines_bg')
 
         # Leaving Settings and Selection
-        pyautogui.press('escape')
-        pyautogui.press('escape')
+        pyautogui.press(['escape', 'escape'], interval=0.100)
 
-    def playbook_set_trade_amount(self, trade_amount):
-        if self.trade_amount != trade_amount:
-            self.click_element(element_id='trade_amount', clicks=2)
-            pyautogui.typewrite(str(trade_amount))
+    def playbook_set_trade_size(self, trade_size):
+        if self.trade_size != trade_size:
+            self.click_element(element_id='trade_size', clicks=2)
+            pyautogui.typewrite("%.2f" % trade_size)
 
     def playbook_set_expiry_time(self, expiry_time='01:00'):
-        self.click_element(element_id='btn_expiry_time', duration=0.4)
+        self.click_element(element_id='btn_expiry_time', wait_when_done=0.5)
 
         if expiry_time == '01:00':
-            self.click_element(element_id='dp_item_1min', duration=0.4)
+            self.click_element(element_id='dp_item_1min')
+        else:
+            # Option is not supported. Closing dropdown menu
+            pyautogui.press('escape')
 
-    def playbook_open_trade(self, side, trade_amount=None):
-        if trade_amount != self.trade_amount:
-            self.playbook_set_trade_amount(trade_amount=trade_amount)
+    def playbook_open_trade(self, side, trade_size):
+        self.playbook_set_trade_size(trade_size=trade_size)
 
         if side.lower() == 'up':
-            self.click_element(element_id='btn_up')
+            self.click_element(element_id='btn_call')
         elif side.lower() == 'down':
-            self.click_element(element_id='btn_down')
+            self.click_element(element_id='btn_put')
 
     ''' Reporting'''
 
     def df_ongoing_positions(self):
         rows = []
-        columns = ['Strategy', 'Side', 'Size', 'Open Time (UTC)']
+        columns = ['Strategy', 'Open Time (UTC)', 'Side', 'Size', 'Open Price']
 
         for position in self.ongoing_positions.values():
             row = [position['strategy_id'],
+                   position['open_time'],
                    position['side'],
-                   self.trade_amount,
-                   position['open_time']]
+                   '%.2f' % self.trade_size,
+                   position['open_price']]
 
             i = 1
             for trade in position['trades']:
@@ -932,18 +1238,19 @@ class SmartTrader:
 
     ''' TA & Trading '''
 
-    def open_position(self, strategy_id, side, trade_amount):
+    def open_position(self, strategy_id, side, trade_size):
         position = {'result': None}
 
         now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         position['asset'] = self.asset
         position['open_time'] = now
+        position['open_price'] = self.close[0]
         position['strategy_id'] = strategy_id
         position['side'] = side
         position['trades'] = []
 
         self.ongoing_positions[strategy_id] = position
-        self.open_trade(strategy_id=strategy_id, side=side, trade_amount=trade_amount)
+        self.open_trade(strategy_id=strategy_id, side=side, trade_size=trade_size)
 
         msg = f"[{self.asset}] Trade has been opened."
         logger.live(msg=msg)
@@ -960,16 +1267,24 @@ class SmartTrader:
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
         self.ongoing_positions.pop(strategy_id)
 
+        # Setting [trade_size] back to [optimal_trade_size]
+        self.read_balance()
+
+        if (not os.path.exists(
+                f"{settings.PATH_LOCK}{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}")
+                or not self.ongoing_positions):
+            self.execute_playbook(playbook_id='set_trade_size', trade_size=self.get_optimal_trade_size())
+
         return closed_position
 
-    def open_trade(self, strategy_id, side, trade_amount):
-        self.execute_playbook(playbook_id='open_trade', side=side, trade_amount=trade_amount)
+    def open_trade(self, strategy_id, side, trade_size):
+        self.execute_playbook(playbook_id='open_trade', side=side, trade_size=trade_size)
 
         now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         trade = {
             'open_time': now,
             'side': self.ongoing_positions[strategy_id]['side'],
-            'trade_amount': trade_amount,
+            'trade_size': trade_size,
             'result': None
         }
 
@@ -978,7 +1293,17 @@ class SmartTrader:
 
     def close_trade(self, strategy_id, result):
         position = self.ongoing_positions[strategy_id]
-        position['trades'][-1]['result'] = result
+        trade = position['trades'][-1]
+        trade['result'] = result
+
+        if result == 'gain':
+            if self.cumulative_losses > 0:
+                # Reducing [cumulative_losses]
+                self.cumulative_losses -= trade['trade_size'] * (self.payout / 100)
+
+        if result == 'loss':
+            # Accumulating losses
+            self.cumulative_losses += trade['trade_size']
 
         return position['trades'][-1]
 
@@ -989,7 +1314,7 @@ class SmartTrader:
                    clear=True)
 
         self.run_validation()
-        sec_action = 58.250
+        sec_action = random.randrange(start=58000, stop=58800) / 1000
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready!'
@@ -1002,32 +1327,44 @@ class SmartTrader:
                 tb_positions = tabulate(tb_positions, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
-            sec_validation = random.randrange(start=50, stop=55)
+            sec_validation = random.randrange(start=40000, stop=48000) / 1000
 
             # Waiting PB
-            msg = "Observing Price Action"
+            msg = "Watching Price Action"
             if sec_validation > gmtime().tm_sec:
                 diff_sec = sec_validation - gmtime().tm_sec
             else:
                 diff_sec = sec_validation - gmtime().tm_sec + 60
-            items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_SLEEP_TIME))
+
+            items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                sleep(settings.PROGRESS_BAR_SLEEP_TIME)
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            # Checking token (only if mouse/keyboard are not being used)
+            if utils.does_lock_file_exist(lock_file='long_action') is False and len(self.ongoing_positions) == 0:
+                # Focusing on App
+                self.mouse_event_on_neutral_area(event='click', area_id='within_app')
+                sleep(1)
+                if self.is_alert_401_popping_up():
+                    # 401 alert popping up
+                    # Session has expired
+                    self.execute_playbook(playbook_id='refresh_page')
 
             # Validation PB
             msg = "Quick validation"
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
 
-            if gmtime().tm_sec > sec_validation:
+            if gmtime().tm_sec >= sec_validation:
                 # Ready for Trading
 
                 # Waiting PB
                 msg = "Watching candle closure"
                 diff_sec = sec_action - gmtime().tm_sec
-                items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_SLEEP_TIME))
+
+                items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                    sleep(settings.PROGRESS_BAR_SLEEP_TIME)
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                 self.run_lookup(context=context)
 
@@ -1040,7 +1377,9 @@ class SmartTrader:
                            msg=msg,
                            clear=True)
 
+                # Cleaning up
                 self.reset_chart_data()
+                self.ongoing_positions.clear()
 
                 wait_time = 5
                 sleep(wait_time)
@@ -1049,32 +1388,41 @@ class SmartTrader:
         position = None
         # Strategies
         msg = "Applying strategies"
-        for item in utils.progress_bar([0], prefix=msg):
-            self.read_chart_data()
 
+        strategies = ['ema_rsi_8020',
+                      'ema_rsi_50']
+
+        # Reading Chart data
+        self.read_element(element_id='chart_data')
+
+        for strategy in utils.progress_bar(strategies, prefix=msg):
             # Strategies
-            position = self.strategy_ema_rsi()
+            f_strategy = f"strategy_{strategy}"
+            if hasattr(self, f_strategy) and callable(strategy := getattr(self, f_strategy)):
+                position = strategy()
+            else:
+                # Strategy not found
+                msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                       f"- That's embarrassing. :/ "
+                       f"\n\t- I couldn't find a function for strategy [{strategy}].! :/"
+                       f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
+                tmsg.input(msg=msg, clear=True)
+                exit(500)
 
-        if position:
-            tmsg.print(context=context, clear=True)
+            if position:
+                tmsg.print(context=context, clear=True)
 
-            if position['result']:
-                art.tprint(text=position['result'], font='block')
-                sleep(10)
+                if position['result']:
+                    art.tprint(text=position['result'], font='block')
+                    sleep(10)
+
+                # Position found with this [strategy]. So skipping next ones.
+                break
 
         return position
 
-    def run_monitoring(self):
-        tmsg.print(context='Monitoring', clear=True)
-
-        # reading chart
-        tmsg.print(msg='\tReading chart. . . . . .', end='')
-        self.read_chart_data()
-        msg = f"{utils.tmsg.success}OK{utils.tmsg.endc}"
-        tmsg.print(msg=msg)
-
-    def strategy_ema_rsi(self):
-        strategy_id = 'ema_rsi'
+    def strategy_ema_rsi_8020(self):
+        strategy_id = 'ema_rsi_8020'
 
         if strategy_id in self.ongoing_positions:
             position = self.ongoing_positions[strategy_id]
@@ -1085,22 +1433,22 @@ class SmartTrader:
             # Has position open
             result = None
             last_trade = position['trades'][-1]
-            amount_trades = position['trades'].__len__()
+            amount_trades = len(position['trades'])
 
             if position['side'] == 'up':
                 # up
-                if self.change[0] > 0:
+                if self.close[0] > position['open_price']:
                     result = 'gain'
-                elif self.change[0] < 0:
+                elif self.close[0] < position['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
 
             else:
                 # down
-                if self.change[0] < 0:
+                if self.close[0] < position['open_price']:
                     result = 'gain'
-                elif self.change[0] > 0:
+                elif self.close[0] > position['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
@@ -1109,7 +1457,7 @@ class SmartTrader:
                 position = self.close_position(strategy_id=strategy_id,
                                                result=result)
             elif result == 'loss':
-                if amount_trades >= settings.MAX_TRADE_AMOUNT_PER_POSITION:
+                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
                     # No more tries
                     position = self.close_position(strategy_id=strategy_id,
                                                    result=result)
@@ -1123,39 +1471,171 @@ class SmartTrader:
                     position = self.close_position(strategy_id=strategy_id,
                                                    result=result)
 
-                else:
+                if not position['result']:
                     # Martingale
-                    trade_amount = last_trade['trade_amount'] * settings.MARTINGALE_MULTIPLIER
+                    trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER
                     self.close_trade(strategy_id=strategy_id,
                                      result=result)
                     self.open_trade(strategy_id=strategy_id,
                                     side=position['side'],
-                                    trade_amount=trade_amount)
+                                    trade_size=trade_size)
             else:
                 # Draw
                 self.close_trade(strategy_id=strategy_id,
                                  result=result)
                 self.open_trade(strategy_id=strategy_id,
                                 side=position['side'],
-                                trade_amount=last_trade['trade_amount'])
+                                trade_size=last_trade['trade_size'])
 
         else:
             # No open position
-            if self.datetime.__len__() >= 2:
-                if self.close[0] > self.ema_72[0]:
-                    # Price above [ema_72]
-                    if self.rsi[1] <= 19 and 30 <= self.rsi[0] <= 70:
-                        # Trend Following
+            dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
+
+            if len(self.datetime) >= 2:
+
+                if self.close[0] > self.ema_72[0] or dst_price_ema_72 < -0.0005:
+                    # Price is above [ema_72] or far bellow [ema_72]
+
+                    if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 70:
                         position = self.open_position(strategy_id=strategy_id,
                                                       side='up',
-                                                      trade_amount=self.trade_amount)
+                                                      trade_size=self.trade_size)
 
-                elif self.close[0] < self.ema_72[0]:
-                    # Price bellow [ema_72]
-                    if self.rsi[1] >= 81 and 70 >= self.rsi[0] >= 30:
+                elif self.close[0] < self.ema_72[0] or dst_price_ema_72 > 0.0005:
+                    # Price is bellow [ema_72] or far above [ema_72]
+                    if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 30:
                         # Trend Following
                         position = self.open_position(strategy_id=strategy_id,
                                                       side='down',
-                                                      trade_amount=self.trade_amount)
+                                                      trade_size=self.trade_size)
+
+        return position
+
+    def strategy_ema_rsi_50(self):
+        strategy_id = 'ema_rsi_50'
+
+        if strategy_id in self.ongoing_positions:
+            position = self.ongoing_positions[strategy_id]
+        else:
+            position = None
+
+        if position:
+            # Has position open
+            result = None
+            last_trade = position['trades'][-1]
+            amount_trades = len(position['trades'])
+
+            if position['side'] == 'up':
+                # up
+                if self.close[0] > position['open_price']:
+                    result = 'gain'
+                elif self.close[0] < position['open_price']:
+                    result = 'loss'
+                else:
+                    result = 'draw'
+
+            else:
+                # down
+                if self.close[0] < position['open_price']:
+                    result = 'gain'
+                elif self.close[0] > position['open_price']:
+                    result = 'loss'
+                else:
+                    result = 'draw'
+
+            if result == 'gain':
+                position = self.close_position(strategy_id=strategy_id,
+                                               result=result)
+            elif result == 'loss':
+                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                    # No more tries
+                    position = self.close_position(strategy_id=strategy_id,
+                                                   result=result)
+
+                elif position['side'] == 'up':
+                    if self.rsi[0] < 40:
+                        # Abort it
+                        position = self.close_position(strategy_id=strategy_id,
+                                                       result=result)
+                    elif self.close[1] > self.ema_72[1] and self.close[0] < self.ema_72[0]:
+                        # [close] crossed [ema_72] up
+                        # Abort it
+                        position = self.close_position(strategy_id=strategy_id,
+                                                       result=result)
+                elif position['side'] == 'down':
+                    if self.rsi[0] > 60:
+                        # Abort it
+                        position = self.close_position(strategy_id=strategy_id,
+                                                       result=result)
+                    elif self.close[1] < self.ema_72[1] and self.close[0] > self.ema_72[0]:
+                        # [close] crossed [ema_72] down
+                        # Abort it
+                        position = self.close_position(strategy_id=strategy_id,
+                                                       result=result)
+
+                if not position['result']:
+                    # Martingale
+                    trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER
+                    self.close_trade(strategy_id=strategy_id,
+                                     result=result)
+                    self.open_trade(strategy_id=strategy_id,
+                                    side=position['side'],
+                                    trade_size=trade_size)
+            else:
+                # Draw
+                self.close_trade(strategy_id=strategy_id,
+                                 result=result)
+                self.open_trade(strategy_id=strategy_id,
+                                side=position['side'],
+                                trade_size=last_trade['trade_size'])
+
+        else:
+            # No open position
+            dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
+            rsi_bullish_from = 40
+            rsi_bullish_min = 50
+            rsi_bullish_max = 80
+            rsi_bearish_from = 60
+            rsi_bearish_min = 50
+            rsi_bearish_max = 20
+
+            if len(self.datetime) >= 2 and dst_price_ema_72 > 0.0001:
+                # Price is not too close to [ema_72]
+
+                if self.close[0] > self.ema_72[0]:
+                    # Price is above [ema_72]
+
+                    if dst_price_ema_72 < 0.0007:
+                        if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
+                            # Trend Following
+                            position = self.open_position(strategy_id=strategy_id,
+                                                          side='up',
+                                                          trade_size=self.trade_size)
+
+                    else:
+                        # Price is too far from [ema_72] (probably loosing strength)
+                        if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
+                            # Against Trend
+                            position = self.open_position(strategy_id=strategy_id,
+                                                          side='down',
+                                                          trade_size=self.trade_size)
+
+                elif self.close[0] < self.ema_72[0]:
+                    # Price is bellow [ema_72]
+
+                    if dst_price_ema_72 < 0.0007:
+                        if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
+                            # Trend Following
+                            position = self.open_position(strategy_id=strategy_id,
+                                                          side='down',
+                                                          trade_size=self.trade_size)
+
+                    else:
+                        # Price is too far from [ema_72] (probably loosing strength)
+                        if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
+                            # Against Trend
+                            position = self.open_position(strategy_id=strategy_id,
+                                                          side='up',
+                                                          trade_size=self.trade_size)
 
         return position

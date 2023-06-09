@@ -1,35 +1,68 @@
+# DEBUG
+DEBUG_OCR = False
+
 # VALIDATION
 MIN_BALANCE = 100
+MIN_TRADE_SIZE = 1.00
 
 # TRADING
-MAX_TRADE_AMOUNT_PER_POSITION = 3
+MODE_SIMULATION = 'simulation'
+MODE_DEMO = 'demo'
+MODE_LIVE = 'live'
+MAX_TRADES_PER_POSITION = 3
 MARTINGALE_MULTIPLIER = 2
-OPTIMAL_TRADE_SIZE_PCT = 0.5
-MAX_TRADE_SIZE_PCT = 3
+OPTIMAL_TRADE_SIZE_PCT = 0.005
 
-# DEBUG
-DEBUG_OCR = True
-DEBUG_CHART = True
+# EXTRAS
+PROGRESS_BAR_WAITING_TIME = 3
+PROGRESS_BAR_INTERVAL_TIME = 0.250
+
 # CORE
 LOCATE_CONFIDENCE = 0.90
-PROGRESS_BAR_SLEEP_TIME = 0.250
-SS_PATH = 'ss\\'
-SS_TEMPLATE_PATH = 'ss\\template\\'
+MAX_TRIES_READING_ELEMENT = 3
+PLAYBOOK_LONG_ACTION = {
+    'iqcent_chart_setup': 30,
+    'log_in': 7,
+    'navigate_url': 5,
+    'set_expiry_time': 2,
+    'tv_reset': 10,
+}
+LOCK_LONG_ACTION_FILENAME = 'long_action'
+LOCK_FILE_EXTENSION = '.lck'
+SS_FILE_EXTENSION = '.png'
+PATH_SS = 'ss\\'
+PATH_SS_TEMPLATE = 'ss\\template\\'
+PATH_LOCK = 'lock\\'
+SESSION_TIMEOUT = 3600
 TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 CORE_DATA = {
+    'alert_401': 'string',
     'asset': 'string',
-    'balance': 'float',
-    'ohlc': 'string',
+    'balance': 'currency',
+    'close': 'float',
     'ema_72': 'float',
-    'rsi': 'float',
-    'trade_amount': 'float',
-    'payout': 'percentage',
     'expiry_time': 'time',
+    'ohlc': 'string_ohlc',
+    'payout': 'percentage',
+    'rsi': 'float',
+    'trade_size': 'float',
 }
 BROKERS = {
     'iqcent': {
         'id': 'iqcent',
         'name': 'IQ Cent',
+        'url': 'https://iqcent.com/trading/option/',
+        'neutral_zones': {
+            'within_app': {
+                'width_pct': 0.50,
+                'height_pct': 0.56
+            },
+            'bellow_app': {
+                'width_pct': 0.50,
+                'height_pct': 0.90
+            }
+
+        },
         'zones': {
             'header': {
                 'id': 'header',
@@ -58,29 +91,45 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.75,
                 'is_mandatory': True,
-                'elements': ['trade_amount', 'payout', 'expiry_time']
+                'elements': ['trade_size', 'payout', 'expiry_time']
+            },
+            'navbar_url': {
+                'context': 'chrome',
+                'id': 'navbar_url',
+                'region': None,
+                'locate_confidence': 0.85,
+            },
+            'modal_login': {
+                'id': 'modal_login',
+                'region': None,
+                'locate_confidence': 0.90,
             },
             'tick_header': {
                 'id': 'tick_header',
                 'region': None,
                 'locate_confidence': 0.75,
             },
+            'logout_header': {
+                'id': 'logout_header',
+                'region': None,
+                'locate_confidence': 0.75,
+            },
             'dp_item_1min': {
                 'id': 'dp_item_1min',
                 'region': None,
-                'locate_confidence': 0.95,
+                'locate_confidence': 0.90,
             },
             'drawing_toolbar': {
                 'context': 'tv',
                 'id': 'drawing_toolbar',
                 'region': None,
-                'locate_confidence': 0.90,
+                'locate_confidence': 0.85,
             },
             'menu_chart': {
                 'context': 'tv',
                 'id': 'menu_chart',
                 'region': None,
-                'locate_confidence': 0.90,
+                'locate_confidence': 0.85,
             },
             'navbar_chart_settings': {
                 'context': 'tv',
@@ -98,19 +147,19 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'chart_settings_tab2_top',
                 'region': None,
-                'locate_confidence': 0.90,
+                'locate_confidence': 0.85,
             },
             'chart_settings_tab2_bottom': {
                 'context': 'tv',
                 'id': 'chart_settings_tab2_bottom',
                 'region': None,
-                'locate_confidence': 0.90,
+                'locate_confidence': 0.85,
             },
             'colors_opacity': {
                 'context': 'tv',
                 'id': 'colors_opacity',
                 'region': None,
-                'locate_confidence': 0.90,
+                'locate_confidence': 0.85,
             },
             'navbar_ema_settings': {
                 'context': 'tv',
@@ -156,9 +205,13 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
-            'lbl_chart_asset': {
-                'context': 'tv',
-                'zone': 'drawing_toolbar',
+            'btn_login': {
+                'zone': 'logout_header',
+                'x': None,
+                'y': None
+            },
+            'btn_login_confirm': {
+                'zone': 'modal_login',
                 'x': None,
                 'y': None
             },
@@ -230,6 +283,16 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
+            'input_email': {
+                'zone': 'modal_login',
+                'x': None,
+                'y': None
+            },
+            'input_pwd': {
+                'zone': 'modal_login',
+                'x': None,
+                'y': None
+            },
             'input_color_opacity': {
                 'context': 'tv',
                 'zone': 'colors_opacity',
@@ -261,6 +324,12 @@ BROKERS = {
                 'y': None
             },
             'input_ema_settings_color': {
+                'context': 'tv',
+                'zone': 'ema_settings_tab2',
+                'x': None,
+                'y': None
+            },
+            'input_ema_settings_precision': {
                 'context': 'tv',
                 'zone': 'ema_settings_tab2',
                 'x': None,
@@ -343,17 +412,33 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
-            'btn_up': {
-                'id': 'trade_amount',
+            'dp_item_6': {
+                'context': 'tv',
+                'zone': 'dp_item_6',
+                'x': None,
+                'y': None
+            },
+            'btn_call': {
                 'zone': 'footer',
                 'type': 'float',
                 'x': None,
                 'y': None
             },
-            'btn_down': {
-                'id': 'trade_amount',
+            'btn_put': {
                 'zone': 'footer',
                 'type': 'float',
+                'x': None,
+                'y': None
+            },
+            'alert_401': {
+                'context': 'iqcent',
+                'zone': 'alert_401',
+                'x': None,
+                'y': None
+            },
+            'input_url': {
+                'context': 'chrome',
+                'zone': 'navbar_url',
                 'x': None,
                 'y': None
             },

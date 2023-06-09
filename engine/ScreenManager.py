@@ -21,7 +21,8 @@ class ScreenManager:
             region_center_y = region_y + region_height / 2
 
             for i in range(0, amount_regions):
-                region = {'height':  region_height,
+                region = {'i': i,
+                          'height':  region_height,
                           'width': region_width,
                           'x': region_x,
                           'y': region_y,

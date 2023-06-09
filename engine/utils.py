@@ -1,4 +1,5 @@
 import os
+import re
 from engine import settings
 
 
@@ -65,7 +66,7 @@ def progress_bar(iterable, prefix='', suffix='', decimals=1, length=20, fill='â–
         # percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
         filledLength = int(length * iteration // total)
         bar = fill * filledLength + '-' * (length - filledLength)
-        padding_left = os.get_terminal_size().columns - length - prefix.__len__() - suffix.__len__() - 3
+        padding_left = os.get_terminal_size().columns - length - len(prefix) - len(suffix) - 3
         
         bar_line = f"\r{' ' * padding_left if padding_left > 0 else ''}{tmsg.italic}{prefix}{tmsg.endc}"
         if prefix:
@@ -76,12 +77,13 @@ def progress_bar(iterable, prefix='', suffix='', decimals=1, length=20, fill='â–
 
     # Initial Call
     print_progress_bar(0)
+
     # Update Progress Bar
     for i, item in enumerate(iterable):
         yield item
 
         if reverse:
-            print_progress_bar(iterable.__len__() - i)
+            print_progress_bar(len(iterable) - i)
         else:
             print_progress_bar(i + 1)
     # Print New Line on Complete
@@ -99,6 +101,8 @@ def find_nth(string, substring, n):
 
 
 def str_to_float(string):
+    string = re.sub("[^0-9.]", "", string)
+
     if string[-1] == '.':
         string = string[:-1]
     if string[-1] == '-':
@@ -107,8 +111,21 @@ def str_to_float(string):
     return float(string)
 
 
+def does_lock_file_exist(lock_file='long_action'):
+    if os.path.exists(f"{settings.PATH_LOCK}{lock_file}{settings.LOCK_FILE_EXTENSION}"):
+        return True
+    return False
+
+
 # Technical Analysis
 def distance_percent(v1, v2):
+    var = v1 - v2
+    var = var / v1
+
+    return var
+
+
+def distance_percent_abs(v1, v2):
     distance = v1 - v2
     distance = distance / v1
 
@@ -116,6 +133,6 @@ def distance_percent(v1, v2):
 
 
 def is_near(v1, v2, threshold):
-    distance = distance_percent(v1, v2)
+    distance = distance_percent_abs(v1, v2)
 
     return distance <= threshold
