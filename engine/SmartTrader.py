@@ -33,10 +33,9 @@ class SmartTrader:
     initial_trade_size = None
     trade_size = None
 
-    recovery_mode = None
-    recovery_trade_size = 0.00
-    cumulative_losses = 0.00
-    consecutive_gains = 0
+    recovery_mode = True
+    recovery_trade_size = 3.33
+    cumulative_losses = 10.00
 
     expiry_time = None
     payout = None
@@ -147,7 +146,6 @@ class SmartTrader:
         #               f"{payout} | "
         #               f"{expiry_time} | "
         #               f"{str(chart_data)}")
-        #         print(f"{dst_price_ema_72}")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -173,6 +171,9 @@ class SmartTrader:
 
         # Validating [payout]
         self.validate_payout()
+
+        # Checking lock files
+        utils.try_to_remove_lock_file(action='long_action')
 
     def validate_balance(self, context='Validation'):
         if self.balance == 0:
@@ -269,21 +270,9 @@ class SmartTrader:
 
     def get_optimal_trade_size(self):
         optimal_trade_size = self.initial_trade_size
-        min_position_loss = self.initial_trade_size + \
-                            self.initial_trade_size * settings.MARTINGALE_MULTIPLIER + \
-                            self.initial_trade_size * settings.MARTINGALE_MULTIPLIER * 2
 
-        if self.cumulative_losses >= min_position_loss:
-            # [cumulative_losses] is in a considerable size to be managed
-            self.recovery_mode = True
-
-            recovery_trade_size = self.cumulative_losses / settings.AMOUNT_TRADES_TO_RECOVER_LOSSES
-
-            if self.recovery_trade_size > self.initial_trade_size:
-                self.recovery_trade_size = recovery_trade_size
-                optimal_trade_size = recovery_trade_size
-        else:
-            self.recovery_mode = False
+        if self.recovery_mode:
+            optimal_trade_size = self.recovery_trade_size
 
         return round(optimal_trade_size, 2)
 
@@ -449,7 +438,7 @@ class SmartTrader:
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     left = width * 0.15
-                    top = height * 0.44
+                    top = height * 0.46
                     right = width * 0.35
                     bottom = height * 0.61
                 if element_id == 'close':
@@ -460,7 +449,7 @@ class SmartTrader:
                 elif element_id == 'expiry_time':
                     left = width * 0.70
                     top = height * 0.33
-                    right = width * 0.82
+                    right = width * 0.815
                     bottom = height * 0.48
                 elif element_id == 'payout':
                     left = width * 0.05
@@ -474,7 +463,7 @@ class SmartTrader:
     def ocr_read_element(self, zone_id, element_id, context_id=None, type='string'):
         # There will be 3 attempts to read the content.
 
-        for attempt in range(1, 3):
+        for attempt in range(1, 2):
             ss_path = None
             if settings.DEBUG_OCR:
                 ss_path = self.get_ss_path(zone_id=zone_id,
@@ -948,7 +937,12 @@ class SmartTrader:
         f_playbook = f"playbook_{playbook_id}"
         if hasattr(self, f_playbook) and callable(playbook := getattr(self, f_playbook)):
             # Playbook has been found
-            if playbook_id in settings.PLAYBOOK_LONG_ACTION:
+
+            if playbook_id not in settings.PLAYBOOK_LONG_ACTION:
+                # It's not a long action
+                result = playbook(**kwargs)
+
+            else:
                 # It's a long action
 
                 lock_file = f"{settings.PATH_LOCK}{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}"
@@ -956,6 +950,9 @@ class SmartTrader:
                 amount_tries = 0
 
                 while is_done is False:
+                    # Trying to remove [lock_file]
+                    utils.try_to_remove_lock_file(action=settings.LOCK_LONG_ACTION_FILENAME)
+
                     try:
                         # Locking it while doing stuff
                         with open(file=lock_file, mode='x') as f:
@@ -966,34 +963,28 @@ class SmartTrader:
                             is_done = True
 
                     except FileExistsError:
-                        # This long action is waiting for another one
-                        # It likely means authentication token expired. So refresh_page on the next opportunity
-                        with open(file=lock_file, mode='r') as f:
-                            playbook_id_running = f.read()
-
-                        if playbook_id_running == playbook_id == 'log_in':
-                            # The other instance is logging in.
-                            # So, refreshing this one
-                            playbook = getattr(self, 'playbook_refresh_page')
-
+                        # Waiting lock release
                         sleep(1)
                         amount_tries += 1
 
-                        if amount_tries > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 3:
-                            # It's taking way too long
+                        if utils.does_lock_file_exist(action=settings.LOCK_LONG_ACTION_FILENAME):
+                            with open(file=lock_file, mode='r') as f:
+                                # Retrieving what long_action playbook is running on
+                                playbook_id_running = f.read()
 
-                            result = playbook(**kwargs)
-                            is_done = True
+                                if playbook_id_running == playbook_id == 'log_in':
+                                    # Another instance is already logging in.
+                                    # So we exchange [log_in] with [refresh_page]
+                                    playbook = getattr(self, 'playbook_refresh_page')
 
-                    finally:
-                        try:
-                            os.remove(lock_file)
-                        except:
-                            pass
+                        if playbook_id_running:
+                            # Currently running playbook has been identified
 
-            else:
-                # It's not a long action
-                result = playbook(**kwargs)
+                            if amount_tries > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 3:
+                                # It's taking way too long
+
+                                result = playbook(**kwargs)
+                                is_done = True
 
         else:
             # Playbook not found
@@ -1257,9 +1248,6 @@ class SmartTrader:
 
             rows.append(row)
 
-        print('columns:' + str(columns))
-        print('rows:' + str(rows))
-
         df = pd.DataFrame(data=rows, columns=columns)
         df.fillna('', inplace=True)
 
@@ -1327,8 +1315,6 @@ class SmartTrader:
 
         # Loss Management
         if result == 'gain':
-            self.consecutive_gains += 1
-
             if self.cumulative_losses > 0:
                 profit = trade['trade_size'] * (self.payout / 100)
 
@@ -1337,14 +1323,23 @@ class SmartTrader:
                     # [cumulative_losses] is greater than [profit]
                     self.cumulative_losses -= profit
                 else:
-                    # Reseting [cumulative_losses]
+                    # Resetting [recovery_mode]
+                    self.recovery_mode = False
                     self.cumulative_losses = 0
 
         elif result == 'loss':
-            self.consecutive_gains = 0
-
             # Accumulating losses
             self.cumulative_losses += trade['trade_size']
+            self.recovery_trade_size = self.cumulative_losses / settings.AMOUNT_TRADES_TO_RECOVER_LOSSES
+
+            if self.recovery_mode is False:
+                # [recovery_mode] is not activated yet
+                min_position_loss = (self.initial_trade_size +
+                                     (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER) +
+                                     (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER * 2))
+                if self.cumulative_losses > min_position_loss:
+                    # Time to activate [recovery_mode]
+                    self.recovery_mode = True
 
         return position['trades'][-1]
 
@@ -1382,7 +1377,7 @@ class SmartTrader:
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Checking token (only if mouse/keyboard are not being used)
-            if utils.does_lock_file_exist(lock_file='long_action') is False and len(self.ongoing_positions) == 0:
+            if utils.does_lock_file_exist(action='long_action') is False and len(self.ongoing_positions) == 0:
                 # Focusing on App
                 self.mouse_event_on_neutral_area(event='click', area_id='within_app')
                 sleep(1)

@@ -111,8 +111,15 @@ def str_to_float(string):
     return float(string)
 
 
-def does_lock_file_exist(lock_file='long_action'):
-    if os.path.exists(f"{settings.PATH_LOCK}{lock_file}{settings.LOCK_FILE_EXTENSION}"):
+def try_to_remove_lock_file(action):
+    try:
+        os.remove(f"{settings.PATH_LOCK}{action}{settings.LOCK_FILE_EXTENSION}")
+    except:
+        pass
+
+
+def does_lock_file_exist(action='long_action'):
+    if os.path.exists(f"{settings.PATH_LOCK}{action}{settings.LOCK_FILE_EXTENSION}"):
         return True
     return False
 
