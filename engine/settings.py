@@ -6,12 +6,14 @@ MIN_BALANCE = 100
 MIN_TRADE_SIZE = 1.00
 
 # TRADING
+TRADING_STRATEGIES = ['ema_rsi_50',
+                      'ema_rsi_8020']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
 MAX_TRADES_PER_POSITION = 3
 MARTINGALE_MULTIPLIER = 2
-OPTIMAL_TRADE_SIZE_PCT = 0.005
+AMOUNT_TRADES_TO_RECOVER_LOSSES = 3
 
 # EXTRAS
 PROGRESS_BAR_WAITING_TIME = 3
@@ -55,7 +57,7 @@ BROKERS = {
         'neutral_zones': {
             'within_app': {
                 'width_pct': 0.50,
-                'height_pct': 0.56
+                'height_pct': 0.66
             },
             'bellow_app': {
                 'width_pct': 0.50,
@@ -102,7 +104,7 @@ BROKERS = {
             'modal_login': {
                 'id': 'modal_login',
                 'region': None,
-                'locate_confidence': 0.90,
+                'locate_confidence': 0.85,
             },
             'tick_header': {
                 'id': 'tick_header',

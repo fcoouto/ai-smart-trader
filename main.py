@@ -1,17 +1,17 @@
-import ctypes
 import sys
 import os
 import getopt
-from time import sleep
 
-from engine import settings, utils, ScreenManager, SmartTrader
+from engine import settings, ScreenManager, SmartTrader
 
 
 def execute(broker, i_monitor, i_region, trade_size):
     sm = ScreenManager.ScreenManager()
     region = sm.get_region(i_monitor=i_monitor, i_region=i_region)
+    agent_id = str(i_monitor) + str(i_region)
 
-    strader = SmartTrader.SmartTrader(broker=broker,
+    strader = SmartTrader.SmartTrader(agent_id=agent_id,
+                                      broker=broker,
                                       region=region,
                                       initial_trade_size=trade_size)
     strader.start()

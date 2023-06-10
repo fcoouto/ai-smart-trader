@@ -20,6 +20,8 @@ logger = Logger()
 
 
 class SmartTrader:
+    agent_id = None
+
     broker = None
     region = None
     mode = None
@@ -30,7 +32,11 @@ class SmartTrader:
     balance = None
     initial_trade_size = None
     trade_size = None
+
+    recovery_mode = None
+    recovery_trade_size = 0.00
     cumulative_losses = 0.00
+    consecutive_gains = 0
 
     expiry_time = None
     payout = None
@@ -49,19 +55,20 @@ class SmartTrader:
 
     position_history = []
 
+    ongoing_positions = {}
     # ongoing_positions = {
     #     'ema_rsi_8020': {'asset': 'ABC',
-    #                 'strategy_id': 'ema_rsi_8020',
-    #                 'open_time': 'XXX',
-    #                 'open_price': 1.20,
-    #                 'side': 'down',
-    #                 'result': None,
-    #                 'trades': [{'open_time': 'XXX',
-    #                             'side': 'up',
-    #                             'trade_size': 1,
-    #                             'result': None}]}
+    #                      'strategy_id': 'ema_rsi_8020',
+    #                      'open_time': 'XXX',
+    #                      'open_price': 0.674804,
+    #                      'side': 'down',
+    #                      'result': None,
+    #                      'trades': [{'open_time': 'XXX',
+    #                                  'side': 'up',
+    #                                  'trade_size': 1,
+    #                                  'result': None}]
+    #      }
     # }
-    ongoing_positions = {}
 
     is_automation_running = False
     awareness = {
@@ -70,7 +77,8 @@ class SmartTrader:
         'payout_low': None,
     }
 
-    def __init__(self, broker, region, initial_trade_size):
+    def __init__(self, agent_id, broker, region, initial_trade_size):
+        self.agent_id = agent_id
         self.broker = broker
         self.region = region
         self.initial_trade_size = initial_trade_size
@@ -98,6 +106,7 @@ class SmartTrader:
             exit(500)
 
     ''' Validations '''
+
     def set_zones(self):
         for zone in self.broker['zones'].values():
             if 'is_mandatory' in zone and zone['is_mandatory']:
@@ -196,12 +205,14 @@ class SmartTrader:
                 self.read_balance()
 
     def validate_trade_size(self, context='Validation'):
-        if len(self.ongoing_positions) == 0 and self.initial_trade_size != self.trade_size:
+        optimal_trade_size = self.get_optimal_trade_size()
+
+        if len(self.ongoing_positions) == 0 and self.trade_size != optimal_trade_size:
             # [trade_size] is different from [initial_trade_size]
 
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Just noticed that Trade Size is [{self.trade_size} USD], "
-                   f"while you recommended to start with [{self.initial_trade_size} USD]. "
+                   f"and the Optimal Trade Size right now would be [{optimal_trade_size} USD]. "
                    f"\n\t  - I'll take care of that...{utils.tmsg.endc}")
             tmsg.print(context=context, msg=msg, clear=True)
 
@@ -212,7 +223,7 @@ class SmartTrader:
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-            self.execute_playbook(playbook_id='set_trade_size', trade_size=self.initial_trade_size)
+            self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size)
             self.read_trade_size()
 
             print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
@@ -257,12 +268,24 @@ class SmartTrader:
                 self.set_awareness(k='payout_low', v=True)
 
     def get_optimal_trade_size(self):
-        # optimal = round(self.balance * settings.OPTIMAL_TRADE_SIZE_PCT, 2)
-        # if optimal < settings.MIN_TRADE_SIZE:
-        #     optimal = settings.MIN_TRADE_SIZE
-        # return optimal
+        optimal_trade_size = self.initial_trade_size
+        min_position_loss = self.initial_trade_size + \
+                            self.initial_trade_size * settings.MARTINGALE_MULTIPLIER + \
+                            self.initial_trade_size * settings.MARTINGALE_MULTIPLIER * 2
 
-        return self.initial_trade_size
+        if self.cumulative_losses >= min_position_loss:
+            # [cumulative_losses] is in a considerable size to be managed
+            self.recovery_mode = True
+
+            recovery_trade_size = self.cumulative_losses / settings.AMOUNT_TRADES_TO_RECOVER_LOSSES
+
+            if self.recovery_trade_size > self.initial_trade_size:
+                self.recovery_trade_size = recovery_trade_size
+                optimal_trade_size = recovery_trade_size
+        else:
+            self.recovery_mode = False
+
+        return round(optimal_trade_size, 2)
 
     def is_logged_in(self):
         return False if self.balance is None else True
@@ -303,7 +326,7 @@ class SmartTrader:
                     # Zone couldn't be located on screen
                     zone = self.broker['zones'][zone_id]
 
-                    if 'has_login_info'in zone and zone['has_login_info']:
+                    if 'has_login_info' in zone and zone['has_login_info']:
                         msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
                                f"- Seems like you are not logged in. "
                                f"\n\t- Or maybe your session window at [{self.broker['name']}] couldn't be found on the "
@@ -449,9 +472,9 @@ class SmartTrader:
         return img
 
     def ocr_read_element(self, zone_id, element_id, context_id=None, type='string'):
-        # There will be 2 attempts to read the content.
+        # There will be 3 attempts to read the content.
 
-        for attempt in range(1, 2):
+        for attempt in range(1, 3):
             ss_path = None
             if settings.DEBUG_OCR:
                 ss_path = self.get_ss_path(zone_id=zone_id,
@@ -597,8 +620,6 @@ class SmartTrader:
         return self.balance
 
     def read_trade_size(self):
-        # Disabled due to not sufficient assertive readings
-
         element_id = 'trade_size'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
@@ -917,6 +938,8 @@ class SmartTrader:
                          y=element['y'],
                          duration=duration)
 
+    ''' Playbooks '''
+
     def execute_playbook(self, playbook_id, **kwargs):
         self.is_automation_running = True
         result = None
@@ -942,30 +965,31 @@ class SmartTrader:
                             result = playbook(**kwargs)
                             is_done = True
 
-                        # Removing lock
-                        os.remove(lock_file)
-
                     except FileExistsError:
                         # This long action is waiting for another one
                         # It likely means authentication token expired. So refresh_page on the next opportunity
                         with open(file=lock_file, mode='r') as f:
                             playbook_id_running = f.read()
 
-                            if playbook_id_running == 'log_in':
-                                # The other instance was logging in.
-                                # So, refreshing this one
-                                playbook = getattr(self, 'playbook_refresh_page')
+                        if playbook_id_running == playbook_id == 'log_in':
+                            # The other instance is logging in.
+                            # So, refreshing this one
+                            playbook = getattr(self, 'playbook_refresh_page')
 
                         sleep(1)
                         amount_tries += 1
 
-                        if amount_tries > 60:
-                            # Trying to delete a long_action lock file
-                            # It fixes cases where lock file is orphan (no instance accessing it anymore)
-                            try:
-                                os.remove(lock_file)
-                            except:
-                                pass
+                        if amount_tries > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 3:
+                            # It's taking way too long
+
+                            result = playbook(**kwargs)
+                            is_done = True
+
+                    finally:
+                        try:
+                            os.remove(lock_file)
+                        except:
+                            pass
 
             else:
                 # It's not a long action
@@ -1215,7 +1239,7 @@ class SmartTrader:
             row = [position['strategy_id'],
                    position['open_time'],
                    position['side'],
-                   '%.2f' % self.trade_size,
+                   position['trades'][0]['trade_size'],
                    position['open_price']]
 
             i = 1
@@ -1225,14 +1249,19 @@ class SmartTrader:
                 else:
                     value = 'on going'
 
-                columns.append('Trade ' + str(i))
+                if 'Trade ' + str(i) not in columns:
+                    columns.append('Trade ' + str(i))
                 row.append(value)
 
                 i += 1
 
             rows.append(row)
 
+        print('columns:' + str(columns))
+        print('rows:' + str(rows))
+
         df = pd.DataFrame(data=rows, columns=columns)
+        df.fillna('', inplace=True)
 
         return df
 
@@ -1243,9 +1272,9 @@ class SmartTrader:
 
         now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         position['asset'] = self.asset
+        position['strategy_id'] = strategy_id
         position['open_time'] = now
         position['open_price'] = self.close[0]
-        position['strategy_id'] = strategy_id
         position['side'] = side
         position['trades'] = []
 
@@ -1296,12 +1325,24 @@ class SmartTrader:
         trade = position['trades'][-1]
         trade['result'] = result
 
+        # Loss Management
         if result == 'gain':
-            if self.cumulative_losses > 0:
-                # Reducing [cumulative_losses]
-                self.cumulative_losses -= trade['trade_size'] * (self.payout / 100)
+            self.consecutive_gains += 1
 
-        if result == 'loss':
+            if self.cumulative_losses > 0:
+                profit = trade['trade_size'] * (self.payout / 100)
+
+                # Reducing [cumulative_losses]
+                if self.cumulative_losses > profit:
+                    # [cumulative_losses] is greater than [profit]
+                    self.cumulative_losses -= profit
+                else:
+                    # Reseting [cumulative_losses]
+                    self.cumulative_losses = 0
+
+        elif result == 'loss':
+            self.consecutive_gains = 0
+
             # Accumulating losses
             self.cumulative_losses += trade['trade_size']
 
@@ -1314,7 +1355,7 @@ class SmartTrader:
                    clear=True)
 
         self.run_validation()
-        sec_action = random.randrange(start=58000, stop=58800) / 1000
+        sec_action = random.randrange(start=58250, stop=58750) / 1000
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready!'
@@ -1388,13 +1429,28 @@ class SmartTrader:
         position = None
         # Strategies
         msg = "Applying strategies"
+        strategies = []
 
-        strategies = ['ema_rsi_8020',
-                      'ema_rsi_50']
+        # Retrieving [strategies]
+        # if self.ongoing_positions:
+        #     # There is a position open
+        #     # Making sure the current strategy is on the top
+        #
+        #     strategies.append(list(self.ongoing_positions.keys())[0])
+        #
+        #     for strategy in settings.TRADING_STRATEGIES:
+        #         if strategy not in strategies:
+        #             strategies.append(strategy)
+        # else:
+        #     # No positions open
+        #     # Following the given sequence
+        #     strategies = settings.TRADING_STRATEGIES.copy()
+        strategies = settings.TRADING_STRATEGIES.copy()
 
         # Reading Chart data
         self.read_element(element_id='chart_data')
 
+        # Looking up
         for strategy in utils.progress_bar(strategies, prefix=msg):
             # Strategies
             f_strategy = f"strategy_{strategy}"
@@ -1416,9 +1472,9 @@ class SmartTrader:
                     art.tprint(text=position['result'], font='block')
                     sleep(10)
 
-                # Position found with this [strategy]. So skipping next ones.
-                break
-
+                # Position found with this [strategy] and it's still in progress.
+                # So skipping next ones.
+                # break
         return position
 
     def strategy_ema_rsi_8020(self):
@@ -1473,7 +1529,11 @@ class SmartTrader:
 
                 if not position['result']:
                     # Martingale
-                    trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER
+                    if self.recovery_mode:
+                        trade_size = self.get_optimal_trade_size()
+                    else:
+                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER
+
                     self.close_trade(strategy_id=strategy_id,
                                      result=result)
                     self.open_trade(strategy_id=strategy_id,
@@ -1499,7 +1559,7 @@ class SmartTrader:
                     if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 70:
                         position = self.open_position(strategy_id=strategy_id,
                                                       side='up',
-                                                      trade_size=self.trade_size)
+                                                      trade_size=self.get_optimal_trade_size())
 
                 elif self.close[0] < self.ema_72[0] or dst_price_ema_72 > 0.0005:
                     # Price is bellow [ema_72] or far above [ema_72]
@@ -1507,7 +1567,7 @@ class SmartTrader:
                         # Trend Following
                         position = self.open_position(strategy_id=strategy_id,
                                                       side='down',
-                                                      trade_size=self.trade_size)
+                                                      trade_size=self.get_optimal_trade_size())
 
         return position
 
@@ -1543,6 +1603,7 @@ class SmartTrader:
                 else:
                     result = 'draw'
 
+            # Checking [result]
             if result == 'gain':
                 position = self.close_position(strategy_id=strategy_id,
                                                result=result)
@@ -1553,7 +1614,7 @@ class SmartTrader:
                                                    result=result)
 
                 elif position['side'] == 'up':
-                    if self.rsi[0] < 40:
+                    if self.rsi[0] < 38:
                         # Abort it
                         position = self.close_position(strategy_id=strategy_id,
                                                        result=result)
@@ -1563,7 +1624,7 @@ class SmartTrader:
                         position = self.close_position(strategy_id=strategy_id,
                                                        result=result)
                 elif position['side'] == 'down':
-                    if self.rsi[0] > 60:
+                    if self.rsi[0] > 62:
                         # Abort it
                         position = self.close_position(strategy_id=strategy_id,
                                                        result=result)
@@ -1575,7 +1636,11 @@ class SmartTrader:
 
                 if not position['result']:
                     # Martingale
-                    trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER
+                    if self.recovery_mode:
+                        trade_size = self.get_optimal_trade_size()
+                    else:
+                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER
+
                     self.close_trade(strategy_id=strategy_id,
                                      result=result)
                     self.open_trade(strategy_id=strategy_id,
@@ -1593,24 +1658,24 @@ class SmartTrader:
             # No open position
             dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
             rsi_bullish_from = 40
-            rsi_bullish_min = 50
+            rsi_bullish_min = 51
             rsi_bullish_max = 80
             rsi_bearish_from = 60
-            rsi_bearish_min = 50
+            rsi_bearish_min = 49
             rsi_bearish_max = 20
 
-            if len(self.datetime) >= 2 and dst_price_ema_72 > 0.0001:
-                # Price is not too close to [ema_72]
+            if len(self.datetime) >= 2 and dst_price_ema_72 > 0.0001618:
+                # Price is not too close to [ema_72] (0.01618%)
 
                 if self.close[0] > self.ema_72[0]:
                     # Price is above [ema_72]
 
-                    if dst_price_ema_72 < 0.0007:
+                    if dst_price_ema_72 < 0.0005:
                         if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
                             # Trend Following
                             position = self.open_position(strategy_id=strategy_id,
                                                           side='up',
-                                                          trade_size=self.trade_size)
+                                                          trade_size=self.get_optimal_trade_size())
 
                     else:
                         # Price is too far from [ema_72] (probably loosing strength)
@@ -1618,17 +1683,17 @@ class SmartTrader:
                             # Against Trend
                             position = self.open_position(strategy_id=strategy_id,
                                                           side='down',
-                                                          trade_size=self.trade_size)
+                                                          trade_size=self.get_optimal_trade_size())
 
                 elif self.close[0] < self.ema_72[0]:
                     # Price is bellow [ema_72]
 
-                    if dst_price_ema_72 < 0.0007:
+                    if dst_price_ema_72 < 0.0005:
                         if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
                             # Trend Following
                             position = self.open_position(strategy_id=strategy_id,
                                                           side='down',
-                                                          trade_size=self.trade_size)
+                                                          trade_size=self.get_optimal_trade_size())
 
                     else:
                         # Price is too far from [ema_72] (probably loosing strength)
@@ -1636,6 +1701,6 @@ class SmartTrader:
                             # Against Trend
                             position = self.open_position(strategy_id=strategy_id,
                                                           side='up',
-                                                          trade_size=self.trade_size)
+                                                          trade_size=self.get_optimal_trade_size())
 
         return position
