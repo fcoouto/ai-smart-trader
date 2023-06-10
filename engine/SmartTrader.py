@@ -33,9 +33,9 @@ class SmartTrader:
     initial_trade_size = None
     trade_size = None
 
-    recovery_mode = True
-    recovery_trade_size = 3.33
-    cumulative_losses = 10.00
+    recovery_mode = False
+    recovery_trade_size = 0.00
+    cumulative_losses = 0.00
 
     expiry_time = None
     payout = None
@@ -412,7 +412,7 @@ class SmartTrader:
                     left = width * 0.07
                     top = height * 0.17
                     right = width * 0.40
-                    bottom = height * 0.35
+                    bottom = height * 0.36
                 elif element_id == 'balance':
                     left = width * 0.50
                     top = height * 0.17
@@ -478,7 +478,7 @@ class SmartTrader:
             if type == 'float':
                 config = '--psm 7 -c tessedit_char_whitelist=0123456789.'
             elif type == 'string':
-                config = '--psm 7 -c tessedit_char_whitelist="/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "'
+                config = '--psm 7 -c tessedit_char_whitelist="/.ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "'
             elif type == 'string_ohlc':
                 config = '--psm 7 -c tessedit_char_whitelist="OHLC0123456789. "'
             elif type == 'currency':
@@ -1319,7 +1319,7 @@ class SmartTrader:
                 profit = trade['trade_size'] * (self.payout / 100)
 
                 # Reducing [cumulative_losses]
-                if self.cumulative_losses > profit:
+                if self.cumulative_losses >= profit:
                     # [cumulative_losses] is greater than [profit]
                     self.cumulative_losses -= profit
                 else:
@@ -1330,14 +1330,18 @@ class SmartTrader:
         elif result == 'loss':
             # Accumulating losses
             self.cumulative_losses += trade['trade_size']
-            self.recovery_trade_size = self.cumulative_losses / settings.AMOUNT_TRADES_TO_RECOVER_LOSSES
+
+            # Calculating [payout_offset_compensation] in order to make sure recovery is made with expected amounts
+            payout_offset_compensation = 2.00 - (self.payout / 100) + 0.02
+            self.recovery_trade_size = (self.cumulative_losses * payout_offset_compensation /
+                                        settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
 
             if self.recovery_mode is False:
                 # [recovery_mode] is not activated yet
                 min_position_loss = (self.initial_trade_size +
                                      (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER) +
                                      (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER * 2))
-                if self.cumulative_losses > min_position_loss:
+                if self.cumulative_losses >= min_position_loss:
                     # Time to activate [recovery_mode]
                     self.recovery_mode = True
 
