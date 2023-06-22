@@ -26,7 +26,9 @@ class tmsg:
             context = self.context
 
         if clear:
-            os.system('cls' if os.name == 'nt' else 'clear')
+
+            if settings.DEBUG_MSG is False:
+                os.system('cls' if os.name == 'nt' else 'clear')
             print(f"{self.header}{context}{' ' * int(os.get_terminal_size().columns/10)}{self.endc}\n")
 
         if msg:
@@ -76,14 +78,14 @@ def progress_bar(iterable, prefix='', suffix='', decimals=1, length=20, fill='â–
         print(bar_line, end=end)
 
     # Initial Call
-    print_progress_bar(0)
+    print_progress_bar(total if reverse else 0)
 
     # Update Progress Bar
     for i, item in enumerate(iterable):
         yield item
 
         if reverse:
-            print_progress_bar(len(iterable) - i)
+            print_progress_bar(total - i)
         else:
             print_progress_bar(i + 1)
     # Print New Line on Complete

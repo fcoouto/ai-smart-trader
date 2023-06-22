@@ -1,5 +1,6 @@
 # DEBUG
-DEBUG_OCR = True
+DEBUG_OCR = False
+DEBUG_MSG = True
 
 # VALIDATION
 MIN_BALANCE = 100
@@ -12,7 +13,7 @@ MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
 MAX_TRADES_PER_POSITION = 3
-MARTINGALE_MULTIPLIER = 2
+MARTINGALE_MULTIPLIER = [1, 2, 1]
 AMOUNT_TRADES_TO_RECOVER_LOSSES = 3
 
 # EXTRAS
@@ -20,28 +21,29 @@ PROGRESS_BAR_WAITING_TIME = 3
 PROGRESS_BAR_INTERVAL_TIME = 0.250
 
 # CORE
-LOCATE_CONFIDENCE = 0.90
+LOCATE_CONFIDENCE = 0.85
 MAX_TRIES_READING_ELEMENT = 3
 PLAYBOOK_LONG_ACTION = {
+    'go_to_url': 7,
+    'go_to_trading_page': 7,
     'iqcent_chart_setup': 30,
-    'log_in': 7,
-    'navigate_url': 5,
-    'set_expiry_time': 2,
+    'log_in': 10,
+    'refresh_page': 7,
+    'set_expiry_time': 5,
     'tv_reset': 10,
 }
+PATH_LOCK = 'lock\\'
 LOCK_LONG_ACTION_FILENAME = 'long_action'
 LOCK_FILE_EXTENSION = '.lck'
+PATH_SS = 'ocr\\'
+PATH_SS_TEMPLATE = f'{PATH_SS}template\\'
+PATH_SS_CONFIG = f'C:\\Users\\fcout\\dev\\_git_projects\\trading\\ai-smart-trader\\ocr\\config\\'
 SS_FILE_EXTENSION = '.png'
-PATH_SS = 'ss\\'
-PATH_SS_TEMPLATE = 'ss\\template\\'
-PATH_LOCK = 'lock\\'
 SESSION_TIMEOUT = 3600
 TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 CORE_DATA = {
-    'alert_401': 'string',
     'asset': 'string',
     'balance': 'currency',
-    'close': 'float',
     'ema_72': 'float',
     'expiry_time': 'time',
     'ohlc': 'string_ohlc',
@@ -53,7 +55,7 @@ BROKERS = {
     'iqcent': {
         'id': 'iqcent',
         'name': 'IQ Cent',
-        'url': 'https://iqcent.com/trading/option/',
+        'url': 'https://iqcent.com/option/',
         'neutral_zones': {
             'within_app': {
                 'width_pct': 0.50,
@@ -72,12 +74,12 @@ BROKERS = {
                 'locate_confidence': 0.75,
                 'is_mandatory': True,
                 'has_login_info': True,
-                'elements': ['asset', 'balance']
+                'elements': ['balance', 'asset']
             },
             'chart_top': {
                 'id': 'chart_top',
                 'region': None,
-                'locate_confidence': 0.70,
+                'locate_confidence': 0.75,
                 'is_mandatory': True,
                 'elements': ['ohlc', 'ema_72'],
             },
@@ -99,7 +101,7 @@ BROKERS = {
                 'context': 'chrome',
                 'id': 'navbar_url',
                 'region': None,
-                'locate_confidence': 0.85,
+                'locate_confidence': 0.80,
             },
             'modal_login': {
                 'id': 'modal_login',
@@ -111,10 +113,10 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.75,
             },
-            'logout_header': {
-                'id': 'logout_header',
+            'header_logged_out': {
+                'id': 'header_logged_out',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.80,
             },
             'dp_item_1min': {
                 'id': 'dp_item_1min',
@@ -137,7 +139,7 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'navbar_chart_settings',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.55,
             },
             'chart_settings_tab1_top': {
                 'context': 'tv',
@@ -208,7 +210,7 @@ BROKERS = {
                 'y': None
             },
             'btn_login': {
-                'zone': 'logout_header',
+                'zone': 'header_logged_out',
                 'x': None,
                 'y': None
             },
@@ -279,6 +281,12 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
+            'item_color_black': {
+                'context': 'tv',
+                'zone': 'colors_opacity',
+                'x': None,
+                'y': None
+            },
             'item_color_white': {
                 'context': 'tv',
                 'zone': 'colors_opacity',
@@ -322,6 +330,24 @@ BROKERS = {
             'input_chart_settings_wick_red': {
                 'context': 'tv',
                 'zone': 'chart_settings_tab1_top',
+                'x': None,
+                'y': None
+            },
+            'input_chart_settings_background': {
+                'context': 'tv',
+                'zone': 'chart_settings_tab4_top',
+                'x': None,
+                'y': None
+            },
+            'input_chart_settings_grid_lines_v': {
+                'context': 'tv',
+                'zone': 'chart_settings_tab4_top',
+                'x': None,
+                'y': None
+            },
+            'input_chart_settings_grid_lines_h': {
+                'context': 'tv',
+                'zone': 'chart_settings_tab4_top',
                 'x': None,
                 'y': None
             },
@@ -379,6 +405,12 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
+            'navitem_chart_settings_tab4': {
+                'context': 'tv',
+                'zone': 'navbar_chart_settings',
+                'x': None,
+                'y': None
+            },
             'slider_background_opacity': {
                 'context': 'tv',
                 'zone': 'chart_settings_tab2_bottom',
@@ -397,8 +429,14 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
-            'trade_amount': {
+            'trade_size': {
                 'zone': 'footer',
+                'x': None,
+                'y': None
+            },
+            'close': {
+                'zone': 'footer',
+                'type': 'float',
                 'x': None,
                 'y': None
             },
@@ -432,9 +470,27 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
-            'alert_401': {
+            'alert_session_ended': {
                 'context': 'iqcent',
-                'zone': 'alert_401',
+                'zone': 'alert_session_ended',
+                'x': None,
+                'y': None
+            },
+            'alert_gain': {
+                'context': 'iqcent',
+                'zone': 'alert_gain',
+                'x': None,
+                'y': None
+            },
+            'alert_loss': {
+                'context': 'iqcent',
+                'zone': 'alert_loss',
+                'x': None,
+                'y': None
+            },
+            'alert_not_in_sync': {
+                'context': 'iqcent',
+                'zone': 'alert_not_in_sync',
                 'x': None,
                 'y': None
             },

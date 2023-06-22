@@ -5,27 +5,28 @@ import getopt
 from engine import settings, ScreenManager, SmartTrader
 
 
-def execute(broker, i_monitor, i_region, trade_size):
+def execute(i_monitor, i_region, broker, asset, trade_size):
     sm = ScreenManager.ScreenManager()
     region = sm.get_region(i_monitor=i_monitor, i_region=i_region)
-    agent_id = str(i_monitor) + str(i_region)
+    agent_id = str(i_monitor + 1) + str(i_region + 1)
 
     strader = SmartTrader.SmartTrader(agent_id=agent_id,
-                                      broker=broker,
                                       region=region,
+                                      broker=broker,
+                                      asset=asset,
                                       initial_trade_size=trade_size)
     strader.start()
 
 
 def main(argsv):
-    broker_id = i_monitor = i_region = trade_size = None
+    i_monitor = i_region = broker_id = asset = trade_size = None
 
     os.system('title STrader')
 
     try:
         opts, args = getopt.getopt(argsv,
-                                   'hb:m:r:t:',
-                                   ['help', 'broker=', 'monitor=', 'region=', 'trade_size='])
+                                   'hm:r:b:a:t:',
+                                   ['help', 'monitor=', 'region=', 'broker=', 'asset=', 'trade_size='])
     except getopt.GetoptError:
         print('\nException: One or more arguments were not expected.')
         print_help()
@@ -35,25 +36,29 @@ def main(argsv):
         if opt in ['-h', '--help']:
             print_help()
             sys.exit()
-        elif opt in ['-b', '--broker']:
-            broker_id = str(arg)
         elif opt in ['-m', '--monitor']:
             i_monitor = int(arg) - 1
         elif opt in ['-r', '--region']:
             i_region = int(arg) - 1
+        elif opt in ['-b', '--broker']:
+            broker_id = str(arg)
+        elif opt in ['-a', '--asset']:
+            asset = str(arg)
         elif opt in ['-t', '--trade_size']:
             trade_size = float(arg)
 
-    if (broker_id is not None and
-            i_monitor is not None and
+    if (i_monitor is not None and
             i_region is not None and
+            broker_id is not None and
+            asset is not None and
             trade_size is not None):
 
-        if broker_id in settings.BROKERS.keys():
+        if broker_id in settings.BROKERS:
             broker = settings.BROKERS[broker_id]
-            execute(broker=broker,
-                    i_monitor=i_monitor,
+            execute(i_monitor=i_monitor,
                     i_region=i_region,
+                    broker=broker,
+                    asset=asset,
                     trade_size=trade_size)
 
         else:
@@ -68,8 +73,9 @@ def main(argsv):
 
 def print_help():
     print('\nUsage examples:')
-    print('  . python.exe %s --monitor <monitor_id> --region <region_id> --trade_size <trade_size>' % os.path.basename(__file__))
-    print('  . python.exe %s --monitor 1 --region 3 --trade_size 4.40' % os.path.basename(__file__))
+    print('  . python.exe %s --monitor <monitor_id> --region <region_id> --broker <broker_id> '
+          '--asset <asset> --trade_size <trade_size>' % os.path.basename(__file__))
+    print('  . python.exe %s --monitor 1 --region 3 --broker iqcent --asset "aud/jpy otc" --trade_size 4.40' % os.path.basename(__file__))
     print('  . python.exe %s -m 1 -r 2 -t 5.50' % os.path.basename(__file__))
 
 

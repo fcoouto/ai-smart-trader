@@ -1,16 +1,18 @@
-from engine import settings, utils
-from engine.Logger import Logger
-
-from time import gmtime, strftime, sleep
-from tabulate import tabulate
-import art
-
 import os
+import random
+import re
+from time import gmtime, strftime, sleep
+from datetime import datetime
+
+import asyncio
+import art
 import pandas as pd
 import pyautogui
 import pytesseract
-import random
-import re
+from tabulate import tabulate
+
+from engine import settings, utils
+from engine.Logger import Logger
 
 pyautogui.FAILSAFE = True
 pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
@@ -34,8 +36,8 @@ class SmartTrader:
     trade_size = None
 
     recovery_mode = False
+    cumulative_loss = 0.00
     recovery_trade_size = 0.00
-    cumulative_losses = 0.00
 
     expiry_time = None
     payout = None
@@ -63,7 +65,7 @@ class SmartTrader:
     #                      'side': 'down',
     #                      'result': None,
     #                      'trades': [{'open_time': 'XXX',
-    #                                  'side': 'up',
+    #                                  'side': 'down',
     #                                  'trade_size': 1,
     #                                  'result': None}]
     #      }
@@ -76,10 +78,11 @@ class SmartTrader:
         'payout_low': None,
     }
 
-    def __init__(self, agent_id, broker, region, initial_trade_size):
+    def __init__(self, agent_id, region, broker, asset, initial_trade_size):
         self.agent_id = agent_id
-        self.broker = broker
         self.region = region
+        self.broker = broker
+        self.asset = asset
         self.initial_trade_size = initial_trade_size
 
         # self.execute_playbook(playbook_id='refresh_page')
@@ -88,9 +91,6 @@ class SmartTrader:
 
         # Setting zones
         self.set_zones()
-
-        # Setting [trade_size]
-        self.execute_playbook(playbook_id='set_trade_size', trade_size=initial_trade_size)
 
     def set_awareness(self, k, v):
         if k in self.awareness:
@@ -131,12 +131,13 @@ class SmartTrader:
         # DEBUG
         # if settings.DEBUG_OCR:
         #     while True:
-        #         asset = self.read_element(element_id='asset')
-        #         balance = self.read_element(element_id='balance')
-        #         payout = self.read_element(element_id='payout')
-        #         chart_data = self.read_element(element_id='chart_data')
-        #         trade_size = self.read_element(element_id='trade_size')
-        #         expiry_time = self.read_element(element_id='expiry_time')
+        #         with asyncio.Runner() as runner:
+        #             asset = runner.run(self.read_element(element_id='asset'))
+        #             balance = runner.run(self.read_element(element_id='balance'))
+        #             payout = runner.run(self.read_element(element_id='payout'))
+        #             chart_data = runner.run(self.read_element(element_id='chart_data'))
+        #             trade_size = runner.run(self.read_element(element_id='trade_size'))
+        #             expiry_time = runner.run(self.read_element(element_id='expiry_time'))
         #
         #         dst_price_ema_72 = utils.distance_percent(v1=chart_data[3], v2=chart_data[6])
         #
@@ -175,6 +176,16 @@ class SmartTrader:
         # Checking lock files
         utils.try_to_remove_lock_file(action='long_action')
 
+    def get_trading_url(self):
+        url = None
+
+        if self.broker['id'] == 'iqcent':
+            asset = str(self.asset).replace('/', '-').replace(' ', '_')
+            url = self.broker['url']
+            url += asset
+
+        return url
+
     def validate_balance(self, context='Validation'):
         if self.balance == 0:
             if not self.awareness['balance_equal_to_zero']:
@@ -203,7 +214,7 @@ class SmartTrader:
                 tmsg.input(context=context, msg=msg)
 
                 self.set_awareness(k='balance_less_than_min_balance', v=True)
-                self.read_balance()
+                self.read_element(element_id='balance')
 
     def validate_trade_size(self, context='Validation'):
         optimal_trade_size = self.get_optimal_trade_size()
@@ -225,7 +236,7 @@ class SmartTrader:
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size)
-            self.read_trade_size()
+            self.read_element(element_id='trade_size')
 
             print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
             sleep(1)
@@ -249,7 +260,7 @@ class SmartTrader:
 
             # Executing playbook
             self.execute_playbook(playbook_id='set_expiry_time', expiry_time='01:00')
-            self.read_expiry_time()
+            self.read_element(element_id='expiry_time')
 
             if self.expiry_time == '01:00':
                 print(f"{utils.tmsg.italic}\n\t- Done! {utils.tmsg.endc}")
@@ -276,17 +287,39 @@ class SmartTrader:
 
         return round(optimal_trade_size, 2)
 
-    def is_logged_in(self):
-        return False if self.balance is None else True
-
-    def is_alert_401_popping_up(self):
-        zone_id = 'alert_401'
+    def is_alerting_session_ended(self):
+        zone_id = 'alert_session_ended'
         zone_region = self.get_zone_region(context_id=self.broker['id'],
                                            zone_id=zone_id,
                                            confidence=0.90)
         if zone_region:
-            # Zone [alert_401] has been found
+            # Zone [alert_session_ended] has been found
             # Which means session has expired.
+            return True
+
+    def is_alerting_not_in_sync(self):
+        zone_id = 'alert_not_in_sync'
+        zone_region = self.get_zone_region(context_id=self.broker['id'],
+                                           zone_id=zone_id,
+                                           confidence=0.90)
+        if zone_region:
+            # Zone [alert_not_in_sync] has been found
+            # Which means session has expired.
+            return True
+
+    def is_logged_in(self):
+        zone_id = 'header'
+        context_id = self.broker['id']
+        confidence = self.broker['zones'][zone_id]['locate_confidence']
+
+        ss_template = self.get_ss_path(zone_id=zone_id,
+                                       context_id=context_id)
+        zone_region = pyautogui.locateOnScreen(ss_template,
+                                               region=self.region,
+                                               confidence=confidence)
+        if zone_region:
+            # Zone [header] has been found
+            # Which means user is authenticated
             return True
 
     ''' OCR '''
@@ -296,6 +329,7 @@ class SmartTrader:
         zone_region = None
         ss_template = self.get_ss_path(zone_id=zone_id,
                                        context_id=context_id)
+        tries = 0
 
         if zone_id not in self.broker['zones']:
             # Zone is NOT expected on broker's object
@@ -310,6 +344,7 @@ class SmartTrader:
                 zone_region = pyautogui.locateOnScreen(ss_template,
                                                        region=self.region,
                                                        confidence=zone['locate_confidence'])
+                tries += 1
 
                 if zone_region is None:
                     # Zone couldn't be located on screen
@@ -320,11 +355,12 @@ class SmartTrader:
                                f"- Seems like you are not logged in. "
                                f"\n\t- Or maybe your session window at [{self.broker['name']}] couldn't be found on the "
                                f"expected [monitor] and [region]."
-                               f"\n\t- In any case, I'll try to log you in now...{utils.tmsg.endc}")
+                               f"\n\t- In any case, let me try to fix it...{utils.tmsg.endc}")
                         tmsg.print(context=context, msg=msg, clear=True)
 
-                        # # Waiting PB
+                        # Waiting PB
                         msg = "Trying to remember the password (CTRL + C to cancel)"
+
                         wait_secs = settings.PROGRESS_BAR_WAITING_TIME
                         items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                         for item in utils.progress_bar(items, prefix=msg, reverse=True):
@@ -362,15 +398,17 @@ class SmartTrader:
                         sleep(1)
 
                     else:
-                        msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
-                               f"- I couldn't find zone_region for [{zone_id}]. "
-                               f"\n\t- I see you are logged in just fine but things are not quite in place yet."
-                               f"\n"
-                               f"\n\t- For this one, I'll need some human support. :){utils.tmsg.endc}")
-                        tmsg.print(context=context, msg=msg, clear=True)
+                        if tries >= 5:
+                            msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                                   f"- I couldn't find zone_region for [{zone_id}]. "
+                                   f"\n\t- I see you are logged in just fine but things are not quite in place yet."
+                                   f"\n"
+                                   f"\n\t- This was my {tries}th attempt, but no success. :/"
+                                   f"\n\t- For this one, I'll need some human support. :){utils.tmsg.endc}")
+                            tmsg.print(context=context, msg=msg, clear=True)
 
-                        msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
-                        tmsg.input(msg=msg)
+                            msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
+                            tmsg.input(msg=msg)
 
         return zone_region
 
@@ -400,6 +438,16 @@ class SmartTrader:
         return img
 
     def crop_screenshot(self, img, zone_id, element_id):
+        # Retrieving original measures
+        width, height = img.size
+
+        # Converting to grayscale
+        img = img.convert('L')
+
+        # Expanding image in 300%
+        img = img.resize([int(width * 4), int(height * 4)])
+
+        # Redefining measures
         width, height = img.size
 
         left = top = 0
@@ -410,35 +458,35 @@ class SmartTrader:
             if zone_id == 'header':
                 if element_id == 'asset':
                     left = width * 0.07
-                    top = height * 0.17
+                    top = height * 0.27
                     right = width * 0.40
-                    bottom = height * 0.36
+                    bottom = height * 0.55
                 elif element_id == 'balance':
                     left = width * 0.50
-                    top = height * 0.17
+                    top = height * 0.27
                     right = width * 0.80
-                    bottom = height * 0.35
+                    bottom = height * 0.55
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
-                    left = width * 0.143
-                    top = height * 0.70
+                    left = width * 0.15
+                    top = height * 0.73
                     right = width
-                    bottom = height * 0.83
+                    bottom = height * 0.87
                 elif element_id == 'ema_72':
-                    left = width * 0.45
-                    top = height * 0.85
-                    right = width * 0.66
+                    left = width * 0.46
+                    top = height * 0.89
+                    right = width * 0.70
                     bottom = height
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
                     left = width * 0.58
-                    top = height * 0.03
+                    top = height * 0.04
                     right = width
                     bottom = height * 0.23
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     left = width * 0.15
-                    top = height * 0.46
+                    top = height * 0.465
                     right = width * 0.35
                     bottom = height * 0.61
                 if element_id == 'close':
@@ -461,7 +509,7 @@ class SmartTrader:
         return img
 
     def ocr_read_element(self, zone_id, element_id, context_id=None, type='string'):
-        # There will be 3 attempts to read the content.
+        # There will be 2 attempts to read the content.
 
         for attempt in range(1, 2):
             ss_path = None
@@ -492,13 +540,26 @@ class SmartTrader:
             else:
                 config = ''
 
+            # config += ' --oem 1'
+            #
+            # if os.path.exists(f'{settings.PATH_SS_CONFIG}{element_id}.user-patterns'):
+            #     config += f' --user-patterns' \
+            #               f' {settings.PATH_SS_CONFIG}{element_id}.user-patterns'
+            #
+            # if os.path.exists(f'{settings.PATH_SS_CONFIG}{element_id}.user-words'):
+            #     config += f' --user-words' \
+            #               f' {settings.PATH_SS_CONFIG}{element_id}.user-words'
+
             text = pytesseract.image_to_string(image=img, config=config)
             text = text.strip()
 
             if text:
                 return text
 
-    def read_element(self, element_id):
+    def read_element(self, element_id, is_async=False):
+        if is_async:
+            return self.read_element_async(element_id=element_id)
+
         # Error handler wrapper of each [read_{element_id}] function
         result = None
         tries = 0
@@ -510,7 +571,69 @@ class SmartTrader:
                 tries += 1
 
                 try:
-                    result = read()
+                    if asyncio.iscoroutinefunction(read):
+                        result = asyncio.run(read())
+                    else:
+                        result = read()
+                    is_processed = True
+                except Exception as err:
+                    if tries >= settings.MAX_TRIES_READING_ELEMENT:
+                        # Something is going on here... Refresh page
+                        msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                               f"- That's weird... While reading [{element_id}], I noticed this:"
+                               f"\n"
+                               f"\n\t{type(err)}: {err}"
+                               f"\n"
+                               f"\n- The reasons for that can vary, but here are my thoughts:"
+                               f"\n\t  . Authorization expired."
+                               f"\n\t  . Broker facing performance issues."
+                               f"\n\t  . Unstable internet connection."
+                               f"\n"
+                               f"\n- I think I should try to refresh the page and see if it is still up... {utils.tmsg.endc}")
+                        tmsg.print(msg=msg, clear=True)
+
+                        # Waiting PB
+                        msg = "Refreshing Page (CTRL + C to cancel)"
+                        wait_secs = settings.PROGRESS_BAR_WAITING_TIME
+                        items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                        for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                            sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                        # Executing playbook
+                        self.execute_playbook(playbook_id='go_to_trading_page')
+                        self.run_validation()
+
+                        if asyncio.iscoroutinefunction(read):
+                            result = asyncio.run(read())
+                        else:
+                            result = read()
+        else:
+            # Function not found
+            msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                   f"- That's embarrassing. :/ "
+                   f"\n- I couldn't find function [{f_read}]!"
+                   f"\n- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
+            tmsg.input(msg=msg, clear=True)
+            exit(500)
+
+        return result
+
+    async def read_element_async(self, element_id):
+        # Error handler wrapper of each [read_{element_id}] function
+        result = None
+        tries = 0
+        is_processed = None
+
+        f_read = f"read_{element_id}"
+        if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
+            while not is_processed:
+                tries += 1
+
+                try:
+                    if asyncio.iscoroutinefunction(read):
+                        result = await read()
+                    else:
+                        result = read()
                     is_processed = True
                 except Exception as err:
                     if tries >= settings.MAX_TRIES_READING_ELEMENT:
@@ -539,7 +662,10 @@ class SmartTrader:
                         self.execute_playbook(playbook_id='refresh_page')
                         self.run_validation()
 
-                        result = read()
+                        if asyncio.iscoroutinefunction(read):
+                            result = await read()
+                        else:
+                            result = read()
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
@@ -556,7 +682,6 @@ class SmartTrader:
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
-
         value = re.sub("[^A-z/ ]", "", value)
 
         if self.asset is None:
@@ -564,13 +689,8 @@ class SmartTrader:
 
         elif self.asset != value:
             # Asset has changed
-
-            asset = str(self.asset).replace('/', '-').replace(' ', '_')
-            url = self.broker['url']
-            url += asset
-
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                   f"{utils.tmsg.italic}- hmm... Just noticed [asset] changed from [{self.asset}] to [{asset}]."
+                   f"{utils.tmsg.italic}- hmm... Just noticed [asset] changed from [{self.asset}] to [{value}]."
                    f"\n\t  - I'll open [{self.asset}] again, so we can continue on the same asset."
                    f"\n\t  - If you want to change it, please restart me.{utils.tmsg.endc}")
             tmsg.print(msg=msg, clear=True)
@@ -582,13 +702,13 @@ class SmartTrader:
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-            self.execute_playbook(playbook_id='navigate_url', url=url)
+            self.execute_playbook(playbook_id='go_to_trading_page')
 
             self.reset_chart_data()
             self.set_awareness(k='payout_low', v=True)
 
         # Renaming PowerShell window name
-        os.system(f'title STrader: {value}')
+        os.system(f'title STrader: {self.asset}')
 
         return self.asset
 
@@ -625,12 +745,15 @@ class SmartTrader:
 
         return self.trade_size
 
-    def read_chart_data(self):
-        # todo: Execute concurrent processes
-        o, h, l, c, change, change_pct = self.read_ohlc()
-        # close = self.read_close()
-        ema_72 = self.read_ema_72()
-        rsi = self.read_rsi()
+    async def read_chart_data(self):
+        async with asyncio.TaskGroup() as tg:
+            ohlc = tg.create_task(self.read_ohlc())
+            ema_72 = tg.create_task(self.read_ema_72())
+            rsi = tg.create_task(self.read_rsi())
+
+        o, h, l, c, change, change_pct = ohlc.result()
+        ema_72 = ema_72.result()
+        rsi = rsi.result()
 
         tm_sec = gmtime().tm_sec
         if tm_sec >= 58 or tm_sec <= 1:
@@ -661,15 +784,21 @@ class SmartTrader:
         self.ema_72.clear()
         self.rsi.clear()
 
-    def read_close(self):
+    async def read_close(self):
         element_id = 'close'
 
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
-        return utils.str_to_float(value)
+        value = utils.str_to_float(value)
 
-    def read_ohlc(self):
+        tm_sec = gmtime().tm_sec
+        if tm_sec >= 58 or tm_sec <= 1:
+            self.close[0] = value
+
+        return value
+
+    async def read_ohlc(self):
         # Returns [open, high, low, close, change]
         element_id = 'ohlc'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
@@ -682,25 +811,24 @@ class SmartTrader:
         if ohlc[:2] == '0.':
             # If first [O] wasn't recognized, add it
             ohlc = '0' + ohlc
-
-        o, h, l, c = ohlc.split(' ')
-        o = utils.str_to_float(o[1:])
-        h = utils.str_to_float(h[1:])
-        l = utils.str_to_float(l[1:])
-        c = utils.str_to_float(c[1:])
+        ohlc = ohlc.split(' ')
+        o = utils.str_to_float(ohlc[0][1:])
+        h = utils.str_to_float(ohlc[1][1:])
+        l = utils.str_to_float(ohlc[2][1:])
+        c = utils.str_to_float(ohlc[3][1:])
         change = utils.str_to_float("%.6f" % (c - o))
         change_pct = utils.distance_percent(v1=c, v2=o)
 
         return [o, h, l, c, change, change_pct]
 
-    def read_ema_72(self):
+    async def read_ema_72(self):
         element_id = 'ema_72'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
         return utils.str_to_float(value)
 
-    def read_rsi(self):
+    async def read_rsi(self):
         element_id = 'rsi'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
@@ -726,13 +854,6 @@ class SmartTrader:
         self.payout = int(value)
         return self.payout
 
-    def read_alert_401(self):
-        element_id = 'alert_401'
-        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
-                                      element_id=element_id,
-                                      type=self.broker['elements'][element_id]['type'])
-        return value
-
     ''' Mouse & Keyboard '''
 
     def get_element(self, element_id):
@@ -749,11 +870,17 @@ class SmartTrader:
         else:
             context_id = self.broker['id']
 
+        if 'locate_confidence' in element:
+            confidence = element['locate_confidence']
+        else:
+            confidence = settings.LOCATE_CONFIDENCE
+
         # references
         region = self.region
 
         zone_region = self.get_zone_region(context_id=context_id,
-                                           zone_id=element['zone'])
+                                           zone_id=element['zone'],
+                                           confidence=confidence)
         zone_center_x = zone_region.left + zone_region.width / 2
         zone_center_y = zone_region.top + zone_region.height / 2
 
@@ -816,6 +943,9 @@ class SmartTrader:
             elif element_id == 'item_color_white':
                 element['x'] = zone_region.left + 20
                 element['y'] = zone_region.top + 25
+            elif element_id == 'item_color_black':
+                element['x'] = zone_region.left + 227
+                element['y'] = zone_region.top + 25
             elif element_id == 'input_email':
                 element['x'] = zone_center_x
                 element['y'] = zone_region.top + 65
@@ -837,6 +967,15 @@ class SmartTrader:
             elif element_id == 'input_chart_settings_wick_red':
                 element['x'] = zone_region.left + 270
                 element['y'] = zone_region.top + 245
+            elif element_id == 'input_chart_settings_background':
+                element['x'] = zone_region.left + 225
+                element['y'] = zone_region.top + 95
+            elif element_id == 'input_chart_settings_grid_lines_v':
+                element['x'] = zone_region.left + 225
+                element['y'] = zone_region.top + 145
+            elif element_id == 'input_chart_settings_grid_lines_h':
+                element['x'] = zone_region.left + 225
+                element['y'] = zone_region.top + 195
             elif element_id == 'input_ema_settings_color':
                 element['x'] = zone_region.left + 140
                 element['y'] = zone_region.top + 130
@@ -864,6 +1003,9 @@ class SmartTrader:
             elif element_id == 'navitem_chart_settings_tab2':
                 element['x'] = zone_region.left + 25
                 element['y'] = zone_region.top + 120
+            elif element_id == 'navitem_chart_settings_tab4':
+                element['x'] = zone_region.left + 25
+                element['y'] = zone_region.top + 200
             elif element_id == 'navitem_ema_settings_tab1':
                 element['x'] = zone_region.left + 40
                 element['y'] = zone_region.top + 65
@@ -944,14 +1086,15 @@ class SmartTrader:
 
             else:
                 # It's a long action
-
                 lock_file = f"{settings.PATH_LOCK}{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}"
                 is_done = False
+                total_waiting_time = 0
                 amount_tries = 0
 
                 while is_done is False:
                     # Trying to remove [lock_file]
                     utils.try_to_remove_lock_file(action=settings.LOCK_LONG_ACTION_FILENAME)
+                    amount_tries += 1
 
                     try:
                         # Locking it while doing stuff
@@ -963,24 +1106,25 @@ class SmartTrader:
                             is_done = True
 
                     except FileExistsError:
-                        # Waiting lock release
-                        sleep(1)
-                        amount_tries += 1
+                        # Give some time for flush by the other instance.
+                        waiting_time = random.randrange(500, 2000) / 1000
+                        total_waiting_time += waiting_time
+                        sleep(waiting_time)
 
                         if utils.does_lock_file_exist(action=settings.LOCK_LONG_ACTION_FILENAME):
                             with open(file=lock_file, mode='r') as f:
                                 # Retrieving what long_action playbook is running on
                                 playbook_id_running = f.read()
 
-                                if playbook_id_running == playbook_id == 'log_in':
-                                    # Another instance is already logging in.
-                                    # So we exchange [log_in] with [refresh_page]
-                                    playbook = getattr(self, 'playbook_refresh_page')
+                                # if playbook_id_running == playbook_id == 'log_in':
+                                #     # Another instance is already logging in.
+                                #     # So we exchange [log_in] with [go_to_trading_page]
+                                #     playbook = getattr(self, 'playbook_go_to_trading_page')
 
                         if playbook_id_running:
                             # Currently running playbook has been identified
 
-                            if amount_tries > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 3:
+                            if total_waiting_time > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 5:
                                 # It's taking way too long
 
                                 result = playbook(**kwargs)
@@ -1002,19 +1146,23 @@ class SmartTrader:
         return result
 
     def playbook_log_in(self):
-        self.click_element(element_id='btn_login', wait_when_done=0.500)
+        # Going to [trading_page]
+        self.playbook_go_to_trading_page()
 
-        # Filling up credentials
-        self.click_element(element_id='input_email')
-        pyautogui.typewrite('f.couto@live.com', interval=0.05)
-        pyautogui.press('tab')
-        pyautogui.typewrite('#F1807a$Iqcent', interval=0.05)
+        if not self.is_logged_in():
+            # User is not logged in
 
-        # Confirming login
-        self.click_element(element_id='btn_login_confirm', wait_when_done=0.250)
+            # Clicking [log_in] button
+            self.click_element(element_id='btn_login', wait_when_done=0.500)
 
-        # Waiting for authentication
-        sleep(5)
+            # Filling up credentials
+            self.click_element(element_id='input_email')
+            pyautogui.typewrite('f.couto@live.com', interval=0.05)
+            pyautogui.press('tab')
+            pyautogui.typewrite('#F1807a$Iqcent', interval=0.05)
+
+            # Confirming login
+            self.click_element(element_id='btn_login_confirm', wait_when_done=5)
 
     def playbook_refresh_page(self):
         pyautogui.click(x=self.region['center_x'], y=self.region['center_y'])
@@ -1026,13 +1174,13 @@ class SmartTrader:
         # Waiting for page to load
         sleep(5)
 
-    def playbook_navigate_url(self, url=None):
+    def playbook_go_to_url(self, url=None):
         # Cleaning field
         self.click_element(element_id='input_url')
         pyautogui.hotkey('ctrl', 'a')
         pyautogui.press('delete')
 
-        # Typing new URL
+        # Typing URL
         pyautogui.typewrite(url, interval=0.05)
 
         # Go
@@ -1040,6 +1188,11 @@ class SmartTrader:
 
         # Waiting for page to load
         sleep(5)
+
+    def playbook_go_to_trading_page(self):
+        # Going to trading page
+        trading_url = self.get_trading_url()
+        self.playbook_go_to_url(url=trading_url)
 
     def playbook_tv_reset(self):
         # Reseting chart
@@ -1080,49 +1233,76 @@ class SmartTrader:
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
         self.playbok_tv_configure_indicator_rsi(length=3)
 
-    def playbook_tv_set_chart_settings(self, candle_opacity=5):
+    def playbook_tv_set_chart_settings(self, candle_opacity=5, bg_color='white'):
         # Opening Chart Settings
-        self.click_element(element_id='area_chart_background', button='right', wait_when_done=0.250)
+        self.click_element(element_id='area_chart_background', button='right', wait_when_done=0.300)
         self.click_element(element_id='btn_chart_settings', wait_when_done=0.300)
 
         # Opening Tab 1
-        self.click_element(element_id='navitem_chart_settings_tab1', wait_when_done=0.250)
+        self.click_element(element_id='navitem_chart_settings_tab1', wait_when_done=0.300)
 
         # [tab1] Configuring [candle_body] opacity
         self.click_element(element_id='input_chart_settings_body_green', wait_when_done=0.300)
         self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(candle_opacity))
         pyautogui.press('escape')
+        sleep(0.050)
 
         self.click_element(element_id='input_chart_settings_body_red', wait_when_done=0.300)
         self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(candle_opacity))
         pyautogui.press('escape')
+        sleep(0.050)
 
         # [tab1] Configuring [candle_wick] opacity
         self.click_element(element_id='input_chart_settings_wick_green', wait_when_done=0.300)
         self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(candle_opacity))
         pyautogui.press('escape')
+        sleep(0.050)
 
         self.click_element(element_id='input_chart_settings_wick_red', wait_when_done=0.300)
         self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(candle_opacity))
         pyautogui.press('escape')
+        sleep(0.050)
 
         # Opening Tab 2
-        self.click_element(element_id='navitem_chart_settings_tab2', wait_when_done=0.250)
+        self.click_element(element_id='navitem_chart_settings_tab2', wait_when_done=0.300)
 
         # [tab2] Toggling [Bar Change Values]
         self.click_element(element_id='checkbox_chart_settings_bar_change_values')
 
         # [tab2] Scrolling down
         pyautogui.scroll(-500)
-        sleep(0.250)
+        sleep(0.300)
 
         # [tab2] Dragging [slider_background_opacity] handler to 100%
         self.move_to_element(element_id='slider_background_opacity')
         pyautogui.drag(xOffset=75, duration=0.200)
+
+        # Opening Tab 4
+        self.click_element(element_id='navitem_chart_settings_tab4', wait_when_done=0.300)
+
+        # [tab4] Setting [color]
+        self.click_element(element_id='input_chart_settings_background', wait_when_done=0.300)
+        self.click_element(element_id=f'item_color_{bg_color}')
+        pyautogui.press('escape')
+        sleep(0.050)
+
+        # [tab4] Setting [grid_lines_v] opacity
+        self.click_element(element_id='input_chart_settings_grid_lines_v', wait_when_done=0.300)
+        self.click_element(element_id='input_color_opacity', clicks=2)
+        pyautogui.typewrite('0')
+        pyautogui.press('escape')
+        sleep(0.050)
+
+        # [tab4] Setting [grid_lines_h] opacity
+        self.click_element(element_id='input_chart_settings_grid_lines_h', wait_when_done=0.300)
+        self.click_element(element_id='input_color_opacity', clicks=2)
+        pyautogui.typewrite('0')
+        pyautogui.press('escape')
+        sleep(0.050)
 
         # Exiting Chart Settings
         pyautogui.press('escape')
@@ -1137,54 +1317,56 @@ class SmartTrader:
         pyautogui.press('enter')
         pyautogui.press('escape')
 
-    def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=5, precision=6):
+    def playbok_tv_configure_indicator_ema(self, length, color='black', opacity=25, precision=6):
         # Opening Settings
         self.click_element(element_id='btn_ema_settings', wait_when_done=0.300)
 
         # [tab1]
-        self.click_element(element_id='navitem_ema_settings_tab1', wait_when_done=0.250)
+        self.click_element(element_id='navitem_ema_settings_tab1', wait_when_done=0.300)
 
         # [tab1] Setting [length]
         self.click_element(element_id='input_ema_settings_length', clicks=2)
         pyautogui.typewrite(str(length))
 
         # [tab2]
-        self.click_element(element_id='navitem_ema_settings_tab2', wait_when_done=0.250)
+        self.click_element(element_id='navitem_ema_settings_tab2', wait_when_done=0.300)
 
         # [tab2] Setting [color]
-        self.click_element(element_id='input_ema_settings_color', wait_when_done=0.250)
+        self.click_element(element_id='input_ema_settings_color', wait_when_done=0.300)
         self.click_element(element_id=f'item_color_{color}')
         self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(opacity))
         pyautogui.press('escape')
+        sleep(0.050)
 
         # [tab2] Setting [precision]
-        self.click_element(element_id='input_ema_settings_precision', wait_when_done=0.250)
+        self.click_element(element_id='input_ema_settings_precision', wait_when_done=0.300)
         self.click_element(element_id=f'dp_item_{precision}')
 
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
 
-    def playbok_tv_configure_indicator_rsi(self, length, color='white', opacity=5):
+    def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=25):
         # Opening Settings
         self.click_element(element_id='btn_rsi_settings', wait_when_done=0.300)
 
         # [tab1]
-        self.click_element(element_id='navitem_rsi_settings_tab1', wait_when_done=0.250)
+        self.click_element(element_id='navitem_rsi_settings_tab1', wait_when_done=0.300)
 
         # [tab1] Setting [length]
         self.click_element(element_id='input_rsi_settings_length', clicks=2)
         pyautogui.typewrite(str(length))
 
         # [tab2]
-        self.click_element(element_id='navitem_rsi_settings_tab2', wait_when_done=0.250)
+        self.click_element(element_id='navitem_rsi_settings_tab2', wait_when_done=0.300)
 
         # [tab2] Setting [color]
-        self.click_element(element_id='input_rsi_settings_color', wait_when_done=0.250)
+        self.click_element(element_id='input_rsi_settings_color', wait_when_done=0.300)
         self.click_element(element_id=f'item_color_{color}')
         self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite(str(opacity))
         pyautogui.press('escape')
+        sleep(0.050)
 
         # [tab2] Toggle [upper_limit]
         self.click_element(element_id='checkbox_rsi_settings_upper_limit')
@@ -1204,7 +1386,7 @@ class SmartTrader:
             pyautogui.typewrite("%.2f" % trade_size)
 
     def playbook_set_expiry_time(self, expiry_time='01:00'):
-        self.click_element(element_id='btn_expiry_time', wait_when_done=0.5)
+        self.click_element(element_id='btn_expiry_time', wait_when_done=0.500)
 
         if expiry_time == '01:00':
             self.click_element(element_id='dp_item_1min')
@@ -1212,7 +1394,7 @@ class SmartTrader:
             # Option is not supported. Closing dropdown menu
             pyautogui.press('escape')
 
-    def playbook_open_trade(self, side, trade_size):
+    async def playbook_open_trade(self, side, trade_size):
         self.playbook_set_trade_size(trade_size=trade_size)
 
         if side.lower() == 'up':
@@ -1255,7 +1437,7 @@ class SmartTrader:
 
     ''' TA & Trading '''
 
-    def open_position(self, strategy_id, side, trade_size):
+    async def open_position(self, strategy_id, side, trade_size):
         position = {'result': None}
 
         now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -1267,10 +1449,7 @@ class SmartTrader:
         position['trades'] = []
 
         self.ongoing_positions[strategy_id] = position
-        self.open_trade(strategy_id=strategy_id, side=side, trade_size=trade_size)
-
-        msg = f"[{self.asset}] Trade has been opened."
-        logger.live(msg=msg)
+        await self.open_trade(strategy_id=strategy_id, side=side, trade_size=trade_size)
 
         return position
 
@@ -1284,9 +1463,6 @@ class SmartTrader:
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
         self.ongoing_positions.pop(strategy_id)
 
-        # Setting [trade_size] back to [optimal_trade_size]
-        self.read_balance()
-
         if (not os.path.exists(
                 f"{settings.PATH_LOCK}{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}")
                 or not self.ongoing_positions):
@@ -1294,8 +1470,11 @@ class SmartTrader:
 
         return closed_position
 
-    def open_trade(self, strategy_id, side, trade_size):
-        self.execute_playbook(playbook_id='open_trade', side=side, trade_size=trade_size)
+    async def open_trade(self, strategy_id, side, trade_size):
+        # Running concurrently
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(self.execute_playbook(playbook_id='open_trade', side=side, trade_size=trade_size))
+            tg.create_task(self.read_element(element_id='close', is_async=True))
 
         now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         trade = {
@@ -1313,36 +1492,39 @@ class SmartTrader:
         trade = position['trades'][-1]
         trade['result'] = result
 
-        # Loss Management
+        # [Loss Management] Updating [cumulative_loss]
         if result == 'gain':
-            if self.cumulative_losses > 0:
+            if self.cumulative_loss > 0:
                 profit = trade['trade_size'] * (self.payout / 100)
 
-                # Reducing [cumulative_losses]
-                if self.cumulative_losses >= profit:
-                    # [cumulative_losses] is greater than [profit]
-                    self.cumulative_losses -= profit
+                # Reducing [cumulative_loss]
+                if self.cumulative_loss >= profit:
+                    # [cumulative_loss] is greater than [profit]
+                    self.cumulative_loss -= profit
                 else:
                     # Resetting [recovery_mode]
                     self.recovery_mode = False
-                    self.cumulative_losses = 0
-
+                    self.cumulative_loss = 0
         elif result == 'loss':
             # Accumulating losses
-            self.cumulative_losses += trade['trade_size']
+            self.cumulative_loss += trade['trade_size']
 
             # Calculating [payout_offset_compensation] in order to make sure recovery is made with expected amounts
-            payout_offset_compensation = 2.00 - (self.payout / 100) + 0.02
-            self.recovery_trade_size = (self.cumulative_losses * payout_offset_compensation /
+            payout_offset_compensation = 2.00 - (self.payout / 100) + 0.01
+            self.recovery_trade_size = (self.cumulative_loss * payout_offset_compensation /
                                         settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
+
+            if self.recovery_trade_size < self.initial_trade_size:
+                # [recovery_size] would be lesser than [initial_trade_size]
+                self.recovery_trade_size = self.initial_trade_size
 
             if self.recovery_mode is False:
                 # [recovery_mode] is not activated yet
-                min_position_loss = (self.initial_trade_size +
-                                     (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER) +
-                                     (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER * 2))
-                if self.cumulative_losses >= min_position_loss:
-                    # Time to activate [recovery_mode]
+                min_position_loss = (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[0] +
+                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[1] +
+                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[2])
+                if self.cumulative_loss >= min_position_loss:
+                    # It's time to activate [recovery_mode]
                     self.recovery_mode = True
 
         return position['trades'][-1]
@@ -1354,7 +1536,7 @@ class SmartTrader:
                    clear=True)
 
         self.run_validation()
-        sec_action = random.randrange(start=58250, stop=58750) / 1000
+        sec_action = random.randrange(start=58000, stop=58750) / 1000
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready!'
@@ -1385,10 +1567,9 @@ class SmartTrader:
                 # Focusing on App
                 self.mouse_event_on_neutral_area(event='click', area_id='within_app')
                 sleep(1)
-                if self.is_alert_401_popping_up():
-                    # 401 alert popping up
-                    # Session has expired
-                    self.execute_playbook(playbook_id='refresh_page')
+                if self.is_alerting_session_ended():
+                    # Alert 401 popping up... Session expired.
+                    self.execute_playbook(playbook_id='go_to_trading_page')
 
             # Validation PB
             msg = "Quick validation"
@@ -1406,7 +1587,22 @@ class SmartTrader:
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-                self.run_lookup(context=context)
+                positions = asyncio.run(self.run_lookup(context=context))
+
+                if len(self.ongoing_positions) > 0:
+                    # A [trade] has been probably open
+                    # Checking if session is still in sync
+
+                    sleep(random.randrange(750, 1750) / 1000)
+                    if self.is_alerting_not_in_sync():
+                        # Alert [not_in_sync] popping up... Refreshing page
+
+                        # Cleaning up
+                        self.reset_chart_data()
+                        self.ongoing_positions.clear()
+
+                        # Refreshing page
+                        self.execute_playbook(playbook_id='refresh_page')
 
             else:
                 # Missed candle data (too late)
@@ -1421,62 +1617,61 @@ class SmartTrader:
                 self.reset_chart_data()
                 self.ongoing_positions.clear()
 
-                wait_time = 5
-                sleep(wait_time)
+                waiting_time = 5
+                sleep(waiting_time)
 
-    def run_lookup(self, context):
-        position = None
+    async def run_lookup(self, context):
+        positions = []
         # Strategies
-        msg = "Applying strategies"
-        strategies = []
-
-        # Retrieving [strategies]
-        # if self.ongoing_positions:
-        #     # There is a position open
-        #     # Making sure the current strategy is on the top
-        #
-        #     strategies.append(list(self.ongoing_positions.keys())[0])
-        #
-        #     for strategy in settings.TRADING_STRATEGIES:
-        #         if strategy not in strategies:
-        #             strategies.append(strategy)
-        # else:
-        #     # No positions open
-        #     # Following the given sequence
-        #     strategies = settings.TRADING_STRATEGIES.copy()
+        msg = "Applying strategy"
         strategies = settings.TRADING_STRATEGIES.copy()
 
         # Reading Chart data
-        self.read_element(element_id='chart_data')
+        print(f'{datetime.now()} - Reading [chart_data]')
+        await self.read_element(element_id='chart_data', is_async=True)
 
-        # Looking up
-        for strategy in utils.progress_bar(strategies, prefix=msg):
-            # Strategies
-            f_strategy = f"strategy_{strategy}"
-            if hasattr(self, f_strategy) and callable(strategy := getattr(self, f_strategy)):
-                position = strategy()
-            else:
-                # Strategy not found
-                msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
-                       f"- That's embarrassing. :/ "
-                       f"\n\t- I couldn't find a function for strategy [{strategy}].! :/"
-                       f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
-                tmsg.input(msg=msg, clear=True)
-                exit(500)
+        # for strategy in utils.progress_bar(strategies, prefix=msg):
+        #     # Strategies
+        #     f_strategy = f"strategy_{strategy}"
+        #     if hasattr(self, f_strategy) and callable(strategy := getattr(self, f_strategy)):
+        #         positions.append(asyncio.run(strategy()))
+        #     else:
+        #         # Strategy not found
+        #         msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+        #                f"- That's embarrassing. :/ "
+        #                f"\n\t- I couldn't find a function for strategy [{strategy}].! :/"
+        #                f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
+        #         tmsg.input(msg=msg, clear=True)
+        #         exit(500)
 
-            if position:
-                tmsg.print(context=context, clear=True)
+        print(f'{datetime.now()} - Reading [chart_data] - done')
 
-                if position['result']:
+        # Preparing tasks
+        tasks = []
+        async with asyncio.TaskGroup() as tg:
+            for strategy in utils.progress_bar(strategies, prefix=msg):
+                print(f'{datetime.now()} - Applying strategy [{strategy}]')
+                f_strategy = f"strategy_{strategy}"
+
+                if hasattr(self, f_strategy) and callable(strategy := getattr(self, f_strategy)):
+                    tasks.append(tg.create_task(strategy()))
+
+        print(f'{datetime.now()} - Applying strategies - done')
+
+        if len(self.ongoing_positions) == 0:
+            # There are no open positions
+
+            for task in tasks:
+                position = task.result()
+
+                if position and position['result']:
+                    # Position has been closed
+                    tmsg.print(context=context, clear=True)
                     art.tprint(text=position['result'], font='block')
-                    sleep(10)
+                    await asyncio.sleep(7)
+        return positions
 
-                # Position found with this [strategy] and it's still in progress.
-                # So skipping next ones.
-                # break
-        return position
-
-    def strategy_ema_rsi_8020(self):
+    async def strategy_ema_rsi_8020(self):
         strategy_id = 'ema_rsi_8020'
 
         if strategy_id in self.ongoing_positions:
@@ -1528,23 +1723,24 @@ class SmartTrader:
 
                 if not position['result']:
                     # Martingale
+                    self.close_trade(strategy_id=strategy_id,
+                                     result=result)
+
                     if self.recovery_mode:
                         trade_size = self.get_optimal_trade_size()
                     else:
-                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER
+                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
 
-                    self.close_trade(strategy_id=strategy_id,
-                                     result=result)
-                    self.open_trade(strategy_id=strategy_id,
-                                    side=position['side'],
-                                    trade_size=trade_size)
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=trade_size)
             else:
                 # Draw
                 self.close_trade(strategy_id=strategy_id,
                                  result=result)
-                self.open_trade(strategy_id=strategy_id,
-                                side=position['side'],
-                                trade_size=last_trade['trade_size'])
+                await self.open_trade(strategy_id=strategy_id,
+                                      side=position['side'],
+                                      trade_size=last_trade['trade_size'])
 
         else:
             # No open position
@@ -1556,21 +1752,21 @@ class SmartTrader:
                     # Price is above [ema_72] or far bellow [ema_72]
 
                     if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 70:
-                        position = self.open_position(strategy_id=strategy_id,
-                                                      side='up',
-                                                      trade_size=self.get_optimal_trade_size())
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='up',
+                                                            trade_size=self.get_optimal_trade_size())
 
                 elif self.close[0] < self.ema_72[0] or dst_price_ema_72 > 0.0005:
                     # Price is bellow [ema_72] or far above [ema_72]
                     if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 30:
                         # Trend Following
-                        position = self.open_position(strategy_id=strategy_id,
-                                                      side='down',
-                                                      trade_size=self.get_optimal_trade_size())
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='down',
+                                                            trade_size=self.get_optimal_trade_size())
 
         return position
 
-    def strategy_ema_rsi_50(self):
+    async def strategy_ema_rsi_50(self):
         strategy_id = 'ema_rsi_50'
 
         if strategy_id in self.ongoing_positions:
@@ -1635,23 +1831,24 @@ class SmartTrader:
 
                 if not position['result']:
                     # Martingale
+                    self.close_trade(strategy_id=strategy_id,
+                                     result=result)
+
                     if self.recovery_mode:
                         trade_size = self.get_optimal_trade_size()
                     else:
-                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER
+                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
 
-                    self.close_trade(strategy_id=strategy_id,
-                                     result=result)
-                    self.open_trade(strategy_id=strategy_id,
-                                    side=position['side'],
-                                    trade_size=trade_size)
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=trade_size)
             else:
                 # Draw
                 self.close_trade(strategy_id=strategy_id,
                                  result=result)
-                self.open_trade(strategy_id=strategy_id,
-                                side=position['side'],
-                                trade_size=last_trade['trade_size'])
+                await self.open_trade(strategy_id=strategy_id,
+                                      side=position['side'],
+                                      trade_size=last_trade['trade_size'])
 
         else:
             # No open position
@@ -1672,17 +1869,17 @@ class SmartTrader:
                     if dst_price_ema_72 < 0.0005:
                         if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
                             # Trend Following
-                            position = self.open_position(strategy_id=strategy_id,
-                                                          side='up',
-                                                          trade_size=self.get_optimal_trade_size())
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='up',
+                                                                trade_size=self.get_optimal_trade_size())
 
                     else:
                         # Price is too far from [ema_72] (probably loosing strength)
                         if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
                             # Against Trend
-                            position = self.open_position(strategy_id=strategy_id,
-                                                          side='down',
-                                                          trade_size=self.get_optimal_trade_size())
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=self.get_optimal_trade_size())
 
                 elif self.close[0] < self.ema_72[0]:
                     # Price is bellow [ema_72]
@@ -1690,16 +1887,16 @@ class SmartTrader:
                     if dst_price_ema_72 < 0.0005:
                         if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
                             # Trend Following
-                            position = self.open_position(strategy_id=strategy_id,
-                                                          side='down',
-                                                          trade_size=self.get_optimal_trade_size())
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=self.get_optimal_trade_size())
 
                     else:
                         # Price is too far from [ema_72] (probably loosing strength)
                         if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
                             # Against Trend
-                            position = self.open_position(strategy_id=strategy_id,
-                                                          side='up',
-                                                          trade_size=self.get_optimal_trade_size())
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='up',
+                                                                trade_size=self.get_optimal_trade_size())
 
         return position
