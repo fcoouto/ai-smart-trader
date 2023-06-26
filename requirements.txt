@@ -1,6 +1,5 @@
 art
 pandas
-numpy
 opencv-python
 pyautogui
 pynput

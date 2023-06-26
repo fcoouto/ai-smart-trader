@@ -5,8 +5,10 @@ import getopt
 from engine import settings, ScreenManager, SmartTrader
 
 
-def execute(i_monitor, i_region, broker, asset, trade_size):
-    sm = ScreenManager.ScreenManager()
+def execute(amount_regions_per_monitor,
+            i_monitor, i_region, broker, asset, trade_size):
+
+    sm = ScreenManager.ScreenManager(amount_regions_per_monitor=amount_regions_per_monitor)
     region = sm.get_region(i_monitor=i_monitor, i_region=i_region)
     agent_id = str(i_monitor + 1) + str(i_region + 1)
 
@@ -19,14 +21,16 @@ def execute(i_monitor, i_region, broker, asset, trade_size):
 
 
 def main(argsv):
-    i_monitor = i_region = broker_id = asset = trade_size = None
+    amount_regions_per_monitor = 3
+    i_monitor = i_region = broker_id = asset = None
+    trade_size = 1.00
 
     os.system('title STrader')
 
     try:
         opts, args = getopt.getopt(argsv,
                                    'hm:r:b:a:t:',
-                                   ['help', 'monitor=', 'region=', 'broker=', 'asset=', 'trade_size='])
+                                   ['help', 'monitor=', 'region=', 'amount_regions=', 'broker=', 'asset=', 'trade_size='])
     except getopt.GetoptError:
         print('\nException: One or more arguments were not expected.')
         print_help()
@@ -46,16 +50,18 @@ def main(argsv):
             asset = str(arg)
         elif opt in ['-t', '--trade_size']:
             trade_size = float(arg)
+        elif opt in ['-t', '--amount_regions']:
+            amount_regions_per_monitor = int(arg)
 
     if (i_monitor is not None and
             i_region is not None and
             broker_id is not None and
-            asset is not None and
-            trade_size is not None):
+            asset is not None):
 
         if broker_id in settings.BROKERS:
             broker = settings.BROKERS[broker_id]
-            execute(i_monitor=i_monitor,
+            execute(amount_regions_per_monitor=amount_regions_per_monitor,
+                    i_monitor=i_monitor,
                     i_region=i_region,
                     broker=broker,
                     asset=asset,
@@ -73,9 +79,10 @@ def main(argsv):
 
 def print_help():
     print('\nUsage examples:')
-    print('  . python.exe %s --monitor <monitor_id> --region <region_id> --broker <broker_id> '
-          '--asset <asset> --trade_size <trade_size>' % os.path.basename(__file__))
-    print('  . python.exe %s --monitor 1 --region 3 --broker iqcent --asset "aud/jpy otc" --trade_size 4.40' % os.path.basename(__file__))
+    print('  . python.exe %s --monitor <monitor_id> --region <region_id> --amount_regions_per_monitor <amount_regions>'
+          '--broker <broker_id> --asset <asset> --trade_size <trade_size>' % os.path.basename(__file__))
+    print('  . python.exe %s --monitor 1 --region 3 --amount_regions_per_monitor 3 '
+          '--broker iqcent --asset "AUD/JPY OTC" --trade_size 4.40' % os.path.basename(__file__))
     print('  . python.exe %s -m 1 -r 2 -t 5.50' % os.path.basename(__file__))
 
 

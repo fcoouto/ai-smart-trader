@@ -4,7 +4,7 @@ import screeninfo
 class ScreenManager:
     monitors = []
 
-    def __init__(self, amount_regions=3):
+    def __init__(self, amount_regions_per_monitor=3):
         for monitor in screeninfo.get_monitors():
             monitor = monitor.__dict__
             monitor['regions'] = []
@@ -15,12 +15,12 @@ class ScreenManager:
 
             region_x = monitor_x
             region_y = monitor_y
-            region_width = monitor['width'] / amount_regions
+            region_width = monitor['width'] / amount_regions_per_monitor
             region_height = monitor['height']
             region_center_x = region_x + region_width / 2
             region_center_y = region_y + region_height / 2
 
-            for i in range(0, amount_regions):
+            for i in range(0, amount_regions_per_monitor):
                 region = {'i': i,
                           'height':  region_height,
                           'width': region_width,
