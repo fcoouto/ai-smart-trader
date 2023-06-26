@@ -35,6 +35,7 @@ PLAYBOOK_LONG_ACTION = {
 PATH_LOCK = 'lock\\'
 LOCK_LONG_ACTION_FILENAME = 'long_action'
 LOCK_FILE_EXTENSION = '.lck'
+PATH_DATA = 'data\\'
 PATH_SS = 'ocr\\'
 PATH_SS_TEMPLATE = f'{PATH_SS}template\\'
 PATH_SS_CONFIG = f'C:\\Users\\fcout\\dev\\_git_projects\\trading\\ai-smart-trader\\ocr\\config\\'

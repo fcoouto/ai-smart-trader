@@ -1,8 +1,9 @@
+art
 pandas
 numpy
 opencv-python
 pyautogui
 pynput
 pytesseract
-pyperclip
+tabulate
 screeninfo

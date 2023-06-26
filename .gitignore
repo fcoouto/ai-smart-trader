@@ -3,3 +3,4 @@
 .env.test
 build
 node_modules
+data/*

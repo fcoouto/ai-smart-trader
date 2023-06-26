@@ -1,4 +1,5 @@
 import os
+import json
 import random
 import re
 from time import gmtime, strftime, sleep
@@ -85,12 +86,16 @@ class SmartTrader:
         self.asset = asset
         self.initial_trade_size = initial_trade_size
 
-        # self.execute_playbook(playbook_id='refresh_page')
-
-        # HERE: Select top X asset based on payout X (region)
-
         # Setting zones
         self.set_zones()
+
+        # Updating [loss_management] data
+        self.loss_management_read_from_file()
+        self.loss_management_update()
+
+        print(f'recovery_mode: {self.recovery_mode} | '
+              f'cumulative_loss: {self.cumulative_loss} | '
+              f'recovery_trade_size: {self.recovery_trade_size} | ')
 
     def set_awareness(self, k, v):
         if k in self.awareness:
@@ -447,7 +452,7 @@ class SmartTrader:
         # Expanding image in 300%
         img = img.resize([int(width * 4), int(height * 4)])
 
-        # Redefining measures
+        # Redefining new measures
         width, height = img.size
 
         left = top = 0
@@ -519,9 +524,12 @@ class SmartTrader:
                                            element_id=element_id,
                                            template=False)
 
+            start = datetime.now()
+            print(f'[{element_id}] Screenshoting', end=' ... ')
             img = self.screenshot_element(zone_id=zone_id,
                                           element_id=element_id,
                                           save_to=ss_path)
+            print(f'{datetime.now() - start}')
 
             if type == 'float':
                 config = '--psm 7 -c tessedit_char_whitelist=0123456789.'
@@ -550,7 +558,10 @@ class SmartTrader:
             #     config += f' --user-words' \
             #               f' {settings.PATH_SS_CONFIG}{element_id}.user-words'
 
+            start = datetime.now()
+            print(f'OCR Reading [{element_id}]', end=' ... ')
             text = pytesseract.image_to_string(image=img, config=config)
+            print(f'{datetime.now() - start}')
             text = text.strip()
 
             if text:
@@ -746,14 +757,16 @@ class SmartTrader:
         return self.trade_size
 
     async def read_chart_data(self):
-        async with asyncio.TaskGroup() as tg:
-            ohlc = tg.create_task(self.read_ohlc())
-            ema_72 = tg.create_task(self.read_ema_72())
-            rsi = tg.create_task(self.read_rsi())
+        results = await asyncio.gather(
+            self.read_ohlc(),
+            self.read_ema_72(),
+            self.read_rsi(),
+            return_exceptions=True
+        )
 
-        o, h, l, c, change, change_pct = ohlc.result()
-        ema_72 = ema_72.result()
-        rsi = rsi.result()
+        o, h, l, c, change, change_pct = results[0]
+        ema_72 = results[1]
+        rsi = results[2]
 
         tm_sec = gmtime().tm_sec
         if tm_sec >= 58 or tm_sec <= 1:
@@ -801,6 +814,7 @@ class SmartTrader:
     async def read_ohlc(self):
         # Returns [open, high, low, close, change]
         element_id = 'ohlc'
+        print(f'{datetime.now()} Reading [{element_id}]')
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
@@ -823,6 +837,7 @@ class SmartTrader:
 
     async def read_ema_72(self):
         element_id = 'ema_72'
+        print(f'{datetime.now()} Reading [{element_id}]')
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
@@ -830,6 +845,7 @@ class SmartTrader:
 
     async def read_rsi(self):
         element_id = 'rsi'
+        print(f'{datetime.now()} Reading [{element_id}]')
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
@@ -1435,6 +1451,70 @@ class SmartTrader:
 
         return df
 
+    ''' Loss Management '''
+
+    def loss_management_update(self, result=None, trade_size=0.00):
+        # On [initialization], both [result] and [trade_size] can be None/0.00,
+        # so [recovery_mode] and [recovery_trade_size] can be calculated based on [settings] and [cumulative_loss]
+
+        if result == 'gain':
+            if self.cumulative_loss > 0:
+                profit = trade_size * (self.payout / 100)
+
+                # Reducing [cumulative_loss]
+                if self.cumulative_loss >= profit:
+                    # [cumulative_loss] is greater than [profit]
+                    self.cumulative_loss -= profit
+                else:
+                    # Resetting [recovery_mode]
+                    self.recovery_mode = False
+                    self.cumulative_loss = 0
+        elif result == 'draw':
+            pass
+        else:
+            # System is initializing or it's a new loss
+
+            self.cumulative_loss += trade_size
+
+            # Calculating [payout_offset_compensation] in order to make sure recovery is made with expected amounts
+            payout_offset_compensation = 2.00 - (self.payout / 100) + 0.01
+            self.recovery_trade_size = (self.cumulative_loss * payout_offset_compensation /
+                                        settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
+
+            if self.recovery_trade_size < self.initial_trade_size:
+                # [recovery_size] would be lesser than [initial_trade_size]
+                self.recovery_trade_size = self.initial_trade_size
+
+            if self.recovery_mode is False:
+                # [recovery_mode] is not activated yet
+                min_position_loss = (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[0] +
+                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[1] +
+                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[2])
+                if self.cumulative_loss >= min_position_loss:
+                    # It's time to activate [recovery_mode]
+                    self.recovery_mode = True
+
+    def loss_management_read_from_file(self):
+        data = None
+
+        if os.path.exists(f'{settings.PATH_DATA}loss_management_{self.agent_id}.json'):
+            with open(file=f'{settings.PATH_DATA}loss_management_{self.agent_id}.json', mode='r') as f:
+                data = json.loads(f.read())
+
+            # Updating Loss Management PB
+            msg = "Managing previous losses"
+            for item in utils.progress_bar([0], prefix=msg):
+                self.cumulative_loss = data['cumulative_loss']
+
+        return data
+
+    def loss_management_write_to_file(self):
+        data = {'agent_id': self.agent_id,
+                'last_asset': self.asset,
+                'cumulative_loss': self.cumulative_loss}
+        with open(file=f'{settings.PATH_DATA}loss_management_{self.agent_id}.json', mode='w') as f:
+            f.write(json.dumps(data))
+
     ''' TA & Trading '''
 
     async def open_position(self, strategy_id, side, trade_size):
@@ -1458,7 +1538,9 @@ class SmartTrader:
         self.ongoing_positions[strategy_id]['result'] = result
         closed_position = self.ongoing_positions[strategy_id].copy()
 
-        self.df_ongoing_positions().to_csv('data\\positions.csv', mode='a', index=False, header=False)
+        # Appending data to [positions.csv] file
+        ongoing_positions = self.df_ongoing_positions()
+        ongoing_positions.to_csv(f'{settings.PATH_DATA}positions.csv', mode='a', index=False, header=False)
 
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
         self.ongoing_positions.pop(strategy_id)
@@ -1472,9 +1554,10 @@ class SmartTrader:
 
     async def open_trade(self, strategy_id, side, trade_size):
         # Running concurrently
-        async with asyncio.TaskGroup() as tg:
-            tg.create_task(self.execute_playbook(playbook_id='open_trade', side=side, trade_size=trade_size))
-            tg.create_task(self.read_element(element_id='close', is_async=True))
+        await asyncio.gather(
+            self.execute_playbook(playbook_id='open_trade', side=side, trade_size=trade_size),
+            self.read_element(element_id='close', is_async=True)
+        )
 
         now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         trade = {
@@ -1493,39 +1576,10 @@ class SmartTrader:
         trade['result'] = result
 
         # [Loss Management] Updating [cumulative_loss]
-        if result == 'gain':
-            if self.cumulative_loss > 0:
-                profit = trade['trade_size'] * (self.payout / 100)
+        self.loss_management_update(result=result, trade_size=trade['trade_size'])
 
-                # Reducing [cumulative_loss]
-                if self.cumulative_loss >= profit:
-                    # [cumulative_loss] is greater than [profit]
-                    self.cumulative_loss -= profit
-                else:
-                    # Resetting [recovery_mode]
-                    self.recovery_mode = False
-                    self.cumulative_loss = 0
-        elif result == 'loss':
-            # Accumulating losses
-            self.cumulative_loss += trade['trade_size']
-
-            # Calculating [payout_offset_compensation] in order to make sure recovery is made with expected amounts
-            payout_offset_compensation = 2.00 - (self.payout / 100) + 0.01
-            self.recovery_trade_size = (self.cumulative_loss * payout_offset_compensation /
-                                        settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
-
-            if self.recovery_trade_size < self.initial_trade_size:
-                # [recovery_size] would be lesser than [initial_trade_size]
-                self.recovery_trade_size = self.initial_trade_size
-
-            if self.recovery_mode is False:
-                # [recovery_mode] is not activated yet
-                min_position_loss = (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[0] +
-                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[1] +
-                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[2])
-                if self.cumulative_loss >= min_position_loss:
-                    # It's time to activate [recovery_mode]
-                    self.recovery_mode = True
+        # [Loss Management] Keeping data in a file for future reference
+        self.loss_management_write_to_file()
 
         return position['trades'][-1]
 
@@ -1587,7 +1641,8 @@ class SmartTrader:
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-                positions = asyncio.run(self.run_lookup(context=context))
+                # Running Lookup
+                asyncio.run(self.run_lookup(context=context))
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
@@ -1627,8 +1682,10 @@ class SmartTrader:
         strategies = settings.TRADING_STRATEGIES.copy()
 
         # Reading Chart data
-        print(f'{datetime.now()} - Reading [chart_data]')
+        start = datetime.now()
+        print(f'Reading [chart_data]',)
         await self.read_element(element_id='chart_data', is_async=True)
+        print(f'Reading [chart_data] done: {datetime.now() - start}')
 
         # for strategy in utils.progress_bar(strategies, prefix=msg):
         #     # Strategies
@@ -1644,19 +1701,24 @@ class SmartTrader:
         #         tmsg.input(msg=msg, clear=True)
         #         exit(500)
 
-        print(f'{datetime.now()} - Reading [chart_data] - done')
-
         # Preparing tasks
         tasks = []
+        print(f'Applying strategies', end=' ... ')
         async with asyncio.TaskGroup() as tg:
             for strategy in utils.progress_bar(strategies, prefix=msg):
-                print(f'{datetime.now()} - Applying strategy [{strategy}]')
                 f_strategy = f"strategy_{strategy}"
 
                 if hasattr(self, f_strategy) and callable(strategy := getattr(self, f_strategy)):
                     tasks.append(tg.create_task(strategy()))
-
-        print(f'{datetime.now()} - Applying strategies - done')
+                else:
+                    # Strategy not found
+                    msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                           f"- That's embarrassing. :/ "
+                           f"\n\t- I couldn't find a function for strategy [{strategy}].! :/"
+                           f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
+                    tmsg.input(msg=msg, clear=True)
+                    exit(500)
+        print(f'{datetime.now() - start}')
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
@@ -1669,7 +1731,6 @@ class SmartTrader:
                     tmsg.print(context=context, clear=True)
                     art.tprint(text=position['result'], font='block')
                     await asyncio.sleep(7)
-        return positions
 
     async def strategy_ema_rsi_8020(self):
         strategy_id = 'ema_rsi_8020'
