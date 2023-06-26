@@ -719,7 +719,8 @@ class SmartTrader:
             self.set_awareness(k='payout_low', v=True)
 
         # Renaming PowerShell window name
-        os.system(f'title STrader: {self.asset}')
+        title = f'STrader: {self.asset}'
+        utils.set_terminal_title(title=title)
 
         return self.asset
 

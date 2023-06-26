@@ -92,6 +92,14 @@ def progress_bar(iterable, prefix='', suffix='', decimals=1, length=20, fill='â–
     print()
 
 
+def set_terminal_title(title=''):
+    if os.getcwd().startswith('/'):
+        # Running from Linux
+        os.system(f'wmctrl -r :ACTIVE: -T "{title}"')
+    elif os.getcwd().startswith('C:\\'):
+        # Probably Windows
+        os.system(f'title {title}')
+
 def find_nth(string, substring, n):
     i = string.find(substring)
 
