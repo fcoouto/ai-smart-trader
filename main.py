@@ -50,7 +50,7 @@ def main(argsv):
             asset = str(arg)
         elif opt in ['-t', '--trade_size']:
             trade_size = float(arg)
-        elif opt in ['-t', '--amount_regions']:
+        elif opt in ['--amount_regions_per_monitor']:
             amount_regions_per_monitor = int(arg)
 
     if (i_monitor is not None and
