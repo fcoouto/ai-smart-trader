@@ -3,7 +3,7 @@ import platform
 
 
 # DEBUG
-DEBUG_OCR = False
+DEBUG_OCR = True
 DEBUG_MSG = True
 
 # VALIDATION
@@ -165,6 +165,12 @@ BROKERS = {
             'chart_settings_tab2_bottom': {
                 'context': 'tv',
                 'id': 'chart_settings_tab2_bottom',
+                'region': None,
+                'locate_confidence': 0.80,
+            },
+            'chart_settings_tab4_top': {
+                'context': 'tv',
+                'id': 'chart_settings_tab4_top',
                 'region': None,
                 'locate_confidence': 0.80,
             },

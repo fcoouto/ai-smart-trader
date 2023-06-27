@@ -439,6 +439,13 @@ class SmartTrader:
                                    zone_id=zone_id,
                                    element_id=element_id)
 
+        # Converting to grayscale
+        img = img.convert('L')
+
+        # Expanding image in 300%
+        width, height = img.size
+        img = img.resize([int(width * 4), int(height * 4)])
+
         if save_to:
             img.save(save_to)
 
@@ -448,15 +455,6 @@ class SmartTrader:
         # Retrieving original measures
         width, height = img.size
 
-        # Converting to grayscale
-        img = img.convert('L')
-
-        # Expanding image in 300%
-        img = img.resize([int(width * 4), int(height * 4)])
-
-        # Redefining new measures
-        width, height = img.size
-
         left = top = 0
         right = width
         bottom = height
@@ -464,19 +462,19 @@ class SmartTrader:
         if self.broker['id'] == 'iqcent':
             if zone_id == 'header':
                 if element_id == 'asset':
-                    left = width * 0.07
-                    top = height * 0.27
+                    left = width * 0.08
+                    top = height * 0.28
                     right = width * 0.40
                     bottom = height * 0.55
                 elif element_id == 'balance':
                     left = width * 0.50
-                    top = height * 0.27
+                    top = height * 0.28
                     right = width * 0.80
                     bottom = height * 0.55
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.15
-                    top = height * 0.73
+                    top = height * 0.745
                     right = width
                     bottom = height * 0.87
                 elif element_id == 'ema_72':
@@ -900,6 +898,7 @@ class SmartTrader:
         zone_region = self.get_zone_region(context_id=context_id,
                                            zone_id=element['zone'],
                                            confidence=confidence)
+
         zone_center_x = zone_region.left + zone_region.width / 2
         zone_center_y = zone_region.top + zone_region.height / 2
 
