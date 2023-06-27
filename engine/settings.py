@@ -35,13 +35,13 @@ PLAYBOOK_LONG_ACTION = {
     'set_expiry_time': 5,
     'tv_reset': 10,
 }
-PATH_LOCK = 'lock\\'
+PATH_LOCK = 'lock'
 LOCK_LONG_ACTION_FILENAME = 'long_action'
 LOCK_FILE_EXTENSION = '.lck'
 PATH_DATA = 'data'
 PATH_SS = 'ocr'
-PATH_SS_TEMPLATE = f'{PATH_SS}template'
-PATH_SS_CONFIG = os.path.join(os.getcwd(), "ocr", "config")
+PATH_SS_TEMPLATE = os.path.join(PATH_SS, 'template')
+PATH_SS_CONFIG = os.path.join(os.getcwd(), 'ocr', 'config')
 SS_FILE_EXTENSION = '.png'
 SESSION_TIMEOUT = 3600
 TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
