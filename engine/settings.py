@@ -208,7 +208,7 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'navbar_rsi_settings',
                 'region': None,
-                'locate_confidence': 0.50,
+                'locate_confidence': 0.45,
             },
             'rsi_settings_tab1': {
                 'context': 'tv',
