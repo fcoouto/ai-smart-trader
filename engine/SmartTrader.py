@@ -1299,7 +1299,7 @@ class SmartTrader:
 
         # [tab2] Dragging [slider_background_opacity] handler to 100%
         self.move_to_element(element_id='slider_background_opacity')
-        pyautogui.drag(xOffset=75, duration=0.200)
+        pyautogui.drag(xOffset=100, duration=0.200)
 
         # Opening Tab 4
         self.click_element(element_id='navitem_chart_settings_tab4', wait_when_done=0.300)
