@@ -80,7 +80,7 @@ BROKERS = {
             'header': {
                 'id': 'header',
                 'region': None,
-                'locate_confidence': 0.80,
+                'locate_confidence': 0.90,
                 'is_mandatory': True,
                 'has_login_info': True,
                 'elements': ['balance', 'asset']
@@ -120,7 +120,7 @@ BROKERS = {
             'tick_header': {
                 'id': 'tick_header',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.80,
             },
             'header_logged_out': {
                 'id': 'header_logged_out',

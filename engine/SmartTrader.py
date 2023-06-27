@@ -353,6 +353,9 @@ class SmartTrader:
                                                        confidence=zone['locate_confidence'])
                 tries += 1
 
+                print(f'zone_id: {zone_id}')
+                print(zone_region)
+
                 if zone_region is None:
                     # Zone couldn't be located on screen
                     zone = self.broker['zones'][zone_id]
@@ -463,14 +466,14 @@ class SmartTrader:
             if zone_id == 'header':
                 if element_id == 'asset':
                     left = width * 0.08
-                    top = height * 0.28
+                    top = height * 0.27
                     right = width * 0.40
-                    bottom = height * 0.55
+                    bottom = height * 0.54
                 elif element_id == 'balance':
                     left = width * 0.50
-                    top = height * 0.28
+                    top = height * 0.27
                     right = width * 0.80
-                    bottom = height * 0.55
+                    bottom = height * 0.54
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.15
@@ -491,7 +494,7 @@ class SmartTrader:
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     left = width * 0.15
-                    top = height * 0.465
+                    top = height * 0.45
                     right = width * 0.35
                     bottom = height * 0.61
                 if element_id == 'close':
@@ -550,13 +553,13 @@ class SmartTrader:
 
             # config += ' --oem 1'
             #
-            if os.path.exists(os.path.join(settings.PATH_SS_CONFIG, f'{element_id}.user-patterns')):
-                config += f' --user-patterns' \
-                          f' {os.path.join(settings.PATH_SS_CONFIG, f"{element_id}.user-patterns")}'
-
-            if os.path.exists(os.path.join(settings.PATH_SS_CONFIG, f'{element_id}.user-words')):
-                config += f' --user-words' \
-                          f' {os.path.join(settings.PATH_SS_CONFIG, f"{element_id}.user-words")}'
+            # if os.path.exists(os.path.join(settings.PATH_SS_CONFIG, f'{element_id}.user-patterns')):
+            #     config += f' --user-patterns' \
+            #               f' {os.path.join(settings.PATH_SS_CONFIG, f"{element_id}.user-patterns")}'
+            #
+            # if os.path.exists(os.path.join(settings.PATH_SS_CONFIG, f'{element_id}.user-words')):
+            #     config += f' --user-words' \
+            #               f' {os.path.join(settings.PATH_SS_CONFIG, f"{element_id}.user-words")}'
 
             start = datetime.now()
             print(f'OCR Reading [{element_id}]', end=' ... ')
@@ -698,7 +701,7 @@ class SmartTrader:
         if self.asset is None:
             self.asset = value
 
-        elif self.asset != value:
+        elif self.asset.replace(' ', '') != value.replace(' ', ''):
             # Asset has changed
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- hmm... Just noticed [asset] changed from [{self.asset}] to [{value}]."
