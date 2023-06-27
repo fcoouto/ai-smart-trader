@@ -926,7 +926,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 410
                 element['y'] = zone_region.top + 90
             elif element_id == 'btn_ema_settings':
-                element['x'] = zone_region.left + 215
+                element['x'] = zone_region.left + 220
                 element['y'] = zone_region.top + 135
             elif element_id == 'btn_rsi_settings':
                 element['x'] = zone_region.left + 170
