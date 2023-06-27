@@ -142,7 +142,7 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'menu_chart',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.70,
             },
             'navbar_chart_settings': {
                 'context': 'tv',
