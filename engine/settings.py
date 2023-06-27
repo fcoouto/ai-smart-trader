@@ -48,7 +48,7 @@ SS_FILE_EXTENSION = '.png'
 if platform.system().lower() == 'windows':
     PATH_TESSERACT = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 elif platform.system().lower() == 'linux':
-    PATH_TESSERACT = '/usr/bin'
+    PATH_TESSERACT = '/usr/bin/tesseract'
 
 CORE_DATA = {
     'asset': 'string',
