@@ -154,7 +154,7 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'chart_settings_tab1_top',
                 'region': None,
-                'locate_confidence': 0.80,
+                'locate_confidence': 0.70,
             },
             'chart_settings_tab2_top': {
                 'context': 'tv',
