@@ -142,7 +142,7 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'menu_chart',
                 'region': None,
-                'locate_confidence': 0.85,
+                'locate_confidence': 0.80,
             },
             'navbar_chart_settings': {
                 'context': 'tv',
@@ -160,19 +160,19 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'chart_settings_tab2_top',
                 'region': None,
-                'locate_confidence': 0.85,
+                'locate_confidence': 0.80,
             },
             'chart_settings_tab2_bottom': {
                 'context': 'tv',
                 'id': 'chart_settings_tab2_bottom',
                 'region': None,
-                'locate_confidence': 0.85,
+                'locate_confidence': 0.80,
             },
             'colors_opacity': {
                 'context': 'tv',
                 'id': 'colors_opacity',
                 'region': None,
-                'locate_confidence': 0.85,
+                'locate_confidence': 0.80,
             },
             'navbar_ema_settings': {
                 'context': 'tv',
