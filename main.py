@@ -30,7 +30,8 @@ def main(argsv):
     try:
         opts, args = getopt.getopt(argsv,
                                    'hm:r:b:a:t:',
-                                   ['help', 'monitor=', 'region=', 'amount_regions=', 'broker=', 'asset=', 'trade_size='])
+                                   ['help', 'amount_regions_per_monitor=', 'monitor=', 'region=',
+                                    'broker=', 'asset=', 'trade_size='])
     except getopt.GetoptError:
         print('\nException: One or more arguments were not expected.')
         print_help()
