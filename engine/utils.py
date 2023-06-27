@@ -100,6 +100,7 @@ def set_terminal_title(title=''):
         # Probably Windows
         os.system(f'title {title}')
 
+
 def find_nth(string, substring, n):
     i = string.find(substring)
 
@@ -121,15 +122,15 @@ def str_to_float(string):
     return float(string)
 
 
-def try_to_remove_lock_file(action):
+def try_to_remove_file(path):
     try:
-        os.remove(f"{settings.PATH_LOCK}{action}{settings.LOCK_FILE_EXTENSION}")
+        os.remove(path)
     except:
         pass
 
 
-def does_lock_file_exist(action='long_action'):
-    if os.path.exists(f"{settings.PATH_LOCK}{action}{settings.LOCK_FILE_EXTENSION}"):
+def does_file_exist(path):
+    if os.path.exists(path):
         return True
     return False
 

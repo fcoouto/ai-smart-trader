@@ -1,3 +1,6 @@
+import os
+
+
 # DEBUG
 DEBUG_OCR = False
 DEBUG_MSG = True
@@ -35,10 +38,10 @@ PLAYBOOK_LONG_ACTION = {
 PATH_LOCK = 'lock\\'
 LOCK_LONG_ACTION_FILENAME = 'long_action'
 LOCK_FILE_EXTENSION = '.lck'
-PATH_DATA = 'data\\'
-PATH_SS = 'ocr\\'
-PATH_SS_TEMPLATE = f'{PATH_SS}template\\'
-PATH_SS_CONFIG = f'C:\\Users\\fcout\\dev\\_git_projects\\trading\\ai-smart-trader\\ocr\\config\\'
+PATH_DATA = 'data'
+PATH_SS = 'ocr'
+PATH_SS_TEMPLATE = f'{PATH_SS}template'
+PATH_SS_CONFIG = os.path.join(os.getcwd(), "ocr", "config")
 SS_FILE_EXTENSION = '.png'
 SESSION_TIMEOUT = 3600
 TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'

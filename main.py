@@ -24,7 +24,7 @@ def main(argsv):
     amount_regions_per_monitor = 3
     i_monitor = i_region = broker_id = asset = None
     trade_size = 1.00
-    
+
     utils.set_terminal_title(title='STrader')
 
     try:

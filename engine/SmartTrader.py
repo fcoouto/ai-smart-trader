@@ -179,7 +179,9 @@ class SmartTrader:
         self.validate_payout()
 
         # Checking lock files
-        utils.try_to_remove_lock_file(action='long_action')
+        lock_file = os.path.join(settings.PATH_LOCK,
+                                 f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
+        utils.try_to_remove_file(path=lock_file)
 
     def get_trading_url(self):
         url = None
@@ -422,12 +424,12 @@ class SmartTrader:
             context_id = self.broker['id']
 
         if template:
-            return f"{settings.PATH_SS_TEMPLATE}" \
-                   f"{context_id}__{zone_id}{settings.SS_FILE_EXTENSION}"
+            return os.path.join(settings.PATH_SS_TEMPLATE,
+                                f'{context_id}__{zone_id}{settings.SS_FILE_EXTENSION}')
 
         else:
-            return f"{settings.PATH_SS}" \
-                   f"{context_id}__{zone_id}__{element_id}{settings.SS_FILE_EXTENSION}"
+            return os.path.join(settings.PATH_SS,
+                                f'{context_id}__{zone_id}__{element_id}{settings.SS_FILE_EXTENSION}')
 
     def screenshot_element(self, zone_id, element_id, save_to=None):
         zone = self.broker['zones'][zone_id]
@@ -550,13 +552,13 @@ class SmartTrader:
 
             # config += ' --oem 1'
             #
-            # if os.path.exists(f'{settings.PATH_SS_CONFIG}{element_id}.user-patterns'):
-            #     config += f' --user-patterns' \
-            #               f' {settings.PATH_SS_CONFIG}{element_id}.user-patterns'
-            #
-            # if os.path.exists(f'{settings.PATH_SS_CONFIG}{element_id}.user-words'):
-            #     config += f' --user-words' \
-            #               f' {settings.PATH_SS_CONFIG}{element_id}.user-words'
+            if os.path.exists(os.path.join(settings.PATH_SS_CONFIG, f'{element_id}.user-patterns')):
+                config += f' --user-patterns' \
+                          f' {os.path.join(settings.PATH_SS_CONFIG, f"{element_id}.user-patterns")}'
+
+            if os.path.exists(os.path.join(settings.PATH_SS_CONFIG, f'{element_id}.user-words')):
+                config += f' --user-words' \
+                          f' {os.path.join(settings.PATH_SS_CONFIG, f"{element_id}.user-words")}'
 
             start = datetime.now()
             print(f'OCR Reading [{element_id}]', end=' ... ')
@@ -1103,14 +1105,16 @@ class SmartTrader:
 
             else:
                 # It's a long action
-                lock_file = f"{settings.PATH_LOCK}{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}"
+                lock_file = os.path.join(settings.PATH_LOCK,
+                                         f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
+
                 is_done = False
                 total_waiting_time = 0
                 amount_tries = 0
 
                 while is_done is False:
                     # Trying to remove [lock_file]
-                    utils.try_to_remove_lock_file(action=settings.LOCK_LONG_ACTION_FILENAME)
+                    utils.try_to_remove_file(path=lock_file)
                     amount_tries += 1
 
                     try:
@@ -1128,7 +1132,7 @@ class SmartTrader:
                         total_waiting_time += waiting_time
                         sleep(waiting_time)
 
-                        if utils.does_lock_file_exist(action=settings.LOCK_LONG_ACTION_FILENAME):
+                        if utils.does_file_exist(path=settings.LOCK_LONG_ACTION_FILENAME):
                             with open(file=lock_file, mode='r') as f:
                                 # Retrieving what long_action playbook is running on
                                 playbook_id_running = f.read()
@@ -1454,6 +1458,10 @@ class SmartTrader:
 
     ''' Loss Management '''
 
+    def get_loss_management_file_path(self):
+        return os.path.join(settings.PATH_DATA,
+                            f'loss_management_{self.agent_id}.json')
+
     def loss_management_update(self, result=None, trade_size=0.00):
         # On [initialization], both [result] and [trade_size] can be None/0.00,
         # so [recovery_mode] and [recovery_trade_size] can be calculated based on [settings] and [cumulative_loss]
@@ -1498,8 +1506,9 @@ class SmartTrader:
     def loss_management_read_from_file(self):
         data = None
 
-        if os.path.exists(f'{settings.PATH_DATA}loss_management_{self.agent_id}.json'):
-            with open(file=f'{settings.PATH_DATA}loss_management_{self.agent_id}.json', mode='r') as f:
+        file_path = self.get_loss_management_file_path()
+        if os.path.exists(file_path):
+            with open(file=file_path, mode='r') as f:
                 data = json.loads(f.read())
 
             # Updating Loss Management PB
@@ -1513,7 +1522,9 @@ class SmartTrader:
         data = {'agent_id': self.agent_id,
                 'last_asset': self.asset,
                 'cumulative_loss': self.cumulative_loss}
-        with open(file=f'{settings.PATH_DATA}loss_management_{self.agent_id}.json', mode='w') as f:
+
+        file_path = self.get_loss_management_file_path()
+        with open(file=file_path, mode='w') as f:
             f.write(json.dumps(data))
 
     ''' TA & Trading '''
@@ -1540,15 +1551,17 @@ class SmartTrader:
         closed_position = self.ongoing_positions[strategy_id].copy()
 
         # Appending data to [positions.csv] file
+        positions_file = os.path.join(settings.PATH_DATA, 'positions.csv')
         ongoing_positions = self.df_ongoing_positions()
-        ongoing_positions.to_csv(f'{settings.PATH_DATA}positions.csv', mode='a', index=False, header=False)
+        ongoing_positions.to_csv(positions_file, mode='a', index=False, header=False)
 
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
         self.ongoing_positions.pop(strategy_id)
 
-        if (not os.path.exists(
-                f"{settings.PATH_LOCK}{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}")
-                or not self.ongoing_positions):
+        # Checking if we can set [trade_size] to an [optimal_trade_size]
+        lock_file = os.path.join(settings.PATH_LOCK,
+                                 f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
+        if not os.path.exists(lock_file) or not self.ongoing_positions:
             self.execute_playbook(playbook_id='set_trade_size', trade_size=self.get_optimal_trade_size())
 
         return closed_position
@@ -1618,7 +1631,7 @@ class SmartTrader:
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Checking token (only if mouse/keyboard are not being used)
-            if utils.does_lock_file_exist(action='long_action') is False and len(self.ongoing_positions) == 0:
+            if utils.does_file_exist(path='long_action') is False and len(self.ongoing_positions) == 0:
                 # Focusing on App
                 self.mouse_event_on_neutral_area(event='click', area_id='within_app')
                 sleep(1)
