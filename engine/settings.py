@@ -80,7 +80,7 @@ BROKERS = {
             'header': {
                 'id': 'header',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.80,
                 'is_mandatory': True,
                 'has_login_info': True,
                 'elements': ['balance', 'asset']
