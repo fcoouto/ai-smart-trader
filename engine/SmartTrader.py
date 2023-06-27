@@ -929,7 +929,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 220
                 element['y'] = zone_region.top + 135
             elif element_id == 'btn_rsi_settings':
-                element['x'] = zone_region.left + 170
+                element['x'] = zone_region.left + 175
                 element['y'] = zone_region.top + 225
             elif element_id == 'btn_chart_remove_indicators':
                 element['x'] = zone_center_x
