@@ -353,9 +353,6 @@ class SmartTrader:
                                                        confidence=zone['locate_confidence'])
                 tries += 1
 
-                print(f'zone_id: {zone_id}')
-                print(zone_region)
-
                 if zone_region is None:
                     # Zone couldn't be located on screen
                     zone = self.broker['zones'][zone_id]
