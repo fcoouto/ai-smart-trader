@@ -1,4 +1,5 @@
 import os
+import platform
 
 
 # DEBUG
@@ -43,8 +44,12 @@ PATH_SS = 'ocr'
 PATH_SS_TEMPLATE = os.path.join(PATH_SS, 'template')
 PATH_SS_CONFIG = os.path.join(os.getcwd(), 'ocr', 'config')
 SS_FILE_EXTENSION = '.png'
-SESSION_TIMEOUT = 3600
-TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+if platform.system().lower() == 'windows':
+    PATH_TESSERACT = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+elif platform.system().lower() == 'linux':
+    PATH_TESSERACT = '/usr/bin'
+
 CORE_DATA = {
     'asset': 'string',
     'balance': 'currency',

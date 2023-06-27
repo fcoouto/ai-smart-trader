@@ -16,7 +16,7 @@ from engine import settings, utils
 from engine.Logger import Logger
 
 pyautogui.FAILSAFE = True
-pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
+pytesseract.pytesseract.tesseract_cmd = settings.PATH_TESSERACT
 
 tmsg = utils.tmsg()
 logger = Logger()
