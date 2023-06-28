@@ -1337,7 +1337,7 @@ class SmartTrader:
         pyautogui.press('enter')
         pyautogui.press('escape')
 
-    def playbok_tv_configure_indicator_ema(self, length, color='black', opacity=25, precision=6):
+    def playbok_tv_configure_indicator_ema(self, length, color='black', opacity=25, precision=5):
         # Opening Settings
         self.click_element(element_id='btn_ema_settings', wait_when_done=0.300)
 

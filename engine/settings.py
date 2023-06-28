@@ -175,12 +175,6 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.80,
             },
-            'dp_item_6': {
-                'context': 'tv',
-                'id': 'dp_item_6',
-                'region': None,
-                'locate_confidence': 0.80,
-            },
             'navbar_ema_settings': {
                 'context': 'tv',
                 'id': 'navbar_ema_settings',
