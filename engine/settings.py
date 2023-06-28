@@ -193,6 +193,12 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.50,
             },
+            'dp_item_6': {
+                'context': 'tv',
+                'id': 'dp_item_6',
+                'region': None,
+                'locate_confidence': 0.75,
+            },
             'navbar_rsi_settings': {
                 'context': 'tv',
                 'id': 'navbar_rsi_settings',
