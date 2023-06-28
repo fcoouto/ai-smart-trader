@@ -472,7 +472,7 @@ class SmartTrader:
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.15
-                    top = height * 0.75
+                    top = height * 0.745
                     right = width
                     bottom = height * 0.87
                 elif element_id == 'ema_72':
