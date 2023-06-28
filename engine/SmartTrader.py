@@ -1612,7 +1612,7 @@ class SmartTrader:
         sec_action = random.randrange(start=58000, stop=58750) / 1000
 
         while True:
-            context = 'Trading' if self.ongoing_positions else 'Getting Ready!'
+            context = 'Trading' if self.ongoing_positions else 'Getting Ready'
             tmsg.print(context=context, clear=True)
 
             if self.ongoing_positions:
