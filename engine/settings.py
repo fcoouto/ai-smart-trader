@@ -196,7 +196,7 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'ema_settings_tab2',
                 'region': None,
-                'locate_confidence': 0.80,
+                'locate_confidence': 0.50,
             },
             'navbar_rsi_settings': {
                 'context': 'tv',
@@ -208,13 +208,13 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'rsi_settings_tab1',
                 'region': None,
-                'locate_confidence': 0.80,
+                'locate_confidence': 0.50,
             },
             'rsi_settings_tab2': {
                 'context': 'tv',
                 'id': 'rsi_settings_tab2',
                 'region': None,
-                'locate_confidence': 0.80,
+                'locate_confidence': 0.50,
             },
         },
         'elements': {
