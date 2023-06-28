@@ -496,7 +496,7 @@ class SmartTrader:
                     bottom = height * 0.61
                 if element_id == 'close':
                     left = width * 0.38
-                    top = height * 0.77
+                    top = height * 0.76
                     right = width * 0.63
                     bottom = height
                 elif element_id == 'expiry_time':
