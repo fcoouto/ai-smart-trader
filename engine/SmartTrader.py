@@ -9,9 +9,12 @@ from datetime import datetime
 import asyncio
 import art
 import pandas as pd
+from tabulate import tabulate
+
+from PIL import Image
+import mss
 import pyautogui
 import pytesseract
-from tabulate import tabulate
 
 from engine import settings, utils
 from engine.Logger import Logger
@@ -432,7 +435,14 @@ class SmartTrader:
     def screenshot_element(self, zone_id, element_id, save_to=None):
         zone = self.broker['zones'][zone_id]
 
-        img = pyautogui.screenshot(region=zone['region'])
+        with mss.mss() as ss:
+            region_dict = {'left': zone['region'].left,
+                           'top': zone['region'].top,
+                           'width': zone['region'].width,
+                           'height': zone['region'].height}
+            img = ss.grab(region_dict)
+            img = Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
+
         img = self.crop_screenshot(img=img,
                                    zone_id=zone_id,
                                    element_id=element_id)
