@@ -1040,6 +1040,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 150
                 element['y'] = zone_region.top + 75
             elif element_id.startswith('dp_item_'):
+                # Matches every [dp_item]
                 element['x'] = zone_center_x
                 element['y'] = zone_center_y
 
@@ -1334,7 +1335,7 @@ class SmartTrader:
         pyautogui.press('enter')
         pyautogui.press('escape')
 
-    def playbok_tv_configure_indicator_ema(self, length, color='black', opacity=25, precision=5):
+    def playbok_tv_configure_indicator_ema(self, length, color='black', opacity=25, precision=6):
         # Opening Settings
         self.click_element(element_id='btn_ema_settings', wait_when_done=0.300)
 
