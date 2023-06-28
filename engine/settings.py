@@ -127,11 +127,6 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.80,
             },
-            'dp_item_1min': {
-                'id': 'dp_item_1min',
-                'region': None,
-                'locate_confidence': 0.90,
-            },
             'drawing_toolbar': {
                 'context': 'tv',
                 'id': 'drawing_toolbar',
@@ -179,6 +174,12 @@ BROKERS = {
                 'id': 'colors_opacity',
                 'region': None,
                 'locate_confidence': 0.80,
+            },
+            'dp_item_6': {
+                'context': 'tv',
+                'id': 'dp_item_6',
+                'region': None,
+                'locate_confidence': 0.90,
             },
             'navbar_ema_settings': {
                 'context': 'tv',
