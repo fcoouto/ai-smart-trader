@@ -190,7 +190,7 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'ema_settings_tab1',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.60,
             },
             'ema_settings_tab2': {
                 'context': 'tv',
