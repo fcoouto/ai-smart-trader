@@ -463,18 +463,18 @@ class SmartTrader:
             if zone_id == 'header':
                 if element_id == 'asset':
                     left = width * 0.08
-                    top = height * 0.27
+                    top = height * 0.26
                     right = width * 0.40
                     bottom = height * 0.54
                 elif element_id == 'balance':
                     left = width * 0.50
-                    top = height * 0.27
+                    top = height * 0.26
                     right = width * 0.80
                     bottom = height * 0.54
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.15
-                    top = height * 0.745
+                    top = height * 0.755
                     right = width
                     bottom = height * 0.87
                 elif element_id == 'ema_72':
