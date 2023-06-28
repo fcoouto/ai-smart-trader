@@ -974,25 +974,25 @@ class SmartTrader:
                 element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + zone_region.height
             elif element_id == 'input_chart_settings_body_green':
-                element['x'] = zone_region.left + 228
+                element['x'] = zone_region.left + 230
                 element['y'] = zone_region.top + 145
             elif element_id == 'input_chart_settings_body_red':
                 element['x'] = zone_region.left + 273
                 element['y'] = zone_region.top + 145
             elif element_id == 'input_chart_settings_wick_green':
-                element['x'] = zone_region.left + 228
+                element['x'] = zone_region.left + 230
                 element['y'] = zone_region.top + 245
             elif element_id == 'input_chart_settings_wick_red':
                 element['x'] = zone_region.left + 273
                 element['y'] = zone_region.top + 245
             elif element_id == 'input_chart_settings_background':
-                element['x'] = zone_region.left + 228
+                element['x'] = zone_region.left + 230
                 element['y'] = zone_region.top + 95
             elif element_id == 'input_chart_settings_grid_lines_v':
-                element['x'] = zone_region.left + 228
+                element['x'] = zone_region.left + 230
                 element['y'] = zone_region.top + 145
             elif element_id == 'input_chart_settings_grid_lines_h':
-                element['x'] = zone_region.left + 228
+                element['x'] = zone_region.left + 230
                 element['y'] = zone_region.top + 195
             elif element_id == 'input_ema_settings_color':
                 element['x'] = zone_region.left + 140
