@@ -135,24 +135,22 @@ class SmartTrader:
                     self.read_element(element_id=element_id)
 
         # DEBUG
-        # if settings.DEBUG_OCR:
-        #     while True:
-        #         with asyncio.Runner() as runner:
-        #             asset = runner.run(self.read_element(element_id='asset'))
-        #             balance = runner.run(self.read_element(element_id='balance'))
-        #             payout = runner.run(self.read_element(element_id='payout'))
-        #             chart_data = runner.run(self.read_element(element_id='chart_data'))
-        #             trade_size = runner.run(self.read_element(element_id='trade_size'))
-        #             expiry_time = runner.run(self.read_element(element_id='expiry_time'))
-        #
-        #         dst_price_ema_72 = utils.distance_percent(v1=chart_data[3], v2=chart_data[6])
-        #
-        #         print(f"{asset} | "
-        #               f"{balance} | "
-        #               f"{str(trade_size)} | "
-        #               f"{payout} | "
-        #               f"{expiry_time} | "
-        #               f"{str(chart_data)}")
+        if settings.DEBUG_OCR:
+            while True:
+                with asyncio.Runner() as runner:
+                    asset = runner.run(self.read_element(element_id='asset'))
+                    balance = runner.run(self.read_element(element_id='balance'))
+                    payout = runner.run(self.read_element(element_id='payout'))
+                    chart_data = runner.run(self.read_element(element_id='chart_data'))
+                    trade_size = runner.run(self.read_element(element_id='trade_size'))
+                    expiry_time = runner.run(self.read_element(element_id='expiry_time'))
+
+                print(f"{asset} | "
+                      f"{balance} | "
+                      f"{str(trade_size)} | "
+                      f"{payout} | "
+                      f"{expiry_time} | "
+                      f"{str(chart_data)}")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
