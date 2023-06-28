@@ -962,7 +962,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 20
                 element['y'] = zone_region.top + 25
             elif element_id == 'item_color_black':
-                element['x'] = zone_region.left + 227
+                element['x'] = zone_region.left + 228
                 element['y'] = zone_region.top + 25
             elif element_id == 'input_email':
                 element['x'] = zone_center_x
@@ -974,25 +974,25 @@ class SmartTrader:
                 element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + zone_region.height
             elif element_id == 'input_chart_settings_body_green':
-                element['x'] = zone_region.left + 225
+                element['x'] = zone_region.left + 228
                 element['y'] = zone_region.top + 145
             elif element_id == 'input_chart_settings_body_red':
-                element['x'] = zone_region.left + 270
+                element['x'] = zone_region.left + 273
                 element['y'] = zone_region.top + 145
             elif element_id == 'input_chart_settings_wick_green':
-                element['x'] = zone_region.left + 225
+                element['x'] = zone_region.left + 228
                 element['y'] = zone_region.top + 245
             elif element_id == 'input_chart_settings_wick_red':
-                element['x'] = zone_region.left + 270
+                element['x'] = zone_region.left + 273
                 element['y'] = zone_region.top + 245
             elif element_id == 'input_chart_settings_background':
-                element['x'] = zone_region.left + 225
+                element['x'] = zone_region.left + 228
                 element['y'] = zone_region.top + 95
             elif element_id == 'input_chart_settings_grid_lines_v':
-                element['x'] = zone_region.left + 225
+                element['x'] = zone_region.left + 228
                 element['y'] = zone_region.top + 145
             elif element_id == 'input_chart_settings_grid_lines_h':
-                element['x'] = zone_region.left + 225
+                element['x'] = zone_region.left + 228
                 element['y'] = zone_region.top + 195
             elif element_id == 'input_ema_settings_color':
                 element['x'] = zone_region.left + 140
@@ -1042,7 +1042,7 @@ class SmartTrader:
             elif element_id == 'dp_item_1min':
                 element['x'] = zone_center_x
                 element['y'] = zone_center_y
-            elif element_id == 'dp_item_6':
+            elif element_id == '    ,':
                 element['x'] = zone_center_x
                 element['y'] = zone_center_y
 
