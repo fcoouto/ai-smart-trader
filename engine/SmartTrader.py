@@ -485,10 +485,10 @@ class SmartTrader:
                     bottom = height
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
-                    left = width * 0.58
+                    left = width * 0.60
                     top = height * 0.04
                     right = width
-                    bottom = height * 0.23
+                    bottom = height * 0.25
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     left = width * 0.15
