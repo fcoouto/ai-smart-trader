@@ -41,7 +41,7 @@ LOCK_LONG_ACTION_FILENAME = 'long_action'
 LOCK_FILE_EXTENSION = '.lck'
 PATH_DATA = 'data'
 PATH_SS = 'ocr'
-PATH_SS_TEMPLATE = os.path.join(PATH_SS, 'template')
+PATH_SS_TEMPLATE = os.path.join(PATH_SS, 'template', platform.system().lower())
 PATH_SS_CONFIG = os.path.join(os.getcwd(), 'ocr', 'config')
 SS_FILE_EXTENSION = '.png'
 
@@ -175,12 +175,6 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.80,
             },
-            'navbar_ema_settings': {
-                'context': 'tv',
-                'id': 'navbar_ema_settings',
-                'region': None,
-                'locate_confidence': 0.50,
-            },
             'ema_settings_tab1': {
                 'context': 'tv',
                 'id': 'ema_settings_tab1',
@@ -192,12 +186,6 @@ BROKERS = {
                 'id': 'ema_settings_tab2',
                 'region': None,
                 'locate_confidence': 0.50,
-            },
-            'navbar_rsi_settings': {
-                'context': 'tv',
-                'id': 'navbar_rsi_settings',
-                'region': None,
-                'locate_confidence': 0.75,
             },
             'rsi_settings_tab1': {
                 'context': 'tv',
@@ -393,13 +381,13 @@ BROKERS = {
             },
             'navitem_ema_settings_tab1': {
                 'context': 'tv',
-                'zone': 'navbar_ema_settings',
+                'zone': 'ema_settings_tab1',
                 'x': None,
                 'y': None
             },
             'navitem_ema_settings_tab2': {
                 'context': 'tv',
-                'zone': 'navbar_ema_settings',
+                'zone': 'ema_settings_tab1',
                 'x': None,
                 'y': None
             },
@@ -429,13 +417,13 @@ BROKERS = {
             },
             'navitem_rsi_settings_tab1': {
                 'context': 'tv',
-                'zone': 'navbar_rsi_settings',
+                'zone': 'rsi_settings_tab2',
                 'x': None,
                 'y': None
             },
             'navitem_rsi_settings_tab2': {
                 'context': 'tv',
-                'zone': 'navbar_rsi_settings',
+                'zone': 'rsi_settings_tab2',
                 'x': None,
                 'y': None
             },
