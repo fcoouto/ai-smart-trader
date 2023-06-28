@@ -462,6 +462,12 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
+            'dp_item_5': {
+                'context': 'tv',
+                'zone': 'dp_item_5',
+                'x': None,
+                'y': None
+            },
             'dp_item_6': {
                 'context': 'tv',
                 'zone': 'dp_item_6',
