@@ -137,13 +137,12 @@ class SmartTrader:
         # DEBUG
         if settings.DEBUG_OCR:
             while True:
-                with asyncio.Runner() as runner:
-                    asset = runner.run(self.read_element(element_id='asset'))
-                    balance = runner.run(self.read_element(element_id='balance'))
-                    payout = runner.run(self.read_element(element_id='payout'))
-                    chart_data = runner.run(self.read_element(element_id='chart_data'))
-                    trade_size = runner.run(self.read_element(element_id='trade_size'))
-                    expiry_time = runner.run(self.read_element(element_id='expiry_time'))
+                asset = self.read_element(element_id='asset')
+                balance = self.read_element(element_id='balance')
+                payout = self.read_element(element_id='payout')
+                chart_data = self.read_element(element_id='chart_data')
+                trade_size = self.read_element(element_id='trade_size')
+                expiry_time = self.read_element(element_id='expiry_time')
 
                 print(f"{asset} | "
                       f"{balance} | "
