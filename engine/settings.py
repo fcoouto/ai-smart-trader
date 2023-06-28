@@ -3,7 +3,7 @@ import platform
 
 
 # DEBUG
-DEBUG_OCR = True
+DEBUG_OCR = False
 DEBUG_MSG = True
 
 # VALIDATION
