@@ -1039,10 +1039,7 @@ class SmartTrader:
             elif element_id == 'trade_size':
                 element['x'] = zone_region.left + 150
                 element['y'] = zone_region.top + 75
-            elif element_id == 'dp_item_1min':
-                element['x'] = zone_center_x
-                element['y'] = zone_center_y
-            elif element_id == '    ,':
+            elif element_id.startswith('dp_item_'):
                 element['x'] = zone_center_x
                 element['y'] = zone_center_y
 
