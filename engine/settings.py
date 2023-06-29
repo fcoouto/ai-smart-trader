@@ -1,5 +1,6 @@
 import os
 import platform
+import tempfile
 
 
 # DEBUG
@@ -37,18 +38,30 @@ PLAYBOOK_LONG_ACTION = {
     'tv_reset': 10,
 }
 PATH_LOCK = 'lock'
-LOCK_LONG_ACTION_FILENAME = 'long_action'
 LOCK_FILE_EXTENSION = '.lck'
+LOCK_LONG_ACTION_FILENAME = 'long_action'
 PATH_DATA = 'data'
 PATH_SS = 'ocr'
 PATH_SS_TEMPLATE = os.path.join(PATH_SS, 'template', platform.system().lower())
 PATH_SS_CONFIG = os.path.join(os.getcwd(), 'ocr', 'config')
 SS_FILE_EXTENSION = '.png'
+PATH_TEMP = tempfile.gettempdir()
+PATH_TEMP_BROWSER_PROFILES = os.path.join(PATH_TEMP, 'google', 'chrome')
 
 if platform.system().lower() == 'windows':
-    PATH_TESSERACT = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+    PATH_TESSERACT = os.path.join('C:\\', 'Program Files', 'Tesseract-OCR', 'tesseract.exe')
+
+    PATH_BROWSER = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
+    BROWSER_X_OFFSET = 6
+    BROWSER_WIDTH = 654
+    BROWSER_HEIGHT = 813
 elif platform.system().lower() == 'linux':
-    PATH_TESSERACT = '/usr/bin/tesseract'
+    PATH_TESSERACT = os.path.join('usr', 'bin', 'tesseract')
+
+    PATH_BROWSER = os.path.join('opt', 'google', 'chrome', 'google-chrome')
+    BROWSER_X_OFFSET = 0
+    BROWSER_WIDTH = 654
+    BROWSER_HEIGHT = 813
 
 CORE_DATA = {
     'asset': 'string',

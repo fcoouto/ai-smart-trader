@@ -7,6 +7,8 @@ from time import gmtime, strftime, sleep
 from datetime import datetime
 
 import asyncio
+import subprocess
+
 import art
 import pandas as pd
 from tabulate import tabulate
@@ -406,6 +408,12 @@ class SmartTrader:
                         sleep(1)
 
                     else:
+                        if zone_id == 'navbar_url':
+                            self.execute_playbook(playbook_id='open_browser')
+
+                            # Go try to find it again
+                            continue
+
                         if tries >= 5:
                             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
                                    f"- I couldn't find zone_region for [{zone_id}]. "
@@ -1170,6 +1178,27 @@ class SmartTrader:
 
         self.is_automation_running = False
         return result
+
+    def playbook_open_browser(self):
+        DETACHED_PROCESS = 0x00000008
+        region = self.region
+        browser_profile_path = os.path.join(settings.PATH_TEMP_BROWSER_PROFILES, f'profile_{self.agent_id}')
+
+        parameters = f'--user-data-dir="{browser_profile_path}" ' \
+                     f'--window-position={int(region["x"] - settings.BROWSER_X_OFFSET)},{int(region["y"])} ' \
+                     f'--window-size={settings.BROWSER_WIDTH},{settings.BROWSER_HEIGHT} ' \
+                     f'--guest ' \
+                     f'--no-first-run ' \
+                     f'--disable-notifications '
+
+        # print(f'"{settings.PATH_BROWSER}" {parameters}')
+        pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters}',
+                               shell=True,
+                               creationflags=DETACHED_PROCESS).pid
+        sleep(3)
+
+        # Changing focus
+        self.mouse_event_on_neutral_area(event='click', area_id='within_app')
 
     def playbook_log_in(self):
         # Going to [trading_page]
