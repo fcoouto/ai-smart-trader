@@ -479,12 +479,12 @@ class SmartTrader:
         if self.broker['id'] == 'iqcent':
             if zone_id == 'header':
                 if element_id == 'asset':
-                    left = width * 0.08
+                    left = width * 0.07
                     top = height * 0.26
                     right = width * 0.40
                     bottom = height * 0.52
                 elif element_id == 'balance':
-                    left = width * 0.50
+                    left = width * 0.49
                     top = height * 0.26
                     right = width * 0.80
                     bottom = height * 0.52
@@ -1211,7 +1211,7 @@ class SmartTrader:
             pid = subprocess.Popen(args,
                                    shell=False,
                                    stdin=None,
-                                   stdout=None, 
+                                   stdout=None,
                                    stderr=None,
                                    close_fds=True).pid
         sleep(3)
