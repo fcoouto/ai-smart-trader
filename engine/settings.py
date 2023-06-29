@@ -56,9 +56,9 @@ if platform.system().lower() == 'windows':
     BROWSER_WIDTH = 654
     BROWSER_HEIGHT = 813
 elif platform.system().lower() == 'linux':
-    PATH_TESSERACT = os.path.join('usr', 'bin', 'tesseract')
+    PATH_TESSERACT = os.path.join('/usr', 'bin', 'tesseract')
 
-    PATH_BROWSER = os.path.join('opt', 'google', 'chrome', 'google-chrome')
+    PATH_BROWSER = os.path.join('/opt', 'google', 'chrome', 'google-chrome')
     BROWSER_X_OFFSET = 0
     BROWSER_WIDTH = 654
     BROWSER_HEIGHT = 813
