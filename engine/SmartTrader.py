@@ -483,12 +483,12 @@ class SmartTrader:
         if self.broker['id'] == 'iqcent':
             if zone_id == 'header':
                 if element_id == 'asset':
-                    left = width * 0.07
+                    left = width * 0.09
                     top = height * 0.26
                     right = width * 0.40
                     bottom = height * 0.52
                 elif element_id == 'balance':
-                    left = width * 0.50
+                    left = width * 0.51
                     top = height * 0.26
                     right = width * 0.80
                     bottom = height * 0.52
@@ -499,7 +499,7 @@ class SmartTrader:
                     right = width
                     bottom = height * 0.865
                 elif element_id == 'ema_72':
-                    left = width * 0.4775
+                    left = width * 0.48
                     top = height * 0.89
                     right = width * 0.70
                     bottom = height
