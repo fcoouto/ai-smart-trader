@@ -1198,7 +1198,7 @@ class SmartTrader:
                                    shell=False,
                                    creationflags=DETACHED_PROCESS).pid
         else:
-            pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters}',
+            pid = subprocess.Popen(f'{settings.PATH_BROWSER} {parameters}',
                                    shell=False).pid
         sleep(3)
 
