@@ -1185,27 +1185,29 @@ class SmartTrader:
         region = self.region
         browser_profile_path = os.path.join(settings.PATH_TEMP_BROWSER_PROFILES, f'profile_{self.agent_id}')
 
-        parameters = f'--user-data-dir="{browser_profile_path}" ' \
-                     f'--window-position={int(region["x"] - settings.BROWSER_X_OFFSET)},{int(region["y"])} ' \
-                     f'--window-size={settings.BROWSER_WIDTH},{settings.BROWSER_HEIGHT} ' \
-                     f'--guest ' \
-                     f'--no-first-run ' \
-                     f'--disable-notifications'
-
-        args = [settings.PATH_BROWSER,
-                f'--user-data-dir="{browser_profile_path}"',
-                f'--window-position={int(region["x"] - settings.BROWSER_X_OFFSET)},{int(region["y"])}',
+        args = [f'--user-data-dir="{browser_profile_path}"',
+                f'--window-position={int(region["x"])},{int(region["y"])}',
                 f'--window-size={settings.BROWSER_WIDTH},{settings.BROWSER_HEIGHT}',
+                '--log-level=3',
                 '--guest',
                 '--no-first-run',
                 '--disable-notifications']
 
-        # print(f'"{settings.PATH_BROWSER}" {parameters}')
         if platform.system().lower() == 'windows':
-            pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters}',
+            # Converting args into [str]
+            str_args = ''
+            for arg in args:
+                str_args += f'{arg} '
+
+            # Executing subprocess
+            pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {str_args}',
                                    shell=False,
                                    creationflags=DETACHED_PROCESS).pid
         else:
+            # Adding [PATH_BROWSER] to [args] on 1st position
+            args.insert(0, settings.PATH_BROWSER)
+
+            # Executing subprocess
             pid = subprocess.Popen(args,
                                    shell=False).pid
         sleep(3)

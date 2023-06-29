@@ -52,14 +52,12 @@ if platform.system().lower() == 'windows':
     PATH_TESSERACT = os.path.join('C:\\', 'Program Files', 'Tesseract-OCR', 'tesseract.exe')
 
     PATH_BROWSER = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
-    BROWSER_X_OFFSET = 6
     BROWSER_WIDTH = 654
     BROWSER_HEIGHT = 813
 elif platform.system().lower() == 'linux':
     PATH_TESSERACT = os.path.join('/usr', 'bin', 'tesseract')
 
     PATH_BROWSER = os.path.join('/opt', 'google', 'chrome', 'google-chrome')
-    BROWSER_X_OFFSET = 0
     BROWSER_WIDTH = 654
     BROWSER_HEIGHT = 813
 
