@@ -4,8 +4,8 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = True
-DEBUG_MSG = True
+DEBUG_OCR = False
+DEBUG_MSG = False
 
 # VALIDATION
 MIN_BALANCE = 100

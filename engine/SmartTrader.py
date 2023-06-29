@@ -352,10 +352,6 @@ class SmartTrader:
             # Zone is expected on broker's object
             while zone_region is None:
                 zone = self.broker['zones'][zone_id]
-
-                print(f'zone_id: {zone_id}')
-                print(zone)
-                print(self.region)
                 zone_region = pyautogui.locateOnScreen(ss_template,
                                                        region=self.region,
                                                        confidence=zone['locate_confidence'])
@@ -1210,11 +1206,6 @@ class SmartTrader:
         else:
             # Adding [PATH_BROWSER] to [args] on 1st position
             args.insert(0, settings.PATH_BROWSER)
-
-            str_args = ''
-            for arg in args:
-                str_args += f'{arg} '
-            print(str_args)
 
             # Executing subprocess
             pid = subprocess.Popen(args,
