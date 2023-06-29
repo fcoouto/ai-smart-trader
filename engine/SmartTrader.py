@@ -1190,7 +1190,7 @@ class SmartTrader:
                      f'--window-size={settings.BROWSER_WIDTH},{settings.BROWSER_HEIGHT} ' \
                      f'--guest ' \
                      f'--no-first-run ' \
-                     f'--disable-notifications '
+                     f'--disable-notifications'
 
         # print(f'"{settings.PATH_BROWSER}" {parameters}')
         if platform.system().lower() == 'windows':
