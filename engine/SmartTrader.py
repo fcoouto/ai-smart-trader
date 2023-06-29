@@ -499,7 +499,7 @@ class SmartTrader:
                     right = width
                     bottom = height * 0.865
                 elif element_id == 'ema_72':
-                    left = width * 0.48
+                    left = width * 0.4825
                     top = height * 0.89
                     right = width * 0.70
                     bottom = height
