@@ -352,6 +352,10 @@ class SmartTrader:
             # Zone is expected on broker's object
             while zone_region is None:
                 zone = self.broker['zones'][zone_id]
+
+                print(f'zone_id: {zone_id}')
+                print(zone)
+                print(self.region)
                 zone_region = pyautogui.locateOnScreen(ss_template,
                                                        region=self.region,
                                                        confidence=zone['locate_confidence'])
