@@ -1192,13 +1192,21 @@ class SmartTrader:
                      f'--no-first-run ' \
                      f'--disable-notifications'
 
+        args = [settings.PATH_BROWSER,
+                '--user-data-dir="{browser_profile_path}"',
+                '--window-position={int(region["x"] - settings.BROWSER_X_OFFSET)},{int(region["y"])}',
+                '--window-size={settings.BROWSER_WIDTH},{settings.BROWSER_HEIGHT}',
+                '--guest',
+                '--no-first-run',
+                '--disable-notifications']
+
         # print(f'"{settings.PATH_BROWSER}" {parameters}')
         if platform.system().lower() == 'windows':
             pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters}',
                                    shell=False,
                                    creationflags=DETACHED_PROCESS).pid
         else:
-            pid = subprocess.Popen(f'{settings.PATH_BROWSER} {parameters}',
+            pid = subprocess.Popen(args,
                                    shell=False).pid
         sleep(3)
 
