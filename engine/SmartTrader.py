@@ -1207,6 +1207,11 @@ class SmartTrader:
             # Adding [PATH_BROWSER] to [args] on 1st position
             args.insert(0, settings.PATH_BROWSER)
 
+            str_args = ''
+            for arg in args:
+                str_args += f'{arg} '
+            print(str_args)
+
             # Executing subprocess
             pid = subprocess.Popen(args,
                                    shell=False,
