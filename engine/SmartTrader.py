@@ -1,4 +1,5 @@
 import os
+import platform
 
 import json
 import random
@@ -1192,9 +1193,13 @@ class SmartTrader:
                      f'--disable-notifications '
 
         # print(f'"{settings.PATH_BROWSER}" {parameters}')
-        pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters}',
-                               shell=True,
-                               creationflags=DETACHED_PROCESS).pid
+        if platform.system().lower() == 'windows':
+            pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters}',
+                                   shell=True,
+                                   creationflags=DETACHED_PROCESS).pid
+        else:
+            pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters}',
+                                   shell=True).pid
         sleep(3)
 
         # Changing focus
