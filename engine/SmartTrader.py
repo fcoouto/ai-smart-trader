@@ -1195,11 +1195,11 @@ class SmartTrader:
         # print(f'"{settings.PATH_BROWSER}" {parameters}')
         if platform.system().lower() == 'windows':
             pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters}',
-                                   shell=True,
+                                   shell=False,
                                    creationflags=DETACHED_PROCESS).pid
         else:
             pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {parameters} &',
-                                   shell=True).pid
+                                   shell=False).pid
         sleep(3)
 
         # Changing focus
