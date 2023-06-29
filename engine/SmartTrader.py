@@ -1209,7 +1209,11 @@ class SmartTrader:
 
             # Executing subprocess
             pid = subprocess.Popen(args,
-                                   shell=False).pid
+                                   shell=False,
+                                   stdin=None,
+                                   stdout=None, 
+                                   stderr=None,
+                                   close_fds=True).pid
         sleep(3)
 
         # Changing focus
