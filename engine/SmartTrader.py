@@ -1193,9 +1193,9 @@ class SmartTrader:
                      f'--disable-notifications'
 
         args = [settings.PATH_BROWSER,
-                '--user-data-dir="{browser_profile_path}"',
-                '--window-position={int(region["x"] - settings.BROWSER_X_OFFSET)},{int(region["y"])}',
-                '--window-size={settings.BROWSER_WIDTH},{settings.BROWSER_HEIGHT}',
+                f'--user-data-dir="{browser_profile_path}"',
+                f'--window-position={int(region["x"] - settings.BROWSER_X_OFFSET)},{int(region["y"])}',
+                f'--window-size={settings.BROWSER_WIDTH},{settings.BROWSER_HEIGHT}',
                 '--guest',
                 '--no-first-run',
                 '--disable-notifications']
