@@ -58,8 +58,8 @@ elif platform.system().lower() == 'linux':
     PATH_TESSERACT = os.path.join('/usr', 'bin', 'tesseract')
 
     PATH_BROWSER = os.path.join('/opt', 'google', 'chrome', 'google-chrome')
-    BROWSER_WIDTH = 654
-    BROWSER_HEIGHT = 813
+    BROWSER_WIDTH = 638
+    BROWSER_HEIGHT = 794
 
 CORE_DATA = {
     'asset': 'string',

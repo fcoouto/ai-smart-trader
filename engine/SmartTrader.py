@@ -484,7 +484,7 @@ class SmartTrader:
                     right = width * 0.40
                     bottom = height * 0.52
                 elif element_id == 'balance':
-                    left = width * 0.49
+                    left = width * 0.50
                     top = height * 0.26
                     right = width * 0.80
                     bottom = height * 0.52
