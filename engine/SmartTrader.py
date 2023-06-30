@@ -1805,7 +1805,7 @@ class SmartTrader:
                     # Position has been closed
                     tmsg.print(context=context, clear=True)
                     art.tprint(text=position['result'], font='block')
-                    await asyncio.sleep(7)
+                    await asyncio.sleep(2)
 
     async def strategy_ema_rsi_8020(self):
         strategy_id = 'ema_rsi_8020'
