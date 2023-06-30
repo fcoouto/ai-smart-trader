@@ -495,13 +495,19 @@ class SmartTrader:
                     right = width
                     bottom = height * 0.865
                 elif element_id == 'ema_72':
-                    left = width * 0.479
+                    if platform.system().lower() == 'linux':
+                        left = width * 0.49
+                    else:
+                        left = width * 0.45
                     top = height * 0.89
                     right = width * 0.70
                     bottom = height
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
-                    left = width * 0.60
+                    if platform.system().lower() == 'linux':
+                        left = width * 0.61
+                    else:
+                        left = width * 0.59
                     top = height * 0.04
                     right = width
                     bottom = height * 0.25
