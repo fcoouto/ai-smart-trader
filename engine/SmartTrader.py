@@ -1671,7 +1671,7 @@ class SmartTrader:
                 tb_positions = tabulate(tb_positions, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
-            validation_trigger = random.randrange(start=40000, stop=48000) / 1000
+            validation_trigger = random.randrange(start=38000, stop=46000) / 1000
 
             # Waiting PB
             msg = "Watching Price Action"
