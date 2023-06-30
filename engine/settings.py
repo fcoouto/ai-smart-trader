@@ -4,7 +4,7 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = True
+DEBUG_OCR = False
 DEBUG_MSG = True
 
 # VALIDATION
@@ -59,7 +59,7 @@ elif platform.system().lower() == 'linux':
 
     PATH_BROWSER = os.path.join('/opt', 'google', 'chrome', 'google-chrome')
     BROWSER_WIDTH = 638
-    BROWSER_HEIGHT = 798
+    BROWSER_HEIGHT = 804
 
 CORE_DATA = {
     'asset': 'string',
