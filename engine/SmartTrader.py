@@ -1566,6 +1566,7 @@ class SmartTrader:
             # Updating Loss Management PB
             msg = "Managing previous losses"
             for item in utils.progress_bar([0], prefix=msg):
+                self.recovery_mode = data['recovery_mode']
                 self.cumulative_loss = data['cumulative_loss']
 
         return data
@@ -1573,7 +1574,8 @@ class SmartTrader:
     def loss_management_write_to_file(self):
         data = {'agent_id': self.agent_id,
                 'last_asset': self.asset,
-                'cumulative_loss': self.cumulative_loss}
+                'cumulative_loss': self.cumulative_loss,
+                'recovery_mode': self.recovery_mode}
 
         file_path = self.get_loss_management_file_path()
         with open(file=file_path, mode='w') as f:
