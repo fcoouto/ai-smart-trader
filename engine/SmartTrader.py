@@ -841,7 +841,6 @@ class SmartTrader:
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
-        print(f'value: {value}')
 
         # Replacing any letter [O] by number [0]
         ohlc = value.replace('O', '0')
