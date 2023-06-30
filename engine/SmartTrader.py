@@ -409,7 +409,7 @@ class SmartTrader:
                         sleep(1)
 
                     else:
-                        if zone_id == 'navbar_url':
+                        if tries == 1 and zone_id == 'navbar_url':
                             self.execute_playbook(playbook_id='open_browser')
 
                             # Go try to find it again
@@ -507,9 +507,9 @@ class SmartTrader:
                     bottom = height * 0.25
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
-                    left = width * 0.15
+                    left = width * 0.16
                     top = height * 0.45
-                    right = width * 0.35
+                    right = width * 0.33
                     bottom = height * 0.61
                 if element_id == 'close':
                     left = width * 0.38
@@ -522,9 +522,9 @@ class SmartTrader:
                     right = width * 0.815
                     bottom = height * 0.48
                 elif element_id == 'payout':
-                    left = width * 0.05
+                    left = width * 0.10
                     top = height * 0.79
-                    right = width * 0.28
+                    right = width * 0.22
                     bottom = height * 0.97
 
         img = img.crop([left, top, right, bottom])
@@ -542,11 +542,11 @@ class SmartTrader:
                                            template=False)
 
             start = datetime.now()
-            print(f'[{element_id}] Screenshoting', end=' ... ')
+            # print(f'[{element_id}] Screenshoting', end=' ... ')
             img = self.screenshot_element(zone_id=zone_id,
                                           element_id=element_id,
                                           save_to=ss_path)
-            print(f'{datetime.now() - start}')
+            # print(f'{datetime.now() - start}')
 
             if type == 'float':
                 config = '--psm 7 -c tessedit_char_whitelist=0123456789.'
@@ -576,9 +576,9 @@ class SmartTrader:
             #               f' {os.path.join(settings.PATH_SS_CONFIG, f"{element_id}.user-words")}'
 
             start = datetime.now()
-            print(f'OCR Reading [{element_id}]', end=' ... ')
+            # print(f'OCR Reading [{element_id}]', end=' ... ')
             text = pytesseract.image_to_string(image=img, config=config)
-            print(f'{datetime.now() - start}')
+            # print(f'{datetime.now() - start}')
             text = text.strip()
 
             if text:
@@ -832,7 +832,6 @@ class SmartTrader:
     async def read_ohlc(self):
         # Returns [open, high, low, close, change]
         element_id = 'ohlc'
-        print(f'{datetime.now()} Reading [{element_id}]')
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
@@ -855,7 +854,6 @@ class SmartTrader:
 
     async def read_ema_72(self):
         element_id = 'ema_72'
-        print(f'{datetime.now()} Reading [{element_id}]')
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
@@ -863,7 +861,6 @@ class SmartTrader:
 
     async def read_rsi(self):
         element_id = 'rsi'
-        print(f'{datetime.now()} Reading [{element_id}]')
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
@@ -1143,7 +1140,7 @@ class SmartTrader:
                     except FileExistsError:
                         playbook_id_running = None
                         # Give some time for flush by the other instance.
-                        waiting_time = random.randrange(500, 2000) / 1000
+                        waiting_time = random.randrange(5000, 20000) / 1000
                         total_waiting_time += waiting_time
                         sleep(waiting_time)
 
@@ -1151,11 +1148,6 @@ class SmartTrader:
                             with open(file=lock_file, mode='r') as f:
                                 # Retrieving what long_action playbook is running on
                                 playbook_id_running = f.read()
-
-                                # if playbook_id_running == playbook_id == 'log_in':
-                                #     # Another instance is already logging in.
-                                #     # So we exchange [log_in] with [go_to_trading_page]
-                                #     playbook = getattr(self, 'playbook_go_to_trading_page')
 
                         if playbook_id_running:
                             # Currently running playbook has been identified
@@ -1656,9 +1648,11 @@ class SmartTrader:
         tmsg.print(context='Warming Up!',
                    msg=msg,
                    clear=True)
-
         self.run_validation()
-        sec_action = random.randrange(start=58000, stop=58750) / 1000
+
+        # First run using estimated time (2 seconds)
+        lookup_duration = 2
+        lookup_trigger = 60 - lookup_duration
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
@@ -1671,14 +1665,14 @@ class SmartTrader:
                 tb_positions = tabulate(tb_positions, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
-            sec_validation = random.randrange(start=40000, stop=48000) / 1000
+            validation_trigger = random.randrange(start=40000, stop=48000) / 1000
 
             # Waiting PB
             msg = "Watching Price Action"
-            if sec_validation > gmtime().tm_sec:
-                diff_sec = sec_validation - gmtime().tm_sec
+            if validation_trigger > gmtime().tm_sec:
+                diff_sec = validation_trigger - gmtime().tm_sec
             else:
-                diff_sec = sec_validation - gmtime().tm_sec + 60
+                diff_sec = validation_trigger - gmtime().tm_sec + 60
 
             items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
@@ -1698,19 +1692,24 @@ class SmartTrader:
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
 
-            if gmtime().tm_sec >= sec_validation:
+            if gmtime().tm_sec >= validation_trigger:
                 # Ready for Trading
 
                 # Waiting PB
                 msg = "Watching candle closure"
-                diff_sec = sec_action - gmtime().tm_sec
+                diff_sec = lookup_trigger - gmtime().tm_sec
 
                 items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                 # Running Lookup
+                start = datetime.now()
+
                 asyncio.run(self.run_lookup(context=context))
+
+                lookup_duration = datetime.now() - start
+                lookup_trigger = 60 - lookup_duration.total_seconds()
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
@@ -1751,9 +1750,8 @@ class SmartTrader:
 
         # Reading Chart data
         start = datetime.now()
-        print(f'Reading [chart_data]',)
         await self.read_element(element_id='chart_data', is_async=True)
-        print(f'Reading [chart_data] done: {datetime.now() - start}')
+        print(f'[chart_data] reading took: {datetime.now() - start}')
 
         # for strategy in utils.progress_bar(strategies, prefix=msg):
         #     # Strategies
@@ -1771,7 +1769,6 @@ class SmartTrader:
 
         # Preparing tasks
         tasks = []
-        print(f'Applying strategies', end=' ... ')
         async with asyncio.TaskGroup() as tg:
             for strategy in utils.progress_bar(strategies, prefix=msg):
                 f_strategy = f"strategy_{strategy}"
@@ -1786,7 +1783,6 @@ class SmartTrader:
                            f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
                     tmsg.input(msg=msg, clear=True)
                     exit(500)
-        print(f'{datetime.now() - start}')
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
