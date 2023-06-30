@@ -1141,6 +1141,7 @@ class SmartTrader:
                             is_done = True
 
                     except FileExistsError:
+                        playbook_id_running = None
                         # Give some time for flush by the other instance.
                         waiting_time = random.randrange(500, 2000) / 1000
                         total_waiting_time += waiting_time
