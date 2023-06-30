@@ -1721,8 +1721,11 @@ class SmartTrader:
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
-                    # Checking if session is still in sync
 
+                    # Setting [lookup_trigger] to be as close to open_time as possible
+                    lookup_trigger = 60 - 0.250
+
+                    # Checking if session is still in sync
                     sleep(random.randrange(750, 1750) / 1000)
                     if self.is_alerting_not_in_sync():
                         # Alert [not_in_sync] popping up... Refreshing page
