@@ -461,7 +461,7 @@ class SmartTrader:
 
         # Expanding image in 300%
         width, height = img.size
-        img = img.resize([int(width * 4), int(height * 4)])
+        img = img.resize([int(width * 5), int(height * 5)])
 
         if save_to:
             img.save(save_to)
@@ -491,14 +491,14 @@ class SmartTrader:
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.15
-                    top = height * 0.74
+                    top = height * 0.72
                     right = width
-                    bottom = height * 0.865
+                    bottom = height * 0.84
                 elif element_id == 'ema_72':
                     if platform.system().lower() == 'linux':
                         left = width * 0.49
                     else:
-                        left = width * 0.45
+                        left = width * 0.465
                     top = height * 0.89
                     right = width * 0.70
                     bottom = height
@@ -513,10 +513,10 @@ class SmartTrader:
                     bottom = height * 0.25
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
-                    left = width * 0.16
-                    top = height * 0.45
-                    right = width * 0.33
-                    bottom = height * 0.61
+                    left = width * 0.15
+                    top = height * 0.46
+                    right = width * 0.34
+                    bottom = height * 0.60
                 if element_id == 'close':
                     left = width * 0.38
                     top = height * 0.76
@@ -526,7 +526,7 @@ class SmartTrader:
                     left = width * 0.70
                     top = height * 0.33
                     right = width * 0.815
-                    bottom = height * 0.48
+                    bottom = height * 0.47
                 elif element_id == 'payout':
                     left = width * 0.10
                     top = height * 0.79
@@ -581,7 +581,7 @@ class SmartTrader:
             #     config += f' --user-words' \
             #               f' {os.path.join(settings.PATH_SS_CONFIG, f"{element_id}.user-words")}'
 
-            start = datetime.now()
+            # start = datetime.now()
             # print(f'OCR Reading [{element_id}]', end=' ... ')
             text = pytesseract.image_to_string(image=img, config=config)
             # print(f'{datetime.now() - start}')
@@ -841,6 +841,7 @@ class SmartTrader:
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
+        print(f'value: {value}')
 
         # Replacing any letter [O] by number [0]
         ohlc = value.replace('O', '0')

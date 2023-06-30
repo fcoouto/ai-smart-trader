@@ -4,7 +4,7 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = False
+DEBUG_OCR = True
 DEBUG_MSG = True
 
 # VALIDATION
@@ -53,7 +53,6 @@ if platform.system().lower() == 'windows':
 
     PATH_BROWSER = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
     BROWSER_WIDTH = 654
-    BROWSER_WIDTH = 638
     BROWSER_HEIGHT = 813
 elif platform.system().lower() == 'linux':
     PATH_TESSERACT = os.path.join('/usr', 'bin', 'tesseract')
@@ -100,21 +99,21 @@ BROKERS = {
             'chart_top': {
                 'id': 'chart_top',
                 'region': None,
-                'locate_confidence': 0.80,
+                'locate_confidence': 0.85,
                 'is_mandatory': True,
                 'elements': ['ohlc', 'ema_72'],
             },
             'chart_bottom': {
                 'id': 'chart_bottom',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.80,
                 'is_mandatory': True,
                 'elements': ['rsi']
             },
             'footer': {
                 'id': 'footer',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.80,
                 'is_mandatory': True,
                 'elements': ['trade_size', 'payout', 'expiry_time']
             },
