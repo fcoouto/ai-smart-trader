@@ -4,7 +4,7 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = False
+DEBUG_OCR = True
 DEBUG_MSG = True
 
 # VALIDATION
