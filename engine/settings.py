@@ -59,7 +59,7 @@ elif platform.system().lower() == 'linux':
 
     PATH_BROWSER = os.path.join('/opt', 'google', 'chrome', 'google-chrome')
     BROWSER_WIDTH = 638
-    BROWSER_HEIGHT = 804
+    BROWSER_HEIGHT = 798
 
 CORE_DATA = {
     'asset': 'string',
