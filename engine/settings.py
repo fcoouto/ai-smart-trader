@@ -121,7 +121,7 @@ BROKERS = {
                 'context': 'chrome',
                 'id': 'navbar_url',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.80,
             },
             'modal_login': {
                 'id': 'modal_login',
