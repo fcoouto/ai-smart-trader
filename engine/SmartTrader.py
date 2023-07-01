@@ -1634,6 +1634,10 @@ class SmartTrader:
         ongoing_positions = self.df_ongoing_positions()
         ongoing_positions.to_csv(positions_file, mode='a', index=False, header=False)
 
+        # Bug: position['trades'][0]['trade-size'] : index out of range
+        # Trying to wait 1 second before popping [strategy_id] from [self.ongoing_positions]
+        sleep(1)
+
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
         self.ongoing_positions.pop(strategy_id)
 
