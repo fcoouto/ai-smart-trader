@@ -1700,7 +1700,7 @@ class SmartTrader:
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
 
-            if gmtime().tm_sec >= validation_trigger:
+            if gmtime().tm_sec + 1 > validation_trigger:
                 # Ready for Trading
 
                 # Waiting PB
