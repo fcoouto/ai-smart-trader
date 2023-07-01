@@ -1732,7 +1732,7 @@ class SmartTrader:
                 msg = "Watching candle closure"
                 diff_sec = lookup_trigger - utils.now_seconds()
 
-                items = range(0, int(diff_sec / settings.PROGRESS_BAR_INTERVAL_TIME * 1000))
+                items = range(0, int(diff_sec / settings.PROGRESS_BAR_INTERVAL_TIME))
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
