@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 from engine import settings
 
 
@@ -133,6 +134,10 @@ def does_file_exist(path):
     if os.path.exists(path):
         return True
     return False
+
+
+def now_seconds():
+    return float(f'{datetime.now().second}.{datetime.now().microsecond}')
 
 
 # Technical Analysis

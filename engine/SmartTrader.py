@@ -362,11 +362,11 @@ class SmartTrader:
                     zone = self.broker['zones'][zone_id]
 
                     if 'has_login_info' in zone and zone['has_login_info']:
-                        msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
-                               f"- Seems like you are not logged in. "
-                               f"\n\t- Or maybe your session window at [{self.broker['name']}] couldn't be found on the "
+                        msg = (f"{utils.tmsg.danger}[WARNING]{utils.tmsg.endc} "
+                               f"  - Seems like you are not logged in. "
+                               f"\n\t  - Or maybe your session window at [{self.broker['name']}] couldn't be found on the "
                                f"expected [monitor] and [region]."
-                               f"\n\t- In any case, let me try to fix it...{utils.tmsg.endc}")
+                               f"\n\t  - In any case, let me try to fix it...{utils.tmsg.endc}")
                         tmsg.print(context=context, msg=msg, clear=True)
 
                         # Waiting PB
@@ -410,6 +410,22 @@ class SmartTrader:
 
                     else:
                         if tries == 1 and zone_id == 'navbar_url':
+                            msg = (f"{utils.tmsg.danger}[WARNING]{utils.tmsg.endc} "
+                                   f"  - Seems like you don't even have a browser running. "
+                                   f"\n\t  - At least I couldn't find it on the "
+                                   f"expected [monitor] and [region]."
+                                   f"\n\t  - In any case, let me try to fix it...{utils.tmsg.endc}")
+                            tmsg.print(context=context, msg=msg, clear=True)
+
+                            # Waiting PB
+                            msg = "Looking for Google Chrome icon... I'll find it... (CTRL + C to cancel)"
+
+                            wait_secs = settings.PROGRESS_BAR_WAITING_TIME
+                            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                            # Executing playbook
                             self.execute_playbook(playbook_id='open_browser')
 
                             # Go try to find it again
@@ -801,8 +817,8 @@ class SmartTrader:
         ema_72 = results[1]
         rsi = results[2]
 
-        tm_sec = gmtime().tm_sec
-        if tm_sec >= 58 or tm_sec <= 3:
+        now_seconds = utils.now_seconds()
+        if now_seconds >= 58 or now_seconds <= 3:
             self.datetime.insert(0, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
             self.open.insert(0, o)
@@ -838,8 +854,8 @@ class SmartTrader:
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
-        tm_sec = gmtime().tm_sec
-        if tm_sec >= 58 or tm_sec <= 1:
+        now_seconds = utils.now_seconds()
+        if now_seconds >= 58 or now_seconds <= 3:
             self.close[0] = value
 
         return value
@@ -1686,10 +1702,10 @@ class SmartTrader:
 
             # Waiting PB
             msg = "Watching Price Action"
-            if validation_trigger > gmtime().tm_sec:
-                diff_sec = validation_trigger - gmtime().tm_sec
+            if validation_trigger > utils.now_seconds():
+                diff_sec = validation_trigger - utils.now_seconds()
             else:
-                diff_sec = validation_trigger - gmtime().tm_sec + 60
+                diff_sec = validation_trigger - utils.now_seconds() + 60
 
             items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
@@ -1709,14 +1725,14 @@ class SmartTrader:
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
 
-            if gmtime().tm_sec + 1 > validation_trigger:
+            if utils.now_seconds() > validation_trigger:
                 # Ready for Trading
 
                 # Waiting PB
                 msg = "Watching candle closure"
-                diff_sec = lookup_trigger - gmtime().tm_sec
+                diff_sec = lookup_trigger - utils.now_seconds()
 
-                items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
+                items = range(0, int(diff_sec / settings.PROGRESS_BAR_INTERVAL_TIME * 1000))
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
