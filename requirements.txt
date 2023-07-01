@@ -1,6 +1,6 @@
 art
-pandas
 opencv-python
+pandas
 pyautogui
 pynput
 pytesseract

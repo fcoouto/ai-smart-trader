@@ -606,10 +606,19 @@ class SmartTrader:
 
                 try:
                     if asyncio.iscoroutinefunction(read):
+                        # Creating an event loop
                         result = asyncio.run(read())
                     else:
                         result = read()
                     is_processed = True
+
+                except RuntimeError as err:
+                    if 'asyncio.run() cannot be called from a running event loop' in str(err):
+                        # An event loop is running already
+                        # Let's just create a task for it
+                        result = asyncio.create_task(read())
+                        is_processed = True
+
                 except Exception as err:
                     if tries >= settings.MAX_TRIES_READING_ELEMENT:
                         # Something is going on here... Refresh page
