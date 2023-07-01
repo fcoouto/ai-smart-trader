@@ -1905,9 +1905,8 @@ class SmartTrader:
 
         else:
             # No open position
-            dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
-
             if len(self.datetime) >= 2:
+                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
 
                 if self.close[0] > self.ema_72[0] or dst_price_ema_72 < -0.0005:
                     # Price is above [ema_72] or far bellow [ema_72]
@@ -2013,51 +2012,52 @@ class SmartTrader:
 
         else:
             # No open position
-            dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
-            rsi_bullish_from = 40
-            rsi_bullish_min = 51
-            rsi_bullish_max = 80
-            rsi_bearish_from = 60
-            rsi_bearish_min = 49
-            rsi_bearish_max = 20
+            if len(self.datetime) >= 2:
+                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
+                rsi_bullish_from = 40
+                rsi_bullish_min = 51
+                rsi_bullish_max = 80
+                rsi_bearish_from = 60
+                rsi_bearish_min = 49
+                rsi_bearish_max = 20
 
-            if len(self.datetime) >= 2 and dst_price_ema_72 > 0.0001618:
-                # Price is not too close to [ema_72] (0.01618%)
+                if dst_price_ema_72 > 0.0001618:
+                    # Price is not too close to [ema_72] (0.01618%)
 
-                if self.close[0] > self.ema_72[0]:
-                    # Price is above [ema_72]
+                    if self.close[0] > self.ema_72[0]:
+                        # Price is above [ema_72]
 
-                    if dst_price_ema_72 < 0.0005:
-                        if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
-                            # Trend Following
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=self.get_optimal_trade_size())
+                        if dst_price_ema_72 < 0.0005:
+                            if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
+                                # Trend Following
+                                position = await self.open_position(strategy_id=strategy_id,
+                                                                    side='up',
+                                                                    trade_size=self.get_optimal_trade_size())
 
-                    else:
-                        # Price is too far from [ema_72] (probably loosing strength)
-                        if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
-                            # Against Trend
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=self.get_optimal_trade_size())
+                        else:
+                            # Price is too far from [ema_72] (probably loosing strength)
+                            if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
+                                # Against Trend
+                                position = await self.open_position(strategy_id=strategy_id,
+                                                                    side='down',
+                                                                    trade_size=self.get_optimal_trade_size())
 
-                elif self.close[0] < self.ema_72[0]:
-                    # Price is bellow [ema_72]
+                    elif self.close[0] < self.ema_72[0]:
+                        # Price is bellow [ema_72]
 
-                    if dst_price_ema_72 < 0.0005:
-                        if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
-                            # Trend Following
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=self.get_optimal_trade_size())
+                        if dst_price_ema_72 < 0.0005:
+                            if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
+                                # Trend Following
+                                position = await self.open_position(strategy_id=strategy_id,
+                                                                    side='down',
+                                                                    trade_size=self.get_optimal_trade_size())
 
-                    else:
-                        # Price is too far from [ema_72] (probably loosing strength)
-                        if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
-                            # Against Trend
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=self.get_optimal_trade_size())
+                        else:
+                            # Price is too far from [ema_72] (probably loosing strength)
+                            if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
+                                # Against Trend
+                                position = await self.open_position(strategy_id=strategy_id,
+                                                                    side='up',
+                                                                    trade_size=self.get_optimal_trade_size())
 
         return position
