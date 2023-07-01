@@ -793,7 +793,7 @@ class SmartTrader:
         rsi = results[2]
 
         tm_sec = gmtime().tm_sec
-        if tm_sec >= 58 or tm_sec <= 1:
+        if tm_sec >= 58 or tm_sec <= 3:
             self.datetime.insert(0, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
             self.open.insert(0, o)
