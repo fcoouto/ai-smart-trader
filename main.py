@@ -24,7 +24,7 @@ def main(argsv):
     amount_regions_per_monitor = 2
     i_monitor = 1
     i_region = None
-    broker = 'iqcent'
+    broker_id = 'iqcent'
     asset = None
     trade_size = 1.00
 

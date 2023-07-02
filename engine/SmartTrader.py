@@ -65,19 +65,17 @@ class SmartTrader:
     position_history = []
 
     ongoing_positions = {}
-    # ongoing_positions = {
-    #     'ema_rsi_8020': {'asset': 'ABC',
-    #                      'strategy_id': 'ema_rsi_8020',
-    #                      'open_time': 'XXX',
-    #                      'side': 'down',
-    #                      'result': None,
-    #                      'trades': [{'open_time': 'XXX',
-    #                                  'open_price': 0.674804,
-    #                                  'side': 'down',
-    #                                  'trade_size': 1,
-    #                                  'result': None}]
-    #      }
-    # }
+    ongoing_positions = {
+        'ema_rsi_8020': {'asset': 'ABC',
+                         'strategy_id': 'ema_rsi_8020',
+                         'side': 'down',
+                         'result': None,
+                         'trades': [{'open_time': 'XXX',
+                                     'open_price': 0.674804,
+                                     'trade_size': 1,
+                                     'result': None}]
+         }
+    }
 
     is_automation_running = False
     awareness = {
