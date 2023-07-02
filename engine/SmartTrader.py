@@ -333,6 +333,21 @@ class SmartTrader:
             # Which means user is authenticated
             return True
 
+    def is_loss(self, timeout=3):
+        zone_id = 'alert_loss'
+
+        # Checking PB
+        msg = "Waiting for result confirmation"
+        items = range(0, int(timeout / settings.PROGRESS_BAR_INTERVAL_TIME))
+        for item in utils.progress_bar(items, prefix=msg, reverse=True):
+            zone_region = self.get_zone_region(context_id=self.broker['id'],
+                                               zone_id=zone_id,
+                                               confidence=0.90)
+            if zone_region:
+                # Zone [alert_loss] has been found
+                # Which means it's a confirmed loss
+                return True
+
     ''' OCR '''
 
     def get_zone_region(self, context_id, zone_id, confidence=settings.LOCATE_CONFIDENCE):
@@ -1632,8 +1647,9 @@ class SmartTrader:
 
         # Appending data to [positions.csv] file
         positions_file = os.path.join(settings.PATH_DATA, 'positions.csv')
-        ongoing_positions = self.df_ongoing_positions()
-        ongoing_positions.to_csv(positions_file, mode='a', index=False, header=False)
+        df = self.df_ongoing_positions()
+        positions = df.query(f'df.Strategy == "{strategy_id}"')
+        positions.to_csv(positions_file, mode='a', index=False, header=False)
 
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
         self.ongoing_positions.pop(strategy_id)
