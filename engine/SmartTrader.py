@@ -244,7 +244,7 @@ class SmartTrader:
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-            self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size)
+            self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size, is_long_action=True)
             self.read_element(element_id='trade_size')
 
             print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
@@ -1145,7 +1145,7 @@ class SmartTrader:
 
     ''' Playbooks '''
 
-    def execute_playbook(self, playbook_id, **kwargs):
+    def execute_playbook(self, playbook_id, is_long_action=False, **kwargs):
         self.is_automation_running = True
         result = None
 
@@ -1154,7 +1154,7 @@ class SmartTrader:
         if hasattr(self, f_playbook) and callable(playbook := getattr(self, f_playbook)):
             # Playbook has been found
 
-            if playbook_id not in settings.PLAYBOOK_LONG_ACTION:
+            if is_long_action is False and playbook_id not in settings.PLAYBOOK_LONG_ACTION:
                 # It's not a long action
                 result = playbook(**kwargs)
 
@@ -1519,13 +1519,11 @@ class SmartTrader:
         rows = []
         columns = ['Asset',
                    'Strategy',
-                   'Open Time (UTC)',
                    'Side']
 
         for position in self.ongoing_positions.values():
             row = [self.asset,
                    position['strategy_id'],
-                   position['trades'][0]['open_time'],
                    position['side']]
 
             i = 1
