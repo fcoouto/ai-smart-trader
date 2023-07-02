@@ -69,10 +69,10 @@ class SmartTrader:
     #     'ema_rsi_8020': {'asset': 'ABC',
     #                      'strategy_id': 'ema_rsi_8020',
     #                      'open_time': 'XXX',
-    #                      'open_price': 0.674804,
     #                      'side': 'down',
     #                      'result': None,
     #                      'trades': [{'open_time': 'XXX',
+    #                                  'open_price': 0.674804,
     #                                  'side': 'down',
     #                                  'trade_size': 1,
     #                                  'result': None}]
@@ -1519,24 +1519,41 @@ class SmartTrader:
 
     def df_ongoing_positions(self):
         rows = []
-        columns = ['Strategy', 'Open Time (UTC)', 'Side', 'Size', 'Open Price']
+        columns = ['Asset',
+                   'Strategy',
+                   'Open Time (UTC)',
+                   'Side']
 
         for position in self.ongoing_positions.values():
-            row = [position['strategy_id'],
+            row = [self.asset,
+                   position['strategy_id'],
                    position['open_time'],
-                   position['side'],
-                   position['trades'][0]['trade_size'],
-                   position['open_price']]
+                   position['side']]
 
             i = 1
             for trade in position['trades']:
+                # Adding [trade] columns
+                if str(f'T{i}: Open Time') not in columns:
+                    columns.append(str(f'T{i}: Open Time'))
+                    columns.append(str(f'T{i}: Size'))
+                    columns.append(str(f'T{i}: Open Price'))
+                    columns.append(str(f'T{i}: Result'))
+
+                # Defining [open_time]
+                row.append(trade['open_time'])
+
+                # Defining [size]
+                row.append(trade['trade_size'])
+
+                # Defining [open_price]
+                row.append(trade['open_price'])
+
+                # Defining [result]
                 if trade['result']:
                     value = trade['result']
                 else:
                     value = 'on going'
 
-                if 'Trade ' + str(i) not in columns:
-                    columns.append('Trade ' + str(i))
                 row.append(value)
 
                 i += 1
@@ -1625,15 +1642,11 @@ class SmartTrader:
     ''' TA & Trading '''
 
     async def open_position(self, strategy_id, side, trade_size):
-        position = {'result': None}
-
-        now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        position['asset'] = self.asset
-        position['strategy_id'] = strategy_id
-        position['open_time'] = now
-        position['open_price'] = self.close[0]
-        position['side'] = side
-        position['trades'] = []
+        position = {'result': None,
+                    'asset': self.asset,
+                    'strategy_id': strategy_id,
+                    'side': side,
+                    'trades': []}
 
         self.ongoing_positions[strategy_id] = position
         await self.open_trade(strategy_id=strategy_id, side=side, trade_size=trade_size)
@@ -1672,8 +1685,8 @@ class SmartTrader:
         now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         trade = {
             'open_time': now,
-            'side': self.ongoing_positions[strategy_id]['side'],
             'trade_size': trade_size,
+            'open_price': self.close[0],
             'result': None
         }
 
@@ -1865,18 +1878,18 @@ class SmartTrader:
 
             if position['side'] == 'up':
                 # up
-                if self.close[0] > position['open_price']:
+                if self.close[0] > last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] < position['open_price']:
+                elif self.close[0] < last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
 
             else:
                 # down
-                if self.close[0] < position['open_price']:
+                if self.close[0] < last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] > position['open_price']:
+                elif self.close[0] > last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
@@ -1959,18 +1972,18 @@ class SmartTrader:
 
             if position['side'] == 'up':
                 # up
-                if self.close[0] > position['open_price']:
+                if self.close[0] > last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] < position['open_price']:
+                elif self.close[0] < last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
 
             else:
                 # down
-                if self.close[0] < position['open_price']:
+                if self.close[0] < last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] > position['open_price']:
+                elif self.close[0] > last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
