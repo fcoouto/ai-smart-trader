@@ -22,7 +22,7 @@ def execute(amount_regions_per_monitor,
 
 def main(argsv):
     amount_regions_per_monitor = 2
-    i_monitor = 1
+    i_monitor = 0
     i_region = None
     broker_id = 'iqcent'
     asset = None
