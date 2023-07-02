@@ -1723,7 +1723,7 @@ class SmartTrader:
                 # Printing [ongoing_positions]
 
                 df = self.df_ongoing_positions()
-                df = df.loc[df.columns('Strategy',
+                df = df.loc[df.columns['Strategy',
                                        'Open Time (UTC)',
                                        'Side',
                                        'Size',
@@ -1732,7 +1732,7 @@ class SmartTrader:
                                        'T2: Open Price',
                                        'T2: Result',
                                        'T3: Open Price',
-                                       'T3: Result')]
+                                       'T3: Result']]
                 tb_positions = tabulate(df, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
