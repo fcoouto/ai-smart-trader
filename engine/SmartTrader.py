@@ -65,17 +65,17 @@ class SmartTrader:
     position_history = []
 
     ongoing_positions = {}
-    ongoing_positions = {
-        'ema_rsi_8020': {'asset': 'ABC',
-                         'strategy_id': 'ema_rsi_8020',
-                         'side': 'down',
-                         'result': None,
-                         'trades': [{'open_time': 'XXX',
-                                     'open_price': 0.674804,
-                                     'trade_size': 1,
-                                     'result': None}]
-         }
-    }
+    # ongoing_positions = {
+    #     'ema_rsi_8020': {'asset': 'ABC',
+    #                      'strategy_id': 'ema_rsi_8020',
+    #                      'side': 'down',
+    #                      'result': None,
+    #                      'trades': [{'open_time': 'XXX',
+    #                                  'open_price': 0.674804,
+    #                                  'trade_size': 1,
+    #                                  'result': None}]
+    #                      }
+    # }
 
     is_automation_running = False
     awareness = {
@@ -1724,15 +1724,15 @@ class SmartTrader:
 
                 df = self.df_ongoing_positions()
                 df = df.filter(items=['Strategy',
-                                       'Open Time (UTC)',
-                                       'Side',
-                                       'Size',
-                                       'T1: Open Price',
-                                       'T1: Result',
-                                       'T2: Open Price',
-                                       'T2: Result',
-                                       'T3: Open Price',
-                                       'T3: Result'])
+                                      'Open Time (UTC)',
+                                      'Side',
+                                      'Size',
+                                      'T1: Open Price',
+                                      'T1: Result',
+                                      'T2: Open Price',
+                                      'T2: Result',
+                                      'T3: Open Price',
+                                      'T3: Result'])
                 tb_positions = tabulate(df, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
