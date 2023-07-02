@@ -1625,8 +1625,8 @@ class SmartTrader:
 
         return position
 
-    def close_position(self, strategy_id, result):
-        self.close_trade(strategy_id=strategy_id, result=result)
+    async def close_position(self, strategy_id, result):
+        await self.close_trade(strategy_id=strategy_id, result=result)
         self.ongoing_positions[strategy_id]['result'] = result
         closed_position = self.ongoing_positions[strategy_id].copy()
 
@@ -1634,10 +1634,6 @@ class SmartTrader:
         positions_file = os.path.join(settings.PATH_DATA, 'positions.csv')
         ongoing_positions = self.df_ongoing_positions()
         ongoing_positions.to_csv(positions_file, mode='a', index=False, header=False)
-
-        # Bug: position['trades'][0]['trade-size'] : index out of range
-        # Trying to wait 1 second before popping [strategy_id] from [self.ongoing_positions]
-        sleep(1)
 
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
         self.ongoing_positions.pop(strategy_id)
@@ -1668,7 +1664,7 @@ class SmartTrader:
         self.ongoing_positions[strategy_id]['trades'].append(trade)
         return trade
 
-    def close_trade(self, strategy_id, result):
+    async def close_trade(self, strategy_id, result):
         position = self.ongoing_positions[strategy_id]
         trade = position['trades'][-1]
         trade['result'] = result
@@ -1870,27 +1866,27 @@ class SmartTrader:
                     result = 'draw'
 
             if result == 'gain':
-                position = self.close_position(strategy_id=strategy_id,
-                                               result=result)
+                position = await self.close_position(strategy_id=strategy_id,
+                                                     result=result)
             elif result == 'loss':
                 if amount_trades >= settings.MAX_TRADES_PER_POSITION:
                     # No more tries
-                    position = self.close_position(strategy_id=strategy_id,
-                                                   result=result)
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
 
                 elif position['side'] == 'up' and self.rsi[0] < 20:
                     # Abort it
-                    position = self.close_position(strategy_id=strategy_id,
-                                                   result=result)
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
                 elif position['side'] == 'down' and self.rsi[0] > 80:
                     # Abort it
-                    position = self.close_position(strategy_id=strategy_id,
-                                                   result=result)
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
 
                 if not position['result']:
                     # Martingale
-                    self.close_trade(strategy_id=strategy_id,
-                                     result=result)
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
 
                     if self.recovery_mode:
                         trade_size = self.get_optimal_trade_size()
@@ -1902,8 +1898,8 @@ class SmartTrader:
                                           trade_size=trade_size)
             else:
                 # Draw
-                self.close_trade(strategy_id=strategy_id,
-                                 result=result)
+                await self.close_trade(strategy_id=strategy_id,
+                                       result=result)
                 await self.open_trade(strategy_id=strategy_id,
                                       side=position['side'],
                                       trade_size=last_trade['trade_size'])
@@ -1965,39 +1961,39 @@ class SmartTrader:
 
             # Checking [result]
             if result == 'gain':
-                position = self.close_position(strategy_id=strategy_id,
-                                               result=result)
+                position = await self.close_position(strategy_id=strategy_id,
+                                                     result=result)
             elif result == 'loss':
                 if amount_trades >= settings.MAX_TRADES_PER_POSITION:
                     # No more tries
-                    position = self.close_position(strategy_id=strategy_id,
-                                                   result=result)
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
 
                 elif position['side'] == 'up':
                     if self.rsi[0] < 38:
                         # Abort it
-                        position = self.close_position(strategy_id=strategy_id,
-                                                       result=result)
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
                     elif self.close[1] > self.ema_72[1] and self.close[0] < self.ema_72[0]:
                         # [close] crossed [ema_72] up
                         # Abort it
-                        position = self.close_position(strategy_id=strategy_id,
-                                                       result=result)
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
                 elif position['side'] == 'down':
                     if self.rsi[0] > 62:
                         # Abort it
-                        position = self.close_position(strategy_id=strategy_id,
-                                                       result=result)
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
                     elif self.close[1] < self.ema_72[1] and self.close[0] > self.ema_72[0]:
                         # [close] crossed [ema_72] down
                         # Abort it
-                        position = self.close_position(strategy_id=strategy_id,
-                                                       result=result)
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
 
                 if not position['result']:
                     # Martingale
-                    self.close_trade(strategy_id=strategy_id,
-                                     result=result)
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
 
                     if self.recovery_mode:
                         trade_size = self.get_optimal_trade_size()
@@ -2009,8 +2005,8 @@ class SmartTrader:
                                           trade_size=trade_size)
             else:
                 # Draw
-                self.close_trade(strategy_id=strategy_id,
-                                 result=result)
+                await self.close_trade(strategy_id=strategy_id,
+                                       result=result)
                 await self.open_trade(strategy_id=strategy_id,
                                       side=position['side'],
                                       trade_size=last_trade['trade_size'])
