@@ -1659,7 +1659,7 @@ class SmartTrader:
         # Appending data to [positions.csv] file
         positions_file = os.path.join(settings.PATH_DATA, 'positions.csv')
         df = self.df_ongoing_positions()
-        positions = df.query(f'df.Strategy == "{strategy_id}"')
+        positions = df.query(f'Strategy == "{strategy_id}"')
         positions.to_csv(positions_file, mode='a', index=False, header=False)
 
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
