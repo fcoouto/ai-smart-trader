@@ -1722,18 +1722,18 @@ class SmartTrader:
             if self.ongoing_positions:
                 # Printing [ongoing_positions]
 
-                df_positions = self.df_ongoing_positions()
-                df_positions = df_positions.loc['Strategy',
-                                                'Open Time (UTC)',
-                                                'Side',
-                                                'Size',
-                                                'T1: Open Price',
-                                                'T1: Result',
-                                                'T2: Open Price',
-                                                'T2: Result',
-                                                'T3: Open Price'
-                                                'T3: Result']
-                tb_positions = tabulate(tb_positions, headers='keys', showindex=False)
+                df = self.df_ongoing_positions()
+                df = df.loc[df.colums('Strategy',
+                                      'Open Time (UTC)',
+                                      'Side',
+                                      'Size',
+                                      'T1: Open Price',
+                                      'T1: Result',
+                                      'T2: Open Price',
+                                      'T2: Result',
+                                      'T3: Open Price',
+                                      'T3: Result')]
+                tb_positions = tabulate(df, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
             validation_trigger = random.randrange(start=38000, stop=46000) / 1000
