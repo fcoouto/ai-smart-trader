@@ -2109,8 +2109,8 @@ class SmartTrader:
                                                                     side='up',
                                                                     trade_size=self.get_optimal_trade_size())
 
-                        else:
-                            # Price is too far from [ema_72] (probably loosing strength)
+                        elif dst_price_ema_72 > 0.0007:
+                            # Price is too far from [ema_72] (probably losing strength)
                             if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
                                 # Against Trend
                                 position = await self.open_position(strategy_id=strategy_id,
@@ -2127,8 +2127,8 @@ class SmartTrader:
                                                                     side='down',
                                                                     trade_size=self.get_optimal_trade_size())
 
-                        else:
-                            # Price is too far from [ema_72] (probably loosing strength)
+                        elif dst_price_ema_72 > 0.0007:
+                            # Price is too far from [ema_72] (probably losing strength)
                             if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
                                 # Against Trend
                                 position = await self.open_position(strategy_id=strategy_id,
