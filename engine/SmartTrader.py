@@ -40,6 +40,7 @@ class SmartTrader:
     }
 
     balance = None
+    highest_balance = None
     initial_trade_size = None
     trade_size = None
 
@@ -797,6 +798,9 @@ class SmartTrader:
         if missing_decimal_separator:
             # It's expected that [trade_size] field will always have 2 decimals
             value = value / 100
+
+        if value > self.highest_balance:
+            self.highest_balance = value
 
         self.balance = value
         return self.balance
@@ -1650,11 +1654,16 @@ class SmartTrader:
         return position
 
     async def close_position(self, strategy_id, result):
+        # Closing trade
         await self.close_trade(strategy_id=strategy_id, result=result)
+
+        # [loss_management.json] Writing data in a file for future reference
+        self.loss_management_write_to_file()
+
         self.ongoing_positions[strategy_id]['result'] = result
         closed_position = self.ongoing_positions[strategy_id].copy()
 
-        # Appending data to [positions.csv] file
+        # [positions.csv] Appending data to [positions.csv] file
         positions_file = os.path.join(settings.PATH_DATA, 'positions.csv')
         df = self.df_ongoing_positions()
         positions = df.query(f'Strategy == "{strategy_id}"')
@@ -1697,8 +1706,8 @@ class SmartTrader:
         # [Loss Management] Updating [cumulative_loss]
         self.loss_management_update(result=result, trade_size=trade['trade_size'])
 
-        # [Loss Management] Keeping data in a file for future reference
-        self.loss_management_write_to_file()
+        # [Loss Management] Write to file on [close_position]...
+        # One less action to do in-between trades (when martingale is needed)
 
         return position['trades'][-1]
 
@@ -1722,7 +1731,7 @@ class SmartTrader:
 
                 df = self.df_ongoing_positions()
                 df = df.filter(items=['Strategy',
-                                      'Open Time (UTC)',
+                                      'T1: Open Time',
                                       'Side',
                                       'Size',
                                       'T1: Open Price',
@@ -2050,10 +2059,10 @@ class SmartTrader:
             # No open position
             if len(self.datetime) >= 2:
                 dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
-                rsi_bullish_from = 40
+                rsi_bullish_from = 39
                 rsi_bullish_min = 51
                 rsi_bullish_max = 80
-                rsi_bearish_from = 60
+                rsi_bearish_from = 61
                 rsi_bearish_min = 49
                 rsi_bearish_max = 20
 
@@ -2064,6 +2073,7 @@ class SmartTrader:
                         # Price is above [ema_72]
 
                         if dst_price_ema_72 < 0.0005:
+                            # Price is not too far from [ema_72] (0.05%)
                             if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
                                 # Trend Following
                                 position = await self.open_position(strategy_id=strategy_id,
