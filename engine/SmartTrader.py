@@ -1196,11 +1196,13 @@ class SmartTrader:
 
                         if utils.does_file_exist(path=lock_file):
                             with open(file=lock_file, mode='r') as f:
+                                print('it works 1')
                                 # Retrieving what long_action playbook is running on
                                 playbook_id_running = f.read()
 
                         if playbook_id_running:
                             # Currently running playbook has been identified
+                            print('it works 2')
 
                             if total_waiting_time > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 2:
                                 # It's taking way too long
