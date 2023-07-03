@@ -1640,7 +1640,7 @@ class SmartTrader:
                     self.recovery_mode = True
 
     def loss_management_read_from_file(self):
-        data = None
+        data = {}
 
         file_path = self.get_loss_management_file_path()
         if os.path.exists(file_path):
@@ -1648,16 +1648,20 @@ class SmartTrader:
                 data = json.loads(f.read())
 
             # Updating Loss Management PB
+            updatable_fields = ['highest_balance',
+                                'recovery_mode',
+                                'cumulative_loss']
             msg = "Managing previous losses"
-            for item in utils.progress_bar([0], prefix=msg):
-                self.recovery_mode = data['recovery_mode']
-                self.cumulative_loss = data['cumulative_loss']
+            for k, v in utils.progress_bar(data.items(), prefix=msg):
+                if k in updatable_fields:
+                    setattr(self, k, v)
 
         return data
 
     def loss_management_write_to_file(self):
         data = {'agent_id': self.agent_id,
                 'last_asset': self.asset,
+                'highest_balance': self.highest_balance,
                 'cumulative_loss': self.cumulative_loss,
                 'recovery_mode': self.recovery_mode}
 
@@ -1803,7 +1807,6 @@ class SmartTrader:
                 diff_sec = lookup_trigger - utils.now_seconds()
 
                 items = range(0, int(diff_sec / settings.PROGRESS_BAR_INTERVAL_TIME))
-                print(f'items: {items}')
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
