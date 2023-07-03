@@ -1188,6 +1188,7 @@ class SmartTrader:
 
                         # Deleting [lock_file]
                         utils.try_to_delete_file(path=lock_file)
+                        print(f'[{lock_file}] should be deleted by now...')
 
                     except FileExistsError:
                         playbook_id_running = None
