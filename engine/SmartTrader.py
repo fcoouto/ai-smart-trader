@@ -803,7 +803,6 @@ class SmartTrader:
         if value > self.highest_balance:
             self.highest_balance = value
 
-
         if self.balance:
             if value > self.balance * (1 + self.stop_loss_pct):
                 # New value is greater than expected.
