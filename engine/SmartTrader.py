@@ -1,3 +1,4 @@
+import fcntl
 import os
 import platform
 
@@ -1179,8 +1180,10 @@ class SmartTrader:
 
                     try:
                         # Locking it while doing stuff
-                        # with open(file=lock_file, mode='x') as f:
-                        with open(lock_file, os.O_RDWR|os.O_CREAT) as f:
+                        with open(file=lock_file, mode='x') as f:
+                            if platform.system().lower() == 'linux':
+                                fcntl.lockf(f, fcntl.LOCK_EX)
+
                             f.write(playbook_id)
                             f.flush()
 
