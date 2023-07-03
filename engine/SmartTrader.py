@@ -1182,6 +1182,7 @@ class SmartTrader:
                         # Locking it while doing stuff
                         with open(file=lock_file, mode='x') as f:
                             if platform.system().lower() == 'linux':
+                                print('it works')
                                 fcntl.lockf(f, fcntl.LOCK_EX)
 
                             f.write(playbook_id)
