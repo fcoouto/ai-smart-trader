@@ -47,6 +47,7 @@ class SmartTrader:
     recovery_mode = False
     cumulative_loss = 0.00
     recovery_trade_size = 0.00
+    stop_loss_pct = 0.15
 
     expiry_time = None
     payout = None
@@ -1604,7 +1605,17 @@ class SmartTrader:
                 # [recovery_size] would be lesser than [initial_trade_size]
                 self.recovery_trade_size = self.initial_trade_size
 
-            if self.recovery_mode is False:
+            if self.recovery_mode:
+                # [recovery_mode] is activated
+                stop_loss = self.highest_balance * self.stop_loss_pct
+
+                if self.cumulative_loss > stop_loss:
+                    # [cumulative_loss] is greater than [stop_loss].
+                    # Resetting [recovery_mode]
+                    self.recovery_mode = False
+                    self.cumulative_loss = 0
+
+            else:
                 # [recovery_mode] is not activated yet
                 min_position_loss = (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[0] +
                                      self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[1] +
@@ -1654,14 +1665,13 @@ class SmartTrader:
         return position
 
     async def close_position(self, strategy_id, result):
-        # Closing trade
+        # Closing trade and position
         await self.close_trade(strategy_id=strategy_id, result=result)
+        self.ongoing_positions[strategy_id]['result'] = result
+        closed_position = self.ongoing_positions[strategy_id].copy()
 
         # [loss_management.json] Writing data in a file for future reference
         self.loss_management_write_to_file()
-
-        self.ongoing_positions[strategy_id]['result'] = result
-        closed_position = self.ongoing_positions[strategy_id].copy()
 
         # [positions.csv] Appending data to [positions.csv] file
         positions_file = os.path.join(settings.PATH_DATA, 'positions.csv')
