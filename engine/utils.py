@@ -123,7 +123,7 @@ def str_to_float(string):
     return float(string)
 
 
-def try_to_remove_file(path):
+def try_to_delete_file(path):
     try:
         os.remove(path)
     except:

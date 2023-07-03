@@ -1,4 +1,3 @@
-import fcntl
 import os
 import platform
 
@@ -186,7 +185,7 @@ class SmartTrader:
         # Checking lock files
         lock_file = os.path.join(settings.PATH_LOCK,
                                  f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
-        utils.try_to_remove_file(path=lock_file)
+        utils.try_to_delete_file(path=lock_file)
 
     def get_trading_url(self):
         url = None
@@ -1174,31 +1173,28 @@ class SmartTrader:
                 amount_tries = 0
 
                 while is_done is False:
-                    # Trying to remove [lock_file]
-                    utils.try_to_remove_file(path=lock_file)
                     amount_tries += 1
 
                     try:
                         # Locking it while doing stuff
                         with open(file=lock_file, mode='x') as f:
-                            if platform.system().lower() == 'linux':
-                                print('it works')
-                                fcntl.lockf(f, fcntl.LOCK_EX)
-
                             f.write(playbook_id)
                             f.flush()
 
                             result = playbook(**kwargs)
                             is_done = True
 
+                        # Deleting [lock_file]
+                        utils.try_to_delete_file(path=lock_file)
+
                     except FileExistsError:
                         playbook_id_running = None
                         # Give some time for flush by the other instance.
-                        waiting_time = random.randrange(5000, 20000) / 1000
+                        waiting_time = random.randrange(500, 5000) / 1000
                         total_waiting_time += waiting_time
                         sleep(waiting_time)
 
-                        if utils.does_file_exist(path=settings.LOCK_LONG_ACTION_FILENAME):
+                        if utils.does_file_exist(path=lock_file):
                             with open(file=lock_file, mode='r') as f:
                                 # Retrieving what long_action playbook is running on
                                 playbook_id_running = f.read()
@@ -1206,8 +1202,11 @@ class SmartTrader:
                         if playbook_id_running:
                             # Currently running playbook has been identified
 
-                            if total_waiting_time > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 5:
+                            if total_waiting_time > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 2:
                                 # It's taking way too long
+
+                                # Trying to remove [lock_file]
+                                utils.try_to_delete_file(path=lock_file)
 
                                 result = playbook(**kwargs)
                                 is_done = True
