@@ -803,6 +803,16 @@ class SmartTrader:
         if value > self.highest_balance:
             self.highest_balance = value
 
+        if value > self.balance * (1 + self.stop_loss_pct):
+            # New value is greater than expected.
+            msg = (f"{tmsg.warning}[WARNING]{tmsg.endc} "
+                   f"{tmsg.italic}- Seems like Your current Balance is [{value} USD], "
+                   f"which is way greater than last reading: [{self.balance} USD]. {tmsg.endc}")
+            tmsg.print(msg=msg, clear=True)
+
+            msg = f"{tmsg.italic}\n\t- Could you confirm if I read it right? {tmsg.endc}"
+            tmsg.input(msg=msg)
+
         self.balance = value
         return self.balance
 
