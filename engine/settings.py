@@ -34,6 +34,7 @@ PLAYBOOK_LONG_ACTION = {
     'iqcent_chart_setup': 30,
     'log_in': 25,
     'refresh_page': 7,
+    'set_trade_size': 2,
     'set_expiry_time': 5,
     'tv_reset': 10,
 }
