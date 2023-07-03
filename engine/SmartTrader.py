@@ -733,7 +733,7 @@ class SmartTrader:
                             sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                         # Executing playbook
-                        self.execute_playbook(playbook_id='refresh_page')
+                        self.execute_playbook(playbook_id='go_to_trading_page')
                         self.run_validation()
 
                         if asyncio.iscoroutinefunction(read):
@@ -1824,7 +1824,7 @@ class SmartTrader:
                         self.ongoing_positions.clear()
 
                         # Refreshing page
-                        self.execute_playbook(playbook_id='refresh_page')
+                        self.execute_playbook(playbook_id='go_to_trading_page')
 
             else:
                 # Missed candle data (too late)
