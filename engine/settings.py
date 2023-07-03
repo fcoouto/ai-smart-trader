@@ -33,7 +33,6 @@ PLAYBOOK_LONG_ACTION = {
     'go_to_trading_page': 7,
     'iqcent_chart_setup': 30,
     'log_in': 10,
-    'open_browser': 5,
     'refresh_page': 7,
     'set_expiry_time': 5,
     'tv_reset': 10,
