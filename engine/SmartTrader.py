@@ -1180,14 +1180,12 @@ class SmartTrader:
                     try:
                         # Locking it while doing stuff
                         # with open(file=lock_file, mode='x') as f:
-                        f = os.open(lock_file, os.O_EXLOCK)
-                        os.write(f, playbook_id)
-                        # f.write(playbook_id)
-                        # f.flush()
+                        with open(lock_file, os.O_RDWR|os.O_CREAT) as f:
+                            f.write(playbook_id)
+                            f.flush()
 
-                        result = playbook(**kwargs)
-                        is_done = True
-                        os.close(f)
+                            result = playbook(**kwargs)
+                            is_done = True
 
                     except FileExistsError:
                         playbook_id_running = None
