@@ -40,7 +40,7 @@ class SmartTrader:
     }
 
     balance = None
-    highest_balance = None
+    highest_balance = 0.00
     initial_trade_size = None
     trade_size = None
 
@@ -1178,17 +1178,14 @@ class SmartTrader:
                     try:
                         # Locking it while doing stuff
                         with open(file=lock_file, mode='x') as f:
-                            print('it works 1')
                             f.write(playbook_id)
                             f.flush()
 
-                            print('it works 2')
                             result = playbook(**kwargs)
                             is_done = True
 
                         # Deleting [lock_file]
                         utils.try_to_delete_file(path=lock_file)
-                        print(f'[{lock_file}] should be deleted by now...')
 
                     except FileExistsError:
                         playbook_id_running = None
@@ -1199,13 +1196,11 @@ class SmartTrader:
 
                         if utils.does_file_exist(path=lock_file):
                             with open(file=lock_file, mode='r') as f:
-                                print('Exception 1')
                                 # Retrieving what long_action playbook is running on
                                 playbook_id_running = f.read()
 
                         if playbook_id_running:
                             # Currently running playbook has been identified
-                            print('Exception 2')
 
                             if total_waiting_time > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 2:
                                 # It's taking way too long
