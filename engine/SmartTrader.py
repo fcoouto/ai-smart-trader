@@ -47,7 +47,7 @@ class SmartTrader:
     recovery_mode = False
     cumulative_loss = 0.00
     recovery_trade_size = 0.00
-    stop_loss_pct = 0.15
+    stop_loss_pct = 0.20
 
     expiry_time = None
     payout = None
@@ -1816,7 +1816,7 @@ class SmartTrader:
                 asyncio.run(self.run_lookup(context=context))
 
                 lookup_duration = datetime.now() - start
-                lookup_trigger = 60 - lookup_duration.total_seconds()
+                lookup_trigger = 60 - lookup_duration.total_seconds() * 1.10
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
