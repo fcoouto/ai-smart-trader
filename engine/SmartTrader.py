@@ -95,15 +95,15 @@ class SmartTrader:
         self.asset = asset
         self.initial_trade_size = initial_trade_size
 
+        # Setting [credentials]
+        self.validate_credentials()
+
         # Setting zones
         self.set_zones()
 
         # Updating [loss_management] data
         self.loss_management_read_from_file()
         self.loss_management_update()
-
-        # Setting [credentials]
-        self.validate_credentials()
 
     def set_awareness(self, k, v):
         if k in self.awareness:
@@ -204,9 +204,6 @@ class SmartTrader:
             fernet = Fernet(key)
             self.broker['credentials']['username'] = fernet.decrypt(self.broker['credentials']['username']).decode()
             self.broker['credentials']['password'] = fernet.decrypt(self.broker['credentials']['password']).decode()
-
-            print(self.broker['credentials']['username'])
-            print(self.broker['credentials']['password'])
 
         else:
             # [key_file] doesn't exist
