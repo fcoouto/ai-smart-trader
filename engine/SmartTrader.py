@@ -1820,7 +1820,7 @@ class SmartTrader:
                 lookup_duration = datetime.now() - start
 
                 # Calculating [lookup_trigger]
-                lookup_trigger += (60 - lookup_duration.total_seconds()) / 2
+                lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
