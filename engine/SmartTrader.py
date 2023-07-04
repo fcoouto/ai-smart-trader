@@ -1799,7 +1799,7 @@ class SmartTrader:
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
 
-            if utils.now_seconds() > validation_trigger:
+            if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
 
                 # Waiting PB
@@ -1816,7 +1816,7 @@ class SmartTrader:
                 asyncio.run(self.run_lookup(context=context))
 
                 lookup_duration = datetime.now() - start
-                lookup_trigger = 60 - lookup_duration.total_seconds() * 1.10
+                lookup_trigger = 60 - (lookup_duration.total_seconds() * 1.10)
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
