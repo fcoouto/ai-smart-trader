@@ -103,6 +103,7 @@ class SmartTrader:
         self.loss_management_update()
 
         # Setting [credentials]
+        self.validate_credentials()
 
 
     def set_awareness(self, k, v):
@@ -196,7 +197,17 @@ class SmartTrader:
     def validate_credentials(self, context='Validation'):
         key_file = 'key'
 
-        if utils.does_file_exist(key_file) is False:
+        if utils.does_file_exist(key_file):
+            # Retrieving key
+            key = open(file=key_file, mode='r').read()
+
+            # Decoding [credentials]
+            fernet = Fernet(key)
+            self.broker['credentials']['username'] = fernet.decrypt(self.broker['credentials']['username']).decode()
+            self.broker['credentials']['password'] = fernet.decrypt(self.broker['credentials']['password']).decode()
+
+        else:
+            # [key_file] doesn't exist
             msg = (f"{utils.tmsg.warning}[ERROR]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- I couldn't find file [{key_file}]. "
                    f"\n\n"
