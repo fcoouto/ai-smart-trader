@@ -214,7 +214,7 @@ class SmartTrader:
                    f"\t - This file is where you store your generated key using python package [cryptography]. "
                    f"Here are some instructions on how to do it: https://pypi.org/project/cryptography/."
                    f"\n\n"
-                   f"\t - Once you have your generated key, use it to encrypt your credentials and update your data"
+                   f"\t - Once you have your generated key, use it to encrypt your credentials and update your data "
                    f"for each broker settings.{utils.tmsg.endc}")
             tmsg.print(context=context, msg=msg, clear=True)
 
