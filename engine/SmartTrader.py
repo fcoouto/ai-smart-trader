@@ -1816,11 +1816,11 @@ class SmartTrader:
 
                 # Running Lookup
                 start = datetime.now()
-
                 asyncio.run(self.run_lookup(context=context))
-
                 lookup_duration = datetime.now() - start
-                lookup_trigger = 60 - (lookup_duration.total_seconds() * 1.10)
+
+                # Calculating [lookup_trigger] average
+                lookup_trigger += (60 - lookup_duration.total_seconds()) / 2
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
