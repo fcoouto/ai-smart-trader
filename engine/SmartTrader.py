@@ -1797,7 +1797,10 @@ class SmartTrader:
             # Validation PB
             msg = "Quick validation"
             for item in utils.progress_bar([0], prefix=msg):
+                start = datetime.now()
                 self.run_validation()
+                print(f'[validation] took: {datetime.now() - start}')
+
 
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
