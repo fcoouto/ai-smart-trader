@@ -1876,29 +1876,14 @@ class SmartTrader:
                 sleep(waiting_time)
 
     async def run_lookup(self, context):
-        positions = []
         # Strategies
         msg = "Applying strategy"
         strategies = settings.TRADING_STRATEGIES.copy()
 
         # Reading Chart data
-        start = datetime.now()
+        # start = datetime.now()
         await self.read_element(element_id='chart_data', is_async=True)
-        print(f'[chart_data] reading took: {datetime.now() - start}')
-
-        # for strategy in utils.progress_bar(strategies, prefix=msg):
-        #     # Strategies
-        #     f_strategy = f"strategy_{strategy}"
-        #     if hasattr(self, f_strategy) and callable(strategy := getattr(self, f_strategy)):
-        #         positions.append(asyncio.run(strategy()))
-        #     else:
-        #         # Strategy not found
-        #         msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
-        #                f"- That's embarrassing. :/ "
-        #                f"\n\t- I couldn't find a function for strategy [{strategy}].! :/"
-        #                f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
-        #         tmsg.input(msg=msg, clear=True)
-        #         exit(500)
+        # print(f'[chart_data] reading took: {datetime.now() - start}')
 
         # Preparing tasks
         tasks = []
