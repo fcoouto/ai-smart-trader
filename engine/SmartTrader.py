@@ -1801,6 +1801,7 @@ class SmartTrader:
                 self.run_validation()
             print(f'[validation] took: {datetime.now() - start}')
 
+            print(f'validation_trigger: {validation_trigger} | lookup_trigger: {lookup_trigger}')
 
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
