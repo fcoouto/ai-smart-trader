@@ -1819,7 +1819,7 @@ class SmartTrader:
                 asyncio.run(self.run_lookup(context=context))
                 lookup_duration = datetime.now() - start
 
-                # Calculating [lookup_trigger] average
+                # Calculating [lookup_trigger]
                 lookup_trigger += (60 - lookup_duration.total_seconds()) / 2
 
                 if len(self.ongoing_positions) > 0:
