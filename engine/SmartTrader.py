@@ -1,6 +1,8 @@
 import os
 import platform
 
+from cryptography.fernet import Fernet
+
 import json
 import random
 import re
@@ -100,9 +102,8 @@ class SmartTrader:
         self.loss_management_read_from_file()
         self.loss_management_update()
 
-        print(f'recovery_mode: {self.recovery_mode} | '
-              f'cumulative_loss: {self.cumulative_loss} | '
-              f'recovery_trade_size: {self.recovery_trade_size} | ')
+        # Setting [credentials]
+
 
     def set_awareness(self, k, v):
         if k in self.awareness:
@@ -192,12 +193,31 @@ class SmartTrader:
 
         return url
 
+    def validate_credentials(self, context='Validation'):
+        key_file = 'key'
+
+        if utils.does_file_exist(key_file) is False:
+            msg = (f"{utils.tmsg.warning}[ERROR]{utils.tmsg.endc} "
+                   f"{utils.tmsg.italic}- I couldn't find file [{key_file}]. "
+                   f"\n\n"
+                   f"\t - This file is where you store your generated key using python package [cryptography]. "
+                   f"Here are some instructions on how to do it: https://pypi.org/project/cryptography/."
+                   f"\n\n"
+                   f"\t - Once you have your generated key, use it to encrypt your credentials and update your data"
+                   f"for each broker settings.{utils.tmsg.endc}")
+            tmsg.print(context=context, msg=msg, clear=True)
+
+            msg = f"{utils.tmsg.italic}\n\t- I'll leave you for know. Take your time. {utils.tmsg.endc}"
+            tmsg.input(context=context, msg=msg)
+            exit(404)
+
     def validate_balance(self, context='Validation'):
         if self.balance == 0:
             if not self.awareness['balance_equal_to_zero']:
                 msg = (f"{tmsg.warning}[WARNING]{tmsg.endc} "
                        f"{tmsg.italic}- Your current Balance is [{self.balance} USD]. "
-                       f"So I think it makes sense to activate [{settings.MODE_SIMULATION}] mode, right? {tmsg.endc}")
+                       f"\n\n"
+                       f"\t  - So I think it makes sense to activate [{settings.MODE_SIMULATION}] mode, right? {tmsg.endc}")
 
                 # Waiting PB
                 msg = f"Activating {settings.MODE_SIMULATION} mode (CTRL + C to cancel)"
@@ -1283,9 +1303,9 @@ class SmartTrader:
 
             # Filling up credentials
             self.click_element(element_id='input_email')
-            pyautogui.typewrite('f.couto@live.com', interval=0.05)
+            pyautogui.typewrite(self.broker['credentials']['username'], interval=0.05)
             pyautogui.press('tab')
-            pyautogui.typewrite('#F1807a$Iqcent', interval=0.05)
+            pyautogui.typewrite(self.broker['credentials']['password'], interval=0.05)
 
             # Confirming login
             self.click_element(element_id='btn_login_confirm', wait_when_done=5)

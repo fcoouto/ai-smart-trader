@@ -77,6 +77,10 @@ BROKERS = {
         'id': 'iqcent',
         'name': 'IQ Cent',
         'url': 'https://iqcent.com/option/',
+        'credentials': {
+            'username': b'gAAAAABkpHCs67_ETDINvlZ4R_HcdrD9iI-t3RwKKbU9m_hg_YBrXH2SmDxSCD4_Pd1uxy3POAzzevoOw7KIxd3YWEfE0DSPKyngkbvg6ZAPI32uGZ7y344=',
+            'password': b'gAAAAABkpHDCKUuyDm6wDy8f5-pLls9Clo-POfzmVfgBiJfdHk4O5wwf4hxJqDUZbkoigeMn8rhAwM7VPIX3qP-pd6l3N6oVxg=='
+        },
         'neutral_zones': {
             'within_app': {
                 'width_pct': 0.50,

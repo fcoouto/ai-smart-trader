@@ -1,4 +1,5 @@
 art
+cryptography
 opencv-python
 pandas
 pyautogui
