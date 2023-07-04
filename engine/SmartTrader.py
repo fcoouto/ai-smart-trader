@@ -182,11 +182,6 @@ class SmartTrader:
         # Validating [payout]
         self.validate_payout()
 
-        # Checking lock files
-        lock_file = os.path.join(settings.PATH_LOCK,
-                                 f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
-        utils.try_to_delete_file(path=lock_file)
-
     def get_trading_url(self):
         url = None
 
@@ -1799,9 +1794,6 @@ class SmartTrader:
             start = datetime.now()
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
-            print(f'[validation] took: {datetime.now() - start}')
-
-            print(f'validation_trigger: {validation_trigger} | lookup_trigger: {lookup_trigger}')
 
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
