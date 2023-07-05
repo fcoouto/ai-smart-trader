@@ -5,7 +5,8 @@ import tempfile
 
 # DEBUG
 DEBUG_OCR = False
-DEBUG_MSG = True
+DEBUG_HISTORY = True
+DEBUG_PERFORMANCE = True
 
 # VALIDATION
 MIN_BALANCE = 100

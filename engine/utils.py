@@ -28,7 +28,7 @@ class tmsg:
 
         if clear:
 
-            if settings.DEBUG_MSG is False:
+            if settings.DEBUG_HISTORY is False:
                 os.system('cls' if os.name == 'nt' else 'clear')
             print(f"{self.header}{context}{' ' * int(os.get_terminal_size().columns/10)}{self.endc}\n")
 

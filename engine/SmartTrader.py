@@ -1825,6 +1825,8 @@ class SmartTrader:
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
 
+            print(f'lookup_trigger: {lookup_trigger}')
+
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
 
@@ -1881,9 +1883,9 @@ class SmartTrader:
         strategies = settings.TRADING_STRATEGIES.copy()
 
         # Reading Chart data
-        # start = datetime.now()
+        start = datetime.now()
         await self.read_element(element_id='chart_data', is_async=True)
-        # print(f'[chart_data] reading took: {datetime.now() - start}')
+        print(f'[chart_data] reading took: {datetime.now() - start}')
 
         # Preparing tasks
         tasks = []
