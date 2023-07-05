@@ -1796,7 +1796,7 @@ class SmartTrader:
 
         # First run using estimated time (2 seconds)
         lookup_duration = default_lookup_duration = timedelta(seconds=2)
-        lookup_trigger = timedelta(seconds=60) - default_lookup_duration
+        lookup_trigger = 60 - default_lookup_duration.total_seconds()
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
@@ -1806,7 +1806,7 @@ class SmartTrader:
             self.validate_lookup_duration(duration=lookup_duration.total_seconds())
 
             # Calculating [lookup_trigger]: average with last value
-            lookup_trigger = (lookup_trigger.total_seconds() + (60 - lookup_duration.total_seconds())) / 2
+            lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
             print(f'lookup_trigger: {lookup_trigger}')
 
             if self.ongoing_positions:
