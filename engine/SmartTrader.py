@@ -1899,7 +1899,7 @@ class SmartTrader:
                 self.ongoing_positions.clear()
 
                 # Reseting [lookup_duration]
-                lookup_trigger = timedelta(seconds=60) - default_lookup_duration
+                lookup_trigger = 60 - default_lookup_duration.total_seconds()
 
                 waiting_time = 5
                 sleep(waiting_time)
