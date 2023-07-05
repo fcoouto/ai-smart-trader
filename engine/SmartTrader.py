@@ -320,11 +320,19 @@ class SmartTrader:
         if time_spent > settings.MAX_TIME_SPENT_ON_LOOKUP:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Lookup actions are taking too long. "
-                   f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
+                   f"\n\n"
+                   f"\t  - A healthy duration would be less than {settings.MAX_TIME_SPENT_ON_LOOKUP} seconds. "
+                   f"\n\n"
+                   f"\t  - The main reason for such slowness is CPU usage beyond its capacity. If you are running "
+                   f"multiple STrader agents in the same host, try to stop one of them.{utils.tmsg.endc}")
             tmsg.print(context=context, msg=msg, clear=True)
 
-            msg = f"{utils.tmsg.italic}\n\t- Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}"
-            tmsg.input(context=context, msg=msg)
+            # Waiting PB
+            msg = "Reseting Lookup Trigger (CTRL + C to cancel)"
+            wait_secs = 7
+            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
     def get_optimal_trade_size(self):
         optimal_trade_size = self.initial_trade_size
@@ -1783,9 +1791,12 @@ class SmartTrader:
                    clear=True)
         self.run_validation()
 
+        long_action_lock_file = os.path.join(settings.PATH_LOCK,
+                                             f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
+
         # First run using estimated time (2 seconds)
-        lookup_duration = 2
-        lookup_trigger = 60 - lookup_duration
+        default_lookup_duration = 2
+        lookup_trigger = 60 - default_lookup_duration
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
@@ -1822,7 +1833,7 @@ class SmartTrader:
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Checking token (only if mouse/keyboard are not being used)
-            if utils.does_file_exist(path='long_action') is False and len(self.ongoing_positions) == 0:
+            if utils.does_file_exist(path=long_action_lock_file) is False and len(self.ongoing_positions) == 0:
                 # Focusing on App
                 self.mouse_event_on_neutral_area(event='click', area_id='within_app')
                 sleep(1)
@@ -1857,6 +1868,8 @@ class SmartTrader:
                 # Calculating [lookup_trigger]: average with last value
                 lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
 
+                # Add check here...
+
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
 
@@ -1874,6 +1887,7 @@ class SmartTrader:
 
             else:
                 # Missed candle data (too late)
+
                 msg = f"{tmsg.warning}We got late and missed last candle's data. \n" \
                       f"Because of that, it's wise to reset chart data.\n\n" \
                       f"But that's no big deal, no actions are needed on your side.{tmsg.endc}"
@@ -1884,6 +1898,9 @@ class SmartTrader:
                 # Cleaning up
                 self.reset_chart_data()
                 self.ongoing_positions.clear()
+
+                # Reseting [lookup_duration]
+                lookup_trigger = 58 - default_lookup_duration
 
                 waiting_time = 5
                 sleep(waiting_time)
