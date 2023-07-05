@@ -7,7 +7,7 @@ import json
 import random
 import re
 from time import gmtime, strftime, sleep
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import asyncio
 import subprocess
@@ -1795,12 +1795,16 @@ class SmartTrader:
                                              f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
 
         # First run using estimated time (2 seconds)
-        default_lookup_duration = 2
-        lookup_trigger = 60 - default_lookup_duration
+        lookup_duration = default_lookup_duration = timedelta(seconds=2)
+        lookup_trigger = timedelta(seconds=60) - default_lookup_duration
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
             tmsg.print(context=context, clear=True)
+
+            # Calculating [lookup_trigger]: average with last value
+            lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
+            print(f'lookup_trigger: {lookup_trigger}')
 
             if self.ongoing_positions:
                 # Printing [ongoing_positions]
@@ -1843,11 +1847,8 @@ class SmartTrader:
 
             # Validation PB
             msg = "Quick validation"
-            start = datetime.now()
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
-
-            print(f'lookup_trigger: {lookup_trigger}')
 
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
@@ -1865,10 +1866,8 @@ class SmartTrader:
                 asyncio.run(self.run_lookup(context=context))
                 lookup_duration = datetime.now() - start
 
-                # Calculating [lookup_trigger]: average with last value
-                lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
-
                 # Add check here...
+                if lookup_duration
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
@@ -1900,7 +1899,7 @@ class SmartTrader:
                 self.ongoing_positions.clear()
 
                 # Reseting [lookup_duration]
-                lookup_trigger = 58 - default_lookup_duration
+                lookup_trigger = timedelta(seconds=60) - default_lookup_duration
 
                 waiting_time = 5
                 sleep(waiting_time)
