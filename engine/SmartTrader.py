@@ -315,9 +315,9 @@ class SmartTrader:
 
                 self.set_awareness(k='payout_low', v=True)
 
-    def is_lookup_taking_too_long(self, time_spent):
+    def validate_lookup_duration(self, duration):
         context = 'Validation'
-        if time_spent > settings.MAX_TIME_SPENT_ON_LOOKUP:
+        if duration > settings.MAX_TIME_SPENT_ON_LOOKUP:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Lookup actions are taking too long. "
                    f"\n\n"
@@ -329,7 +329,7 @@ class SmartTrader:
 
             # Waiting PB
             msg = "Reseting Lookup Trigger (CTRL + C to cancel)"
-            wait_secs = 7
+            wait_secs = 10
             items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
@@ -1802,6 +1802,9 @@ class SmartTrader:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
             tmsg.print(context=context, clear=True)
 
+            # Validating [lookup_duration]
+            self.validate_lookup_duration(duration=lookup_duration.total_seconds())
+
             # Calculating [lookup_trigger]: average with last value
             lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
             print(f'lookup_trigger: {lookup_trigger}')
@@ -1865,9 +1868,6 @@ class SmartTrader:
                 start = datetime.now()
                 asyncio.run(self.run_lookup(context=context))
                 lookup_duration = datetime.now() - start
-
-                # Add check here...
-                if lookup_duration
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
