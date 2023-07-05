@@ -315,6 +315,17 @@ class SmartTrader:
 
                 self.set_awareness(k='payout_low', v=True)
 
+    def is_lookup_taking_too_long(self, time_spent):
+        context = 'Validation'
+        if time_spent > settings.MAX_TIME_SPENT_ON_LOOKUP:
+            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                   f"{utils.tmsg.italic}- Lookup actions are taking too long. "
+                   f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
+            tmsg.print(context=context, msg=msg, clear=True)
+
+            msg = f"{utils.tmsg.italic}\n\t- Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}"
+            tmsg.input(context=context, msg=msg)
+
     def get_optimal_trade_size(self):
         optimal_trade_size = self.initial_trade_size
 
@@ -872,7 +883,7 @@ class SmartTrader:
         rsi = results[2]
 
         now_seconds = utils.now_seconds()
-        if now_seconds >= 58 or now_seconds <= 3:
+        if now_seconds >= settings.MIN_CHART_DATA_SECONDS or now_seconds <= settings.MAX_CHART_DATA_SECONDS:
             self.datetime.insert(0, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
             self.open.insert(0, o)
@@ -909,7 +920,7 @@ class SmartTrader:
         value = utils.str_to_float(value)
 
         now_seconds = utils.now_seconds()
-        if now_seconds >= 58 or now_seconds <= 3:
+        if now_seconds >= settings.MIN_CHART_DATA_SECONDS or now_seconds <= settings.MAX_CHART_DATA_SECONDS:
             self.close[0] = value
 
         return value
@@ -1465,7 +1476,7 @@ class SmartTrader:
 
     def playbook_tv_add_indicator(self, hint):
         # Opening [btn_chart_indicators] element
-        self.click_element(element_id='btn_chart_indicators', wait_when_done=0.300)
+        self.click_element(element_id='btn_chart_indicators', wait_when_done=0.500)
 
         # Adding indicator
         pyautogui.typewrite(hint, interval=0.05)
@@ -1843,7 +1854,7 @@ class SmartTrader:
                 asyncio.run(self.run_lookup(context=context))
                 lookup_duration = datetime.now() - start
 
-                # Calculating [lookup_trigger]
+                # Calculating [lookup_trigger]: average with last value
                 lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
 
                 if len(self.ongoing_positions) > 0:
@@ -1879,7 +1890,7 @@ class SmartTrader:
 
     async def run_lookup(self, context):
         # Strategies
-        msg = "Applying strategy"
+        msg = "Applying strategies"
         strategies = settings.TRADING_STRATEGIES.copy()
 
         # Reading Chart data
