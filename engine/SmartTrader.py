@@ -315,11 +315,11 @@ class SmartTrader:
 
                 self.set_awareness(k='payout_low', v=True)
 
-    def validate_lookup_duration(self, duration):
+    def is_lookup_taking_too_long(self, duration):
         context = 'Validation'
         if duration > settings.MAX_TIME_SPENT_ON_LOOKUP:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                   f"{utils.tmsg.italic}- Lookup actions are taking too long. "
+                   f"{utils.tmsg.italic}- Lookup actions are taking too long: {duration} seconds."
                    f"\n\n"
                    f"\t  - A healthy duration would be less than {settings.MAX_TIME_SPENT_ON_LOOKUP} seconds. "
                    f"\n\n"
@@ -333,6 +333,8 @@ class SmartTrader:
             items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            return True
 
     def get_optimal_trade_size(self):
         optimal_trade_size = self.initial_trade_size
@@ -1802,9 +1804,6 @@ class SmartTrader:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
             tmsg.print(context=context, clear=True)
 
-            # Validating [lookup_duration]
-            self.validate_lookup_duration(duration=lookup_duration.total_seconds())
-
             # Calculating [lookup_trigger]: average with last value
             lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
             print(f'lookup_trigger: {lookup_trigger}')
@@ -1883,6 +1882,11 @@ class SmartTrader:
 
                         # Refreshing page
                         self.execute_playbook(playbook_id='go_to_trading_page')
+
+                elif self.is_lookup_taking_too_long(duration=lookup_duration):
+                    # Reseting [lookup_duration]
+                    lookup_trigger = 60 - default_lookup_duration.total_seconds()
+
 
             else:
                 # Missed candle data (too late)
