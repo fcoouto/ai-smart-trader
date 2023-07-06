@@ -1868,6 +1868,11 @@ class SmartTrader:
                 asyncio.run(self.run_lookup(context=context))
                 lookup_duration = datetime.now() - start
 
+                # Checking if [lookup] is taking too long
+                if self.is_lookup_taking_too_long(duration=lookup_duration.total_seconds()):
+                    # Reseting [lookup_duration]
+                    lookup_trigger = 60 - default_lookup_duration.total_seconds()
+
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
 
@@ -1882,11 +1887,6 @@ class SmartTrader:
 
                         # Refreshing page
                         self.execute_playbook(playbook_id='go_to_trading_page')
-
-                elif self.is_lookup_taking_too_long(duration=lookup_duration):
-                    # Reseting [lookup_duration]
-                    lookup_trigger = 60 - default_lookup_duration.total_seconds()
-
 
             else:
                 # Missed candle data (too late)
