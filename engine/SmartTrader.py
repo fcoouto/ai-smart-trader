@@ -170,6 +170,9 @@ class SmartTrader:
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
 
+        # Validating [clock]
+        self.validate_clock(context=context)
+
         # Validating [balance]
         self.validate_balance(context=context)
 
@@ -177,10 +180,10 @@ class SmartTrader:
         self.validate_trade_size(context=context)
 
         # Validating [expiry_time]
-        self.validate_expiry_time()
+        self.validate_expiry_time(context=context)
 
         # Validating [payout]
-        self.validate_payout()
+        self.validate_payout(context=context)
 
     def get_trading_url(self):
         url = None
