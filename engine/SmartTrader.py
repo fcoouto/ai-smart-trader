@@ -1356,6 +1356,7 @@ class SmartTrader:
         elif platform.system().lower() == 'linux':
             # Adding [PATH_BROWSER] to [args] on 1st position
             args.insert(0, settings.PATH_BROWSER)
+            args.append('&')
 
             # Executing subprocess
             pid = subprocess.Popen(args,
