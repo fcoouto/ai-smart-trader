@@ -256,18 +256,23 @@ class SmartTrader:
 
     def validate_clock(self, context='Validation'):
         # First reading
-        now = datetime.now().time().strftime('%S')
+        now = datetime.utcnow()
         clock = self.read_element(element_id='clock')
+        app_now = datetime.fromisoformat(f'{now.date().isoformat()} {clock}')
+        delta = now - app_now
         tries = 0
 
-        while now != clock[-2:]:
+        while abs(delta.total_seconds()) > 1:
+            # Out of sync confirmed
+
             wait_secs = 3
             tries += 1
 
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Seems like broker's clock is not synchronized with computer's clock."
                    f"\n"
-                   f"\t  - Right now, computer says it's [{now}] while app says it's [{clock}]"
+                   f"\t  - Right now, computer says it's [{now.time().strftime('%H:%M:%S')}] "
+                   f"while app says it's [{app_now.time().strftime('%H:%M:%S')}]"
                    f"\n\n"
                    f"\t  - Let me try to fix it...{utils.tmsg.endc}")
 
@@ -275,7 +280,7 @@ class SmartTrader:
 
             if tries == 1:
                 # Waiting PB
-                msg = "Synchronizing local time with a NTP server... (CTRL + C to cancel)"
+                msg = "Synchronizing clock with a NTP server... (CTRL + C to cancel)"
                 items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
@@ -299,7 +304,7 @@ class SmartTrader:
                 exit(500)
 
             # Retrieving [now] and reading [clock] for next loop
-            now = datetime.now().time().strftime('%H:%M:%S')
+            now = datetime.now().time()
             clock = self.read_element(element_id='clock')
 
     def validate_trade_size(self, context='Validation'):
