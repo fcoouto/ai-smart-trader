@@ -560,11 +560,6 @@ class SmartTrader:
                     top = height * 0.26
                     right = width * 0.80
                     bottom = height * 0.52
-                elif element_id == 'clock':
-                    left = width * 0.29
-                    top = height * 0.18
-                    right = width * 0.435
-                    bottom = height * 0.34
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.15
@@ -579,6 +574,11 @@ class SmartTrader:
                     top = height * 0.89
                     right = width * 0.70
                     bottom = height
+                elif element_id == 'clock':
+                    left = width * 0.29
+                    top = height * 0.18
+                    right = width * 0.435
+                    bottom = height * 0.34
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
                     if platform.system().lower() == 'linux':
