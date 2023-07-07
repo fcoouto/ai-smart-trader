@@ -485,7 +485,7 @@ class SmartTrader:
                         # Executing playbook
                         self.execute_playbook(playbook_id='log_in')
 
-                        msg = f"\t- Done !"
+                        msg = f"\t  - Done !"
                         tmsg.print(context=context, msg=msg)
                         sleep(1)
 
@@ -509,7 +509,7 @@ class SmartTrader:
                         # Executing playbook
                         self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
 
-                        msg = f"\t- Done !"
+                        msg = f"\t  - Done !"
                         tmsg.print(context=context, msg=msg)
                         sleep(1)
 
