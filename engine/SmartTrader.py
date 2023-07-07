@@ -256,11 +256,11 @@ class SmartTrader:
 
     def validate_clock(self, context='Validation'):
         # First reading
-        now = datetime.now().time().strftime('%H:%M:%S')
+        now = datetime.now().time().strftime('%S')
         clock = self.read_element(element_id='clock')
         tries = 0
 
-        while now != clock:
+        while now != clock[-2:]:
             wait_secs = 3
             tries += 1
 
