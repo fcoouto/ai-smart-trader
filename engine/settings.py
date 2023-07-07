@@ -14,8 +14,8 @@ MIN_TRADE_SIZE = 1.00
 #   CHART_DATA_SECONDS is about [ohlc, ema, rsi] values that should be stored in a list.
 #   They must represent the closing of a candle.
 CHART_DATA_MIN_SECONDS = 58
-CHART_DATA_MAX_SECONDS = 5
-CHART_DATA_READING_LIMIT_SECONDS = 4
+CHART_DATA_MAX_SECONDS = 7
+CHART_DATA_READING_LIMIT_SECONDS = 5
 
 # TRADING
 TRADING_STRATEGIES = ['ema_rsi_50',
