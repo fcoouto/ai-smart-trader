@@ -260,10 +260,10 @@ class SmartTrader:
         clock = self.read_element(element_id='clock')
         tries = 0
 
-        clock = '12:12:12'
-
         while now != clock:
+            wait_secs = 3
             tries += 1
+
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Seems like broker's clock is not synchronized with computer's clock."
                    f"\n"
@@ -273,17 +273,24 @@ class SmartTrader:
 
             tmsg.print(context=context, msg=msg, clear=True)
 
-            # Waiting PB
-            msg = "Refreshing page (CTRL + C to cancel)"
-            wait_secs = 3
-            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-            for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
-            # Executing playbook
             if tries == 1:
-                self.execute_playbook(playbook_id='sync_time_with_ntp_server')
+                # Waiting PB
+                msg = "Synchronizing local time with a NTP server... (CTRL + C to cancel)"
+                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                # Executing playbook
+                self.execute_playbook(playbook_id='sync_clock_with_ntp_server')
+
             elif tries == 2:
+                # Waiting PB
+                msg = "Refreshing page (CTRL + C to cancel)"
+                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                # Executing playbook
                 self.execute_playbook(playbook_id='go_to_trading_page')
                 self.run_validation()
             else:
@@ -1421,7 +1428,7 @@ class SmartTrader:
         trading_url = self.get_trading_url()
         self.playbook_go_to_url(url=trading_url)
 
-    def playbook_sync_time_with_ntp_server(self, ntp_server='pool.ntp.org'):
+    def playbook_sync_clock_with_ntp_server(self, ntp_server='pool.ntp.org'):
         if platform.system().lower() == 'windows':
             # not implemented yet
             args = []
