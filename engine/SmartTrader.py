@@ -271,8 +271,8 @@ class SmartTrader:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Seems like broker's clock is not synchronized with computer's clock."
                    f"\n"
-                   f"\t  - Right now, computer says it's [{now.time().strftime('%H:%M:%S')}] "
-                   f"while app says it's [{app_now.time().strftime('%H:%M:%S')}]"
+                   f"\t  - Right now, the difference between computer's clock and "
+                   f"broker's clock is {abs(delta.total_seconds())} seconds."
                    f"\n\n"
                    f"\t  - Let me try to fix it...{utils.tmsg.endc}")
 
