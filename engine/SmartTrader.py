@@ -252,7 +252,41 @@ class SmartTrader:
                 self.read_element(element_id='balance')
 
     def validate_clock(self, context='Validation'):
-        pass
+        # First reading
+        now = datetime.now().time().strftime('%H:%M:%S')
+        clock = self.read_element(element_id='clock')
+        tries = 0
+
+        while now != clock:
+            tries += 1
+            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                   f"{utils.tmsg.italic}- Broker's clock is not synchronized with computer's clock."
+                   f"\n"
+                   f"\n\t  - Let me try to fix it...{utils.tmsg.endc}")
+
+            tmsg.print(context=context, msg=msg, clear=True)
+
+            # Waiting PB
+            msg = "Refreshing page (CTRL + C to cancel)"
+            wait_secs = 3
+            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            # Executing playbook
+            if tries == 1:
+                self.execute_playbook(playbook_id='sync_time_with_ntp_server')
+            elif tries == 2:
+                self.execute_playbook(playbook_id='go_to_trading_page')
+                self.run_validation()
+            else:
+                msg = f"{utils.tmsg.italic}\n\t  - I couldn't fix it. :/ {utils.tmsg.endc}"
+                tmsg.print(context=context, msg=msg)
+                exit(500)
+
+            # Retrieving [now] and reading [clock] for next loop
+            now = datetime.now().time().strftime('%H:%M:%S')
+            clock = self.read_element(element_id='clock')
 
     def validate_trade_size(self, context='Validation'):
         optimal_trade_size = self.get_optimal_trade_size()
@@ -263,7 +297,8 @@ class SmartTrader:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Just noticed that Trade Size is [{self.trade_size} USD], "
                    f"and the Optimal Trade Size right now would be [{optimal_trade_size} USD]. "
-                   f"\n\t  - I'll take care of that...{utils.tmsg.endc}")
+                   f"\n"
+                   f"\t  - I'll take care of that...{utils.tmsg.endc}")
             tmsg.print(context=context, msg=msg, clear=True)
 
             # Waiting PB
@@ -301,7 +336,7 @@ class SmartTrader:
             self.read_element(element_id='expiry_time')
 
             if self.expiry_time == '01:00':
-                print(f"{utils.tmsg.italic}\n\t- Done! {utils.tmsg.endc}")
+                print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
                 sleep(1)
 
     def validate_payout(self, context='Validation'):
@@ -312,7 +347,7 @@ class SmartTrader:
                        f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
                 tmsg.print(context=context, msg=msg, clear=True)
 
-                msg = f"{utils.tmsg.italic}\n\t- Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}"
+                msg = f"{utils.tmsg.italic}\n\t  - Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}"
                 tmsg.input(context=context, msg=msg)
 
                 self.set_awareness(k='payout_low', v=True)
@@ -1292,7 +1327,6 @@ class SmartTrader:
         return result
 
     def playbook_open_browser(self):
-        DETACHED_PROCESS = 0x00000008
         region = self.region
         browser_profile_path = os.path.join(settings.PATH_TEMP_BROWSER_PROFILES, f'profile_{self.agent_id}')
 
@@ -1305,6 +1339,8 @@ class SmartTrader:
                 '--disable-notifications']
 
         if platform.system().lower() == 'windows':
+            DETACHED_PROCESS = 0x00000008
+
             # Converting args into [str]
             str_args = ''
             for arg in args:
@@ -1314,7 +1350,7 @@ class SmartTrader:
             pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {str_args}',
                                    shell=False,
                                    creationflags=DETACHED_PROCESS).pid
-        else:
+        elif platform.system().lower() == 'linux':
             # Adding [PATH_BROWSER] to [args] on 1st position
             args.insert(0, settings.PATH_BROWSER)
 
@@ -1323,8 +1359,7 @@ class SmartTrader:
                                    shell=False,
                                    stdin=None,
                                    stdout=None,
-                                   stderr=None,
-                                   close_fds=True).pid
+                                   stderr=None).pid
         sleep(7)
 
         # Changing focus
@@ -1378,6 +1413,28 @@ class SmartTrader:
         # Going to trading page
         trading_url = self.get_trading_url()
         self.playbook_go_to_url(url=trading_url)
+
+    def playbook_sync_time_with_ntp_server(self, ntp_server='pool.ntp.org'):
+        if platform.system().lower() == 'windows':
+            # not implemented yet
+            args = []
+            pass
+
+        elif platform.system().lower() == 'linux':
+            # Defining [args]
+            args = ['psync',
+                    '-sync',
+                    ntp_server]
+
+            # Executing subprocess
+            pid = subprocess.Popen(args,
+                                   shell=False,
+                                   stdin=None,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+            # Waiting for results
+            stdout, stderr = pid.communicate()
+            print(f'stdout: {stdout} | stderr: {stderr}')
 
     def playbook_tv_reset(self):
         # Reseting chart
