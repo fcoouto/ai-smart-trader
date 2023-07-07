@@ -317,6 +317,7 @@ class SmartTrader:
 
     def is_lookup_taking_too_long(self, duration):
         context = 'Validation'
+
         if duration > settings.MAX_TIME_SPENT_ON_LOOKUP:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Lookup actions are taking too long: {duration} seconds."
@@ -1317,7 +1318,7 @@ class SmartTrader:
                                    stdout=None,
                                    stderr=None,
                                    close_fds=True).pid
-        sleep(3)
+        sleep(7)
 
         # Changing focus
         self.mouse_event_on_neutral_area(event='click', area_id='within_app')
@@ -1797,15 +1798,15 @@ class SmartTrader:
                                              f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
 
         # First run using estimated time (2 seconds)
-        lookup_duration = default_lookup_duration = timedelta(seconds=2)
-        lookup_trigger = 60 - default_lookup_duration.total_seconds()
+        reading_chart_duration = default_lookup_duration = timedelta(seconds=2).total_seconds()
+        lookup_trigger = 60 - default_lookup_duration
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
             tmsg.print(context=context, clear=True)
 
             # Calculating [lookup_trigger]: average with last value
-            lookup_trigger = (lookup_trigger + (60 - lookup_duration.total_seconds())) / 2
+            lookup_trigger = (lookup_trigger + (60 - reading_chart_duration)) / 2
             print(f'lookup_trigger: {lookup_trigger}')
 
             if self.ongoing_positions:
@@ -1864,14 +1865,13 @@ class SmartTrader:
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                 # Running Lookup
-                start = datetime.now()
-                asyncio.run(self.run_lookup(context=context))
-                lookup_duration = datetime.now() - start
+                result = asyncio.run(self.strategies_lookup(context=context))
+                reading_chart_duration = result['reading_chart_duration']
 
                 # Checking if [lookup] is taking too long
-                if self.is_lookup_taking_too_long(duration=lookup_duration.total_seconds()):
+                if self.is_lookup_taking_too_long(duration=reading_chart_duration):
                     # Reseting [lookup_duration]
-                    lookup_trigger = 60 - default_lookup_duration.total_seconds()
+                    lookup_trigger = 60 - default_lookup_duration
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
@@ -1903,22 +1903,23 @@ class SmartTrader:
                 self.ongoing_positions.clear()
 
                 # Reseting [lookup_duration]
-                lookup_trigger = 60 - default_lookup_duration.total_seconds()
+                lookup_trigger = 60 - default_lookup_duration
 
                 waiting_time = 5
                 sleep(waiting_time)
 
-    async def run_lookup(self, context):
-        # Strategies
+    async def strategies_lookup(self, context):
         msg = "Applying strategies"
+        result = {'reading_chart_duration': None}
         strategies = settings.TRADING_STRATEGIES.copy()
 
         # Reading Chart data
         start = datetime.now()
         await self.read_element(element_id='chart_data', is_async=True)
-        print(f'[chart_data] reading took: {datetime.now() - start}')
+        delta = datetime.now() - start
+        result['reading_chart_duration'] = delta.total_seconds()
 
-        # Preparing tasks
+        # Executing tasks
         tasks = []
         async with asyncio.TaskGroup() as tg:
             for strategy in utils.progress_bar(strategies, prefix=msg):
@@ -1937,7 +1938,6 @@ class SmartTrader:
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
-
             for task in tasks:
                 position = task.result()
 
@@ -1946,6 +1946,8 @@ class SmartTrader:
                     tmsg.print(context=context, clear=True)
                     art.tprint(text=position['result'], font='block')
                     await asyncio.sleep(2)
+
+        return result
 
     async def strategy_ema_rsi_8020(self):
         strategy_id = 'ema_rsi_8020'
