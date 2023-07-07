@@ -106,14 +106,14 @@ BROKERS = {
                 'locate_confidence': 0.88,
                 'is_mandatory': True,
                 'has_login_info': True,
-                'elements': ['balance', 'asset', 'clock']
+                'elements': ['balance', 'asset']
             },
             'chart_top': {
                 'id': 'chart_top',
                 'region': None,
                 'locate_confidence': 0.80,
                 'is_mandatory': True,
-                'elements': ['ohlc', 'ema_72'],
+                'elements': ['ohlc', 'ema_72', 'clock'],
             },
             'chart_bottom': {
                 'id': 'chart_bottom',

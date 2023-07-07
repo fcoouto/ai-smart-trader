@@ -143,21 +143,19 @@ class SmartTrader:
                     self.read_element(element_id=element_id)
 
         # DEBUG
-        # if settings.DEBUG_OCR:
-        #     while True:
-        #         asset = self.read_element(element_id='asset')
-        #         balance = self.read_element(element_id='balance')
-        #         payout = self.read_element(element_id='payout')
-        #         chart_data = self.read_element(element_id='chart_data')
-        #         trade_size = self.read_element(element_id='trade_size')
-        #         expiry_time = self.read_element(element_id='expiry_time')
-        #
-        #         print(f"{asset} | "
-        #               f"{balance} | "
-        #               f"{str(trade_size)} | "
-        #               f"{payout} | "
-        #               f"{expiry_time} | "
-        #               f"{str(chart_data)}")
+        if settings.DEBUG_OCR:
+            while True:
+                asset = self.read_element(element_id='asset')
+                balance = self.read_element(element_id='balance')
+                clock = self.read_element(element_id='clock')
+                payout = self.read_element(element_id='payout')
+                chart_data = self.read_element(element_id='chart_data')
+                trade_size = self.read_element(element_id='trade_size')
+                expiry_time = self.read_element(element_id='expiry_time')
+
+                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
+                      f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
+                      f"\nchart_data: {str(chart_data)}")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -563,7 +561,7 @@ class SmartTrader:
                     right = width * 0.80
                     bottom = height * 0.52
                 elif element_id == 'clock':
-                    left = width * 0.295
+                    left = width * 0.29
                     top = height * 0.18
                     right = width * 0.435
                     bottom = height * 0.34
