@@ -143,19 +143,19 @@ class SmartTrader:
                     self.read_element(element_id=element_id)
 
         # DEBUG
-        if settings.DEBUG_OCR:
-            while True:
-                asset = self.read_element(element_id='asset')
-                balance = self.read_element(element_id='balance')
-                clock = self.read_element(element_id='clock')
-                payout = self.read_element(element_id='payout')
-                chart_data = self.read_element(element_id='chart_data')
-                trade_size = self.read_element(element_id='trade_size')
-                expiry_time = self.read_element(element_id='expiry_time')
-
-                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
-                      f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-                      f"\nchart_data: {str(chart_data)}")
+        # if settings.DEBUG_OCR:
+        #     while True:
+        #         asset = self.read_element(element_id='asset')
+        #         balance = self.read_element(element_id='balance')
+        #         clock = self.read_element(element_id='clock')
+        #         payout = self.read_element(element_id='payout')
+        #         chart_data = self.read_element(element_id='chart_data')
+        #         trade_size = self.read_element(element_id='trade_size')
+        #         expiry_time = self.read_element(element_id='expiry_time')
+        #
+        #         print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
+        #               f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
+        #               f"\nchart_data: {str(chart_data)}")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -260,12 +260,16 @@ class SmartTrader:
         clock = self.read_element(element_id='clock')
         tries = 0
 
+        clock = '12:12:12'
+
         while now != clock:
             tries += 1
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                   f"{utils.tmsg.italic}- Broker's clock is not synchronized with computer's clock."
+                   f"{utils.tmsg.italic}- Seems like broker's clock is not synchronized with computer's clock."
                    f"\n"
-                   f"\n\t  - Let me try to fix it...{utils.tmsg.endc}")
+                   f"\t  - Right now, computer says it's [{now}] while app says it's [{clock}]"
+                   f"\n\n"
+                   f"\t  - Let me try to fix it...{utils.tmsg.endc}")
 
             tmsg.print(context=context, msg=msg, clear=True)
 
