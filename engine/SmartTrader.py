@@ -1358,11 +1358,11 @@ class SmartTrader:
             args.insert(0, settings.PATH_BROWSER)
 
             # Executing subprocess
-            pid = subprocess.Popen(args,
-                                   shell=False,
-                                   stdin=None,
-                                   stdout=None,
-                                   stderr=None).pid
+            subprocess.Popen(args,
+                             shell=False,
+                             stdin=None,
+                             stdout=None,
+                             stderr=None)
         sleep(7)
 
         # Changing focus
