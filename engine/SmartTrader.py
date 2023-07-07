@@ -1429,6 +1429,8 @@ class SmartTrader:
         self.playbook_go_to_url(url=trading_url)
 
     def playbook_sync_clock_with_ntp_server(self, ntp_server='pool.ntp.org'):
+        stdout = stderr = None
+
         if platform.system().lower() == 'windows':
             # not implemented yet
             args = []
@@ -1448,7 +1450,9 @@ class SmartTrader:
                                  stderr=subprocess.PIPE)
             # Waiting for results
             stdout, stderr = p.communicate()
-            print(f'stdout: {stdout} | stderr: {stderr}')
+            stdout, stderr = stdout.decode(), stderr.decode()
+
+        return [stdout, stderr]
 
     def playbook_tv_reset(self):
         # Reseting chart
