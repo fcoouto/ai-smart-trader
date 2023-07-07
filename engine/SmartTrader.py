@@ -304,8 +304,10 @@ class SmartTrader:
                 exit(500)
 
             # Retrieving [now] and reading [clock] for next loop
-            now = datetime.now().time()
+            now = datetime.utcnow()
             clock = self.read_element(element_id='clock')
+            app_now = datetime.fromisoformat(f'{now.date().isoformat()} {clock}')
+            delta = now - app_now
 
     def validate_trade_size(self, context='Validation'):
         optimal_trade_size = self.get_optimal_trade_size()
