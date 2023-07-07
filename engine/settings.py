@@ -4,7 +4,7 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = False
+DEBUG_OCR = True
 DEBUG_HISTORY = True
 DEBUG_PERFORMANCE = True
 
@@ -71,6 +71,7 @@ elif platform.system().lower() == 'linux':
 CORE_DATA = {
     'asset': 'string',
     'balance': 'currency',
+    'clock': 'time',
     'ema_72': 'float',
     'expiry_time': 'time',
     'ohlc': 'string_ohlc',
@@ -105,7 +106,7 @@ BROKERS = {
                 'locate_confidence': 0.88,
                 'is_mandatory': True,
                 'has_login_info': True,
-                'elements': ['balance', 'asset']
+                'elements': ['balance', 'asset', 'clock']
             },
             'chart_top': {
                 'id': 'chart_top',

@@ -51,11 +51,12 @@ class SmartTrader:
     recovery_trade_size = 0.00
     stop_loss_pct = 0.20
 
+    clock = None
     expiry_time = None
     payout = None
-    datetime = []
 
     asset = None
+    datetime = []
     open = []
     high = []
     low = []
@@ -561,6 +562,11 @@ class SmartTrader:
                     top = height * 0.26
                     right = width * 0.80
                     bottom = height * 0.52
+                elif element_id == 'clock':
+                    left = width * 0.295
+                    top = height * 0.18
+                    right = width * 0.435
+                    bottom = height * 0.34
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.15
@@ -858,6 +864,14 @@ class SmartTrader:
 
         self.balance = value
         return self.balance
+
+    def read_clock(self):
+        element_id = 'clock'
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
+        self.clock = value
+        return self.clock
 
     def read_trade_size(self):
         element_id = 'trade_size'
