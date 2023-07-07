@@ -252,6 +252,9 @@ class SmartTrader:
                 self.set_awareness(k='balance_less_than_min_balance', v=True)
                 self.read_element(element_id='balance')
 
+    def validate_clock(self, context='Validation'):
+        pass
+
     def validate_trade_size(self, context='Validation'):
         optimal_trade_size = self.get_optimal_trade_size()
 
@@ -315,14 +318,14 @@ class SmartTrader:
 
                 self.set_awareness(k='payout_low', v=True)
 
-    def is_lookup_taking_too_long(self, duration):
+    def is_reading_taking_too_long(self, element_id, duration):
         context = 'Validation'
 
-        if duration > settings.MAX_TIME_SPENT_ON_LOOKUP:
+        if element_id == 'chart_data' and duration > settings.CHART_DATA_READING_LIMIT_SECONDS:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Lookup actions are taking too long: {duration} seconds."
                    f"\n\n"
-                   f"\t  - A healthy duration would be less than {settings.MAX_TIME_SPENT_ON_LOOKUP} seconds. "
+                   f"\t  - A healthy duration would be less than {settings.CHART_DATA_READING_LIMIT_SECONDS} seconds. "
                    f"\n\n"
                    f"\t  - The main reason for such slowness is CPU usage beyond its capacity. If you are running "
                    f"multiple STrader agents in the same host, try to stop one of them.{utils.tmsg.endc}")
@@ -894,7 +897,7 @@ class SmartTrader:
         rsi = results[2]
 
         now_seconds = utils.now_seconds()
-        if now_seconds >= settings.MIN_CHART_DATA_SECONDS or now_seconds <= settings.MAX_CHART_DATA_SECONDS:
+        if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
             self.datetime.insert(0, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
             self.open.insert(0, o)
@@ -931,7 +934,7 @@ class SmartTrader:
         value = utils.str_to_float(value)
 
         now_seconds = utils.now_seconds()
-        if now_seconds >= settings.MIN_CHART_DATA_SECONDS or now_seconds <= settings.MAX_CHART_DATA_SECONDS:
+        if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
             self.close[0] = value
 
         return value
@@ -1798,8 +1801,8 @@ class SmartTrader:
                                              f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
 
         # First run using estimated time (2 seconds)
-        reading_chart_duration = default_lookup_duration = timedelta(seconds=2).total_seconds()
-        lookup_trigger = 60 - default_lookup_duration
+        reading_chart_duration = default_reading_duration = timedelta(seconds=2).total_seconds()
+        lookup_trigger = 60 - default_reading_duration
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
@@ -1869,9 +1872,10 @@ class SmartTrader:
                 reading_chart_duration = result['reading_chart_duration']
 
                 # Checking if [lookup] is taking too long
-                if self.is_lookup_taking_too_long(duration=reading_chart_duration):
-                    # Reseting [lookup_duration]
-                    lookup_trigger = 60 - default_lookup_duration
+                if self.is_reading_taking_too_long(element_id='chart_data',
+                                                   duration=reading_chart_duration):
+                    # Reseting [lookup_trigger]
+                    lookup_trigger = 60 - default_reading_duration
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
@@ -1902,8 +1906,8 @@ class SmartTrader:
                 self.reset_chart_data()
                 self.ongoing_positions.clear()
 
-                # Reseting [lookup_duration]
-                lookup_trigger = 60 - default_lookup_duration
+                # Reseting [lookup_trigger]
+                lookup_trigger = 60 - default_reading_duration
 
                 waiting_time = 5
                 sleep(waiting_time)
