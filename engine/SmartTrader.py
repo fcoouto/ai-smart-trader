@@ -1350,19 +1350,19 @@ class SmartTrader:
                 str_args += f'{arg} '
 
             # Executing subprocess
-            pid = subprocess.Popen(f'"{settings.PATH_BROWSER}" {str_args}',
-                                   shell=False,
-                                   creationflags=DETACHED_PROCESS).pid
+            p = subprocess.Popen(f'"{settings.PATH_BROWSER}" {str_args}',
+                                 shell=False,
+                                 creationflags=DETACHED_PROCESS).pid
         elif platform.system().lower() == 'linux':
             # Adding [PATH_BROWSER] to [args] on 1st position
             args.insert(0, settings.PATH_BROWSER)
 
             # Executing subprocess
-            subprocess.Popen(args,
-                             shell=False,
-                             stdin=None,
-                             stdout=None,
-                             stderr=None)
+            p = subprocess.Popen(args,
+                                 shell=False,
+                                 stdin=None,
+                                 stdout=None,
+                                 stderr=None).pid
         sleep(7)
 
         # Changing focus
@@ -1430,13 +1430,13 @@ class SmartTrader:
                     ntp_server]
 
             # Executing subprocess
-            pid = subprocess.Popen(args,
-                                   shell=False,
-                                   stdin=None,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+            p = subprocess.Popen(args,
+                                 shell=False,
+                                 stdin=None,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
             # Waiting for results
-            stdout, stderr = pid.communicate()
+            stdout, stderr = p.communicate()
             print(f'stdout: {stdout} | stderr: {stderr}')
 
     def playbook_tv_reset(self):
