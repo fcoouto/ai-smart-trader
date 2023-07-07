@@ -340,14 +340,6 @@ class SmartTrader:
 
             return True
 
-    def get_optimal_trade_size(self):
-        optimal_trade_size = self.initial_trade_size
-
-        if self.recovery_mode:
-            optimal_trade_size = self.recovery_trade_size
-
-        return round(optimal_trade_size, 2)
-
     def is_alerting_session_ended(self):
         zone_id = 'alert_session_ended'
         zone_region = self.get_zone_region(context_id=self.broker['id'],
@@ -1684,7 +1676,7 @@ class SmartTrader:
                 # [recovery_mode] is not activated yet
                 min_position_loss = (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[0] +
                                      self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[1] +
-                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[2])
+                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[2]) * 2
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
@@ -1720,6 +1712,13 @@ class SmartTrader:
             f.write(json.dumps(data))
 
     ''' TA & Trading '''
+    def get_optimal_trade_size(self):
+        optimal_trade_size = self.initial_trade_size
+
+        if self.recovery_mode:
+            optimal_trade_size = self.recovery_trade_size
+
+        return round(optimal_trade_size, 2)
 
     async def open_position(self, strategy_id, side, trade_size):
         position = {'result': None,
