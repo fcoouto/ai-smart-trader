@@ -523,7 +523,7 @@ class SmartTrader:
                     else:
                         if tries == 1 and zone_id == 'navbar_url':
                             msg = (f"{utils.tmsg.danger}[WARNING]{utils.tmsg.endc} "
-                                   f"  - Seems like you don't even have a browser running. "
+                                   f"- Seems like you don't even have a browser running. "
                                    f"\n\t  - At least I couldn't find it on the "
                                    f"expected [monitor] and [region]."
                                    f"\n\t  - In any case, let me try to fix it...{utils.tmsg.endc}")
