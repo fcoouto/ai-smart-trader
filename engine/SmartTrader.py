@@ -386,13 +386,6 @@ class SmartTrader:
                    f"multiple STrader agents in the same host, try to stop one of them.{utils.tmsg.endc}")
             tmsg.print(context=context, msg=msg, clear=True)
 
-            # Waiting PB
-            msg = "Reseting Lookup Trigger (CTRL + C to cancel)"
-            wait_secs = 10
-            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-            for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
             return True
 
     def is_alerting_session_ended(self):
@@ -1970,6 +1963,13 @@ class SmartTrader:
                 # Checking if [lookup] is taking too long
                 if self.is_reading_taking_too_long(element_id='chart_data',
                                                    duration=reading_chart_duration):
+                    # Waiting PB
+                    msg = "Reseting Lookup Trigger (CTRL + C to cancel)"
+                    wait_secs = 7
+                    items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                    for item in utils.progress_bar(items, prefix=msg):
+                        sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
                     # Reseting [lookup_trigger]
                     lookup_trigger = 60 - default_reading_duration
 
