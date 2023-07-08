@@ -1970,8 +1970,8 @@ class SmartTrader:
                     for item in utils.progress_bar(items, prefix=msg):
                         sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-                    # Reseting [lookup_trigger]
-                    lookup_trigger = 60 - default_reading_duration
+                    # Reseting [reading_chart_duration]
+                    reading_chart_duration = default_reading_duration
 
                 if len(self.ongoing_positions) > 0:
                     # A [trade] has been probably open
@@ -2002,8 +2002,8 @@ class SmartTrader:
                 self.reset_chart_data()
                 self.ongoing_positions.clear()
 
-                # Reseting [lookup_trigger]
-                lookup_trigger = 60 - default_reading_duration
+                # Reseting [reading_chart_duration]
+                reading_chart_duration = default_reading_duration
 
                 waiting_time = 5
                 sleep(waiting_time)
