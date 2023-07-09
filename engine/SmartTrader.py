@@ -49,7 +49,6 @@ class SmartTrader:
     recovery_mode = False
     cumulative_loss = 0.00
     recovery_trade_size = 0.00
-    stop_loss_pct = 0.20
 
     clock = None
     expiry_time = None
@@ -902,7 +901,7 @@ class SmartTrader:
             self.highest_balance = value
 
         if self.balance:
-            if value > self.balance * (1 + self.stop_loss_pct):
+            if value > self.balance * (1 + settings.STOP_LOSS_PCT):
                 # New value is greater than expected.
                 msg = (f"{tmsg.warning}[WARNING]{tmsg.endc} "
                        f"{tmsg.italic}- Seems like Your current Balance is [{value} USD], "
@@ -1754,7 +1753,7 @@ class SmartTrader:
 
             if self.recovery_mode:
                 # [recovery_mode] is activated
-                stop_loss = self.highest_balance * self.stop_loss_pct
+                stop_loss = self.highest_balance * settings.STOP_LOSS_PCT
 
                 if self.cumulative_loss > stop_loss:
                     # [cumulative_loss] is greater than [stop_loss].
