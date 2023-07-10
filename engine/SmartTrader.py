@@ -1761,9 +1761,18 @@ class SmartTrader:
 
                 if self.cumulative_loss > stop_loss:
                     # [cumulative_loss] is greater than [stop_loss].
+                    msg = (f"{tmsg.warning}[WARNING]{tmsg.endc} "
+                           f"{tmsg.italic}- This asset has reached [stop_loss] set of [{stop_loss} USD]."
+                           f"\n\t- The cumulative loss is [{self.cumulative_loss} USD]."
+                           f"\n\n"
+                           f"\t- I strongly recommend exchanging this asset for another one with better chart patterns. {tmsg.endc}")
+
                     # Resetting [recovery_mode]
                     self.recovery_mode = False
                     self.cumulative_loss = 0
+
+                    tmsg.print(msg=msg, clear=True)
+                    exit(500)
 
             else:
                 # [recovery_mode] is not activated yet
