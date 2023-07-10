@@ -2246,7 +2246,7 @@ class SmartTrader:
                 if dst_price_ema_72 > 0.0001618:
                     # Price is not too close to [ema_72] (0.01618%)
 
-                    trade_size = self.initial_trade_size
+                    trade_size = self.get_optimal_trade_size()
 
                     if self.close[0] > self.ema_72[0]:
                         # Price is above [ema_72]
