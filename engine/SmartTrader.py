@@ -247,8 +247,12 @@ class SmartTrader:
                        f"I would recommend at least [{settings.MIN_BALANCE} USD]. {tmsg.endc}")
                 tmsg.print(context=context, msg=msg, clear=True)
 
-                msg = f"{tmsg.italic}\n\t- Should I continue anyway? (CTRL-C to abort) {tmsg.endc}"
-                tmsg.input(context=context, msg=msg)
+                # Waiting PB
+                msg = "Should I continue anyway? (CTRL-C to abort)"
+                wait_secs = 10
+                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                 self.set_awareness(k='balance_less_than_min_balance', v=True)
                 self.read_element(element_id='balance')
@@ -901,7 +905,7 @@ class SmartTrader:
             self.highest_balance = value
 
         if self.balance:
-            if value > self.balance * (1 + settings.STOP_LOSS_PCT):
+            if value > self.balance * 2:
                 # New value is greater than expected.
                 msg = (f"{tmsg.warning}[WARNING]{tmsg.endc} "
                        f"{tmsg.italic}- Seems like Your current Balance is [{value} USD], "
@@ -2124,13 +2128,15 @@ class SmartTrader:
             if len(self.datetime) >= 2:
                 dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
 
+                trade_size = self.get_optimal_trade_size()
+
                 if self.close[0] > self.ema_72[0] or dst_price_ema_72 < -0.0005:
                     # Price is above [ema_72] or far bellow [ema_72]
 
                     if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 70:
                         position = await self.open_position(strategy_id=strategy_id,
                                                             side='up',
-                                                            trade_size=self.get_optimal_trade_size())
+                                                            trade_size=trade_size)
 
                 elif self.close[0] < self.ema_72[0] or dst_price_ema_72 > 0.0005:
                     # Price is bellow [ema_72] or far above [ema_72]
@@ -2138,7 +2144,7 @@ class SmartTrader:
                         # Trend Following
                         position = await self.open_position(strategy_id=strategy_id,
                                                             side='down',
-                                                            trade_size=self.get_optimal_trade_size())
+                                                            trade_size=trade_size)
 
         return position
 
@@ -2240,6 +2246,8 @@ class SmartTrader:
                 if dst_price_ema_72 > 0.0001618:
                     # Price is not too close to [ema_72] (0.01618%)
 
+                    trade_size = self.initial_trade_size
+
                     if self.close[0] > self.ema_72[0]:
                         # Price is above [ema_72]
 
@@ -2249,7 +2257,7 @@ class SmartTrader:
                                 # Trend Following
                                 position = await self.open_position(strategy_id=strategy_id,
                                                                     side='up',
-                                                                    trade_size=self.get_optimal_trade_size())
+                                                                    trade_size=trade_size)
 
                         elif dst_price_ema_72 > 0.0007:
                             # Price is too far from [ema_72] (probably losing strength)
@@ -2257,7 +2265,7 @@ class SmartTrader:
                                 # Against Trend
                                 position = await self.open_position(strategy_id=strategy_id,
                                                                     side='down',
-                                                                    trade_size=self.get_optimal_trade_size())
+                                                                    trade_size=trade_size)
 
                     elif self.close[0] < self.ema_72[0]:
                         # Price is bellow [ema_72]
@@ -2267,7 +2275,7 @@ class SmartTrader:
                                 # Trend Following
                                 position = await self.open_position(strategy_id=strategy_id,
                                                                     side='down',
-                                                                    trade_size=self.get_optimal_trade_size())
+                                                                    trade_size=trade_size)
 
                         elif dst_price_ema_72 > 0.0007:
                             # Price is too far from [ema_72] (probably losing strength)
@@ -2275,6 +2283,6 @@ class SmartTrader:
                                 # Against Trend
                                 position = await self.open_position(strategy_id=strategy_id,
                                                                     side='up',
-                                                                    trade_size=self.get_optimal_trade_size())
+                                                                    trade_size=trade_size)
 
         return position
