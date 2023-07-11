@@ -142,10 +142,10 @@ def now_seconds():
 
 # Technical Analysis
 def distance_percent(v1, v2):
-    var = v1 - v2
-    var = var / v1
+    distance = v1 - v2
+    distance = distance / v1
 
-    return var
+    return distance
 
 
 def distance_percent_abs(v1, v2):

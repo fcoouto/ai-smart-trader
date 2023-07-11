@@ -2184,21 +2184,21 @@ class SmartTrader:
         else:
             # No open position
             if len(self.datetime) >= 2:
-                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[0], v2=self.ema_72[0])
+                dst_price_ema_72 = utils.distance_percent(v1=self.close[0], v2=self.ema_72[0])
 
                 trade_size = self.get_optimal_trade_size()
 
                 if self.close[0] > self.ema_72[0] or dst_price_ema_72 < -0.0005:
                     # Price is above [ema_72] or far bellow [ema_72]
 
-                    if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 70:
+                    if self.rsi[1] <= 19 and 30 <= self.rsi[0] <= 70:
                         position = await self.open_position(strategy_id=strategy_id,
                                                             side='up',
                                                             trade_size=trade_size)
 
                 elif self.close[0] < self.ema_72[0] or dst_price_ema_72 > 0.0005:
                     # Price is bellow [ema_72] or far above [ema_72]
-                    if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 30:
+                    if self.rsi[1] >= 81 and 70 >= self.rsi[0] >= 30:
                         # Trend Following
                         position = await self.open_position(strategy_id=strategy_id,
                                                             side='down',
