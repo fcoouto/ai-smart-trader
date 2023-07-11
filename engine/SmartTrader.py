@@ -2184,7 +2184,7 @@ class SmartTrader:
         else:
             # No open position
             if len(self.datetime) >= 2:
-                dst_price_ema_72 = utils.distance_percent(v1=self.close[0], v2=self.ema_72[0])
+                dst_price_ema_72 = utils.distance_percent(v1=self.close[1], v2=self.ema_72[1])
 
                 trade_size = self.get_optimal_trade_size()
 
