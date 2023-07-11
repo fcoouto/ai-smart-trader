@@ -1155,7 +1155,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 305
                 element['y'] = zone_region.top + 20
             elif element_id == 'btn_activate':
-                element['x'] = zone_center_x + 5
+                element['x'] = zone_center_x
                 element['y'] = zone_center_y
             elif element_id == 'btn_expiry_time':
                 element['x'] = zone_region.left + 460
@@ -1695,10 +1695,17 @@ class SmartTrader:
             pyautogui.press('escape')
 
     def playbook_activate_super_strike(self):
-        # Activating [super_Strike]
+        # Opening [super_Strike] modal
         self.click_element(element_id='btn_super_strike', wait_when_done=2)
-        self.click_element(element_id='btn_activate', wait_when_done=0.500)
-        # self.click_element(element_id='btn_activate', duration=0.500, wait_when_done=0.500)
+
+        # Clicking on button [activate] didn't work out-of-the-box on Linux.
+        #   So we are doing keyboard hotkeys to get to the button...
+        # self.click_element(element_id='btn_activate', wait_when_done=0.500)
+        pyautogui.hotkey('shift', 'tab')
+        pyautogui.hotkey('shift', 'tab')
+        pyautogui.hotkey('shift', 'tab')
+        pyautogui.hotkey('shift', 'tab')
+        pyautogui.press('enter')
 
         # Leaving [super_strike] menu
         self.mouse_event_on_neutral_area(area_id='screen_center_25')
