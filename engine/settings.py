@@ -4,7 +4,7 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = True
+DEBUG_OCR = False
 DEBUG_HISTORY = True
 DEBUG_PERFORMANCE = True
 
