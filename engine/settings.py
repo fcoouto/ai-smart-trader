@@ -35,6 +35,7 @@ PROGRESS_BAR_INTERVAL_TIME = 0.250
 LOCATE_CONFIDENCE = 0.85
 MAX_TRIES_READING_ELEMENT = 3
 PLAYBOOK_LONG_ACTION = {
+    'activate_super_strike': 5,
     'go_to_url': 7,
     'go_to_trading_page': 7,
     'iqcent_chart_setup': 35,
