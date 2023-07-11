@@ -1293,17 +1293,14 @@ class SmartTrader:
                         clicks=clicks,
                         button=button,
                         duration=duration)
-
-        # After click, wait the same amount of time used for [duration].
-        # It gives time for CSS to load and transformations.
-        # if [duration] is, we understand it's urgent and there can't be any wait time.
         sleep(wait_when_done)
 
-    def move_to_element(self, element_id, duration=0.0):
+    def move_to_element(self, element_id, duration=0.0, wait_when_done=0.0):
         element = self.get_element(element_id=element_id)
         pyautogui.moveTo(x=element['x'],
                          y=element['y'],
                          duration=duration)
+        sleep(wait_when_done)
 
     ''' Playbooks '''
 
@@ -1700,7 +1697,7 @@ class SmartTrader:
     def playbook_activate_super_strike(self):
         # Activating [super_Strike]
         self.click_element(element_id='btn_super_strike', wait_when_done=0.500)
-        self.move_to_element(element_id='btn_activate')
+        self.move_to_element(element_id='btn_activate', wait_when_done=0.250)
         self.click_element(element_id='btn_activate')
 
         # Leaving [super_strike] menu
