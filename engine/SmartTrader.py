@@ -693,7 +693,7 @@ class SmartTrader:
             elif type == 'string_ohlc':
                 config = '--psm 7 -c tessedit_char_whitelist="OHLC0123456789. "'
             elif type == 'currency':
-                config = '--psm 7 -c tessedit_char_whitelist="0123456789. ABCDEFGHIJKLMNOPQRSTUVWXYZ"'
+                config = '--psm 7 -c tessedit_char_whitelist="0123456789,. ABCDEFGHIJKLMNOPQRSTUVWXYZ"'
             elif type == 'int':
                 config = '--psm 7 -c tessedit_char_whitelist=0123456789'
             elif type == 'time':
