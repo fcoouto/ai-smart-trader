@@ -1825,6 +1825,9 @@ class SmartTrader:
                     self.recovery_mode = False
                     self.cumulative_loss = 0
 
+                    # [loss_management.json] Writing data in a file for future reference
+                    self.loss_management_write_to_file()
+
                     tmsg.print(msg=msg, clear=True)
                     exit()
 
