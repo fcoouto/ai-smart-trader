@@ -1155,7 +1155,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 305
                 element['y'] = zone_region.top + 20
             elif element_id == 'btn_activate':
-                element['x'] = zone_center_x
+                element['x'] = zone_center_x + 5
                 element['y'] = zone_center_y
             elif element_id == 'btn_expiry_time':
                 element['x'] = zone_region.left + 460
