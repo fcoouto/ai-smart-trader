@@ -81,7 +81,8 @@ class SmartTrader:
     #                      }
     # }
 
-    is_automation_running = False
+    is_automation_running = None
+    is_super_strike_active = None
     awareness = {
         'balance_equal_to_zero': None,
         'balance_less_than_min_balance': None,
@@ -183,6 +184,9 @@ class SmartTrader:
 
         # Validating [payout]
         self.validate_payout(context=context)
+
+        # Validating [super_strike]
+        self.validate_super_strike(context=context)
 
     def get_trading_url(self):
         url = None
@@ -376,6 +380,27 @@ class SmartTrader:
 
                 self.set_awareness(k='payout_low', v=True)
 
+    def validate_super_strike(self, context='Validation'):
+        if not self.is_super_strike_activated():
+            # [super_strike] hasn't been activated yet
+
+            if self.is_super_strike_available():
+                # It's available to be activated
+                self.execute_playbook(playbook_id='activate_super_strike')
+
+
+        while self.payout < 75:
+            if not self.awareness['payout_low']:
+                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                       f"{utils.tmsg.italic}- Payout is currently [{self.payout}%]. "
+                       f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
+                tmsg.print(context=context, msg=msg, clear=True)
+
+                msg = f"{utils.tmsg.italic}\n\t  - Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}"
+                tmsg.input(context=context, msg=msg)
+
+                self.set_awareness(k='payout_low', v=True)
+
     def is_reading_taking_too_long(self, element_id, duration):
         context = 'Validation'
 
@@ -409,6 +434,25 @@ class SmartTrader:
         if zone_region:
             # Zone [alert_not_in_sync] has been found
             # Which means session has expired.
+            return True
+
+    def is_super_strike_available(self):
+        zone_id = 'super_strike_available'
+        zone_region = self.get_zone_region(context_id=self.broker['id'],
+                                           zone_id=zone_id,
+                                           confidence=0.98)
+        if zone_region:
+            # Zone [super_strike_available] has been found
+            # Which means it's available but not activated yet.
+            return True
+
+    def is_super_strike_activated(self):
+        zone_id = 'super_strike_activated'
+        zone_region = self.get_zone_region(context_id=self.broker['id'],
+                                           zone_id=zone_id,
+                                           confidence=0.98)
+        if zone_region:
+            # Zone [super_strike_activated] has been found
             return True
 
     def is_logged_in(self):
@@ -492,7 +536,7 @@ class SmartTrader:
                         tmsg.print(context=context, msg=msg)
                         sleep(1)
 
-                    elif self.is_automation_running is False:
+                    elif not self.is_automation_running:
                         msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                                f"- I couldn't find zone_region for [{zone_id}]."
                                f"\n\t  - I see you are logged in [{self.broker['name']}] "
@@ -1120,6 +1164,12 @@ class SmartTrader:
             elif element_id == 'btn_chart_settings':
                 element['x'] = zone_center_x
                 element['y'] = zone_region.top + 235
+            elif element_id == 'btn_super_strike':
+                element['x'] = zone_region.left + 305
+                element['y'] = zone_region.top + 20
+            elif element_id == 'btn_activate':
+                element['x'] = zone_center_x
+                element['y'] = zone_center_y
             elif element_id == 'btn_expiry_time':
                 element['x'] = zone_region.left + 460
                 element['y'] = zone_region.top + 75
@@ -1659,6 +1709,18 @@ class SmartTrader:
         else:
             # Option is not supported. Closing dropdown menu
             pyautogui.press('escape')
+
+    def playbook_activate_super_strike(self):
+        # Activating [super_Strike]
+        self.click_element(element_id='btn_super_strike', wait_when_done=0.500)
+        self.click_element(element_id='btn_activate', wait_when_done=0.250)
+
+        # Leaving [super_strike] menu
+        self.mouse_event_on_neutral_area(area_id='screen_center')
+        sleep(0.500)
+
+        # Moving focus to [neutral_are]
+        self.mouse_event_on_neutral_area(area_id='within_app')
 
     async def playbook_open_trade(self, side, trade_size):
         self.playbook_set_trade_size(trade_size=trade_size)

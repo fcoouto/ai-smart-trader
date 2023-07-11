@@ -89,14 +89,18 @@ BROKERS = {
             'password': b'gAAAAABkpHDCKUuyDm6wDy8f5-pLls9Clo-POfzmVfgBiJfdHk4O5wwf4hxJqDUZbkoigeMn8rhAwM7VPIX3qP-pd6l3N6oVxg=='
         },
         'neutral_zones': {
-            'within_app': {
+            'screen_center': {
                 'width_pct': 0.50,
-                'height_pct': 0.66
+                'height_pct': 0.50
             },
             'bellow_app': {
                 'width_pct': 0.50,
                 'height_pct': 0.90
-            }
+            },
+            'within_app': {
+                'width_pct': 0.50,
+                'height_pct': 0.66
+            },
 
         },
         'zones': {
@@ -275,6 +279,17 @@ BROKERS = {
             'btn_rsi_settings': {
                 'context': 'tv',
                 'zone': 'drawing_toolbar',
+                'x': None,
+                'y': None
+            },
+            'btn_super_strike': {
+                'zone': 'footer',
+                'x': None,
+                'y': None
+            },
+            'btn_activate': {
+                'context': 'iqcent',
+                'zone': 'btn_activate',
                 'x': None,
                 'y': None
             },
