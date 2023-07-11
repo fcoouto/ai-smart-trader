@@ -116,7 +116,7 @@ class SmartTrader:
                    f"\n\t- I couldn't find the key [{k}] within object [self.awareness]! :/"
                    f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit(500)
+            exit()
 
     ''' Validations '''
 
@@ -186,7 +186,7 @@ class SmartTrader:
         self.validate_payout(context=context)
 
         # Validating [super_strike]
-        # self.validate_super_strike(context=context)
+        self.validate_super_strike(context=context)
 
     def get_trading_url(self):
         url = None
@@ -224,7 +224,7 @@ class SmartTrader:
 
             msg = f"{utils.tmsg.italic}\n\t- I'll leave you for know. Take your time. {utils.tmsg.endc}"
             tmsg.input(context=context, msg=msg)
-            exit(404)
+            exit()
 
     def validate_balance(self, context='Validation'):
         if self.balance == 0:
@@ -308,7 +308,7 @@ class SmartTrader:
             else:
                 msg = f"{utils.tmsg.italic}\n\t  - I couldn't fix it. :/ {utils.tmsg.endc}"
                 tmsg.print(context=context, msg=msg)
-                exit(500)
+                exit()
 
             # Retrieving [now] and reading [clock] for next loop
             now = datetime.utcnow()
@@ -820,7 +820,7 @@ class SmartTrader:
                    f"\n- I couldn't find function [{f_read}]!"
                    f"\n- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit(500)
+            exit()
 
         return result
 
@@ -879,7 +879,7 @@ class SmartTrader:
                    f"\n- I couldn't find function [{f_read}]!"
                    f"\n- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit(500)
+            exit()
 
         return result
 
@@ -1279,7 +1279,7 @@ class SmartTrader:
                    f"\n\t- I couldn't find area [{area_id}] within object [self.broker.neutral_zones]! :/"
                    f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit(500)
+            exit()
 
         if event == 'click':
             pyautogui.click(x=x, y=y)
@@ -1372,7 +1372,7 @@ class SmartTrader:
                    f"\n\t- I couldn't find the playbook [{playbook_id}]! :/"
                    f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit(500)
+            exit()
 
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
@@ -1697,7 +1697,8 @@ class SmartTrader:
     def playbook_activate_super_strike(self):
         # Activating [super_Strike]
         self.click_element(element_id='btn_super_strike', wait_when_done=2)
-        self.click_element(element_id='btn_activate', duration=0.500, wait_when_done=0.500)
+        self.click_element(element_id='btn_activate', wait_when_done=0.500)
+        # self.click_element(element_id='btn_activate', duration=0.500, wait_when_done=0.500)
 
         # Leaving [super_strike] menu
         self.mouse_event_on_neutral_area(area_id='screen_center_25')
@@ -1818,7 +1819,7 @@ class SmartTrader:
                     self.cumulative_loss = 0
 
                     tmsg.print(msg=msg, clear=True)
-                    exit(500)
+                    exit()
 
             else:
                 # [recovery_mode] is not activated yet
@@ -2092,7 +2093,7 @@ class SmartTrader:
                            f"\n\t- I couldn't find a function for strategy [{strategy}].! :/"
                            f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
                     tmsg.input(msg=msg, clear=True)
-                    exit(500)
+                    exit()
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
