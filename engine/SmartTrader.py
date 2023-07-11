@@ -427,7 +427,7 @@ class SmartTrader:
         zone_id = 'super_strike_available'
         zone_region = self.get_zone_region(context_id=self.broker['id'],
                                            zone_id=zone_id,
-                                           confidence=0.95)
+                                           confidence=0.98)
         if zone_region:
             # Zone [super_strike_available] has been found
             # Which means it's available but not activated yet.
@@ -437,7 +437,7 @@ class SmartTrader:
         zone_id = 'super_strike_activated'
         zone_region = self.get_zone_region(context_id=self.broker['id'],
                                            zone_id=zone_id,
-                                           confidence=0.95)
+                                           confidence=0.98)
         if zone_region:
             # Zone [super_strike_activated] has been found
             return True
