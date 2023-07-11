@@ -186,7 +186,7 @@ class SmartTrader:
         self.validate_payout(context=context)
 
         # Validating [super_strike]
-        self.validate_super_strike(context=context)
+        # self.validate_super_strike(context=context)
 
     def get_trading_url(self):
         url = None
