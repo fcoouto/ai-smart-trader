@@ -388,19 +388,6 @@ class SmartTrader:
                 # It's available to be activated
                 self.execute_playbook(playbook_id='activate_super_strike')
 
-
-        while self.payout < 75:
-            if not self.awareness['payout_low']:
-                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                       f"{utils.tmsg.italic}- Payout is currently [{self.payout}%]. "
-                       f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
-                tmsg.print(context=context, msg=msg, clear=True)
-
-                msg = f"{utils.tmsg.italic}\n\t  - Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}"
-                tmsg.input(context=context, msg=msg)
-
-                self.set_awareness(k='payout_low', v=True)
-
     def is_reading_taking_too_long(self, element_id, duration):
         context = 'Validation'
 
