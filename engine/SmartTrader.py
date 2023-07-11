@@ -1703,7 +1703,7 @@ class SmartTrader:
         self.click_element(element_id='btn_activate', wait_when_done=0.250)
 
         # Leaving [super_strike] menu
-        self.mouse_event_on_neutral_area(area_id='screen_center')
+        self.mouse_event_on_neutral_area(area_id='screen_center_25')
         sleep(0.500)
 
         # Moving focus to [neutral_are]

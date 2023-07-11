@@ -89,9 +89,9 @@ BROKERS = {
             'password': b'gAAAAABkpHDCKUuyDm6wDy8f5-pLls9Clo-POfzmVfgBiJfdHk4O5wwf4hxJqDUZbkoigeMn8rhAwM7VPIX3qP-pd6l3N6oVxg=='
         },
         'neutral_zones': {
-            'screen_center': {
+            'screen_center_25': {
                 'width_pct': 0.50,
-                'height_pct': 0.50
+                'height_pct': 0.25
             },
             'bellow_app': {
                 'width_pct': 0.50,
