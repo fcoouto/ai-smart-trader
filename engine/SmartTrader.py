@@ -1734,6 +1734,9 @@ class SmartTrader:
             # Option is not supported. Closing dropdown menu
             pyautogui.press('escape')
 
+        # Waiting CSS components
+        sleep(0.500)
+
     def playbook_activate_super_strike(self):
         # Activationg [super_Strike] mode
         self.click_element(element_id='btn_super_strike', wait_when_done=2)
