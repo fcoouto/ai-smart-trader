@@ -1846,7 +1846,7 @@ class SmartTrader:
 
             if self.recovery_mode:
                 # [recovery_mode] is activated
-                stop_loss = self.highest_balance * settings.STOP_LOSS_PCT
+                stop_loss = self.initial_trade_size * settings.INITIAL_TRADE_AMOUNT_MULTIPLIER_FOR_STOP_LOSS
 
                 if self.cumulative_loss > stop_loss:
                     # [cumulative_loss] is greater than [stop_loss].
