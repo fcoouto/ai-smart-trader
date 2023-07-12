@@ -375,10 +375,14 @@ class SmartTrader:
                        f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
                 tmsg.print(context=context, msg=msg, clear=True)
 
-                msg = f"{utils.tmsg.italic}\n\t  - Let me know when I can continue. (CTRL-C to abort) {utils.tmsg.endc}"
-                tmsg.input(context=context, msg=msg)
+                # Waiting PB
+                msg = "Waiting for payout get better again (CTRL + C to cancel)"
+                wait_secs = 60
+                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-                self.set_awareness(k='payout_low', v=True)
+                self.read_element(element_id='payout')
 
     def validate_super_strike(self, context='Validation'):
         if not self.is_super_strike_activated():
