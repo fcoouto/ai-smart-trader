@@ -360,6 +360,7 @@ class SmartTrader:
 
             # Executing playbook
             self.execute_playbook(playbook_id='toggle_expiry_time')
+            self.read_element(element_id='expiry_time')
 
         print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
         sleep(1)
@@ -384,8 +385,8 @@ class SmartTrader:
             self.execute_playbook(playbook_id='set_expiry_time', expiry_time='01:00')
             self.read_element(element_id='expiry_time')
 
-            print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
-            sleep(1)
+        print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
+        sleep(1)
 
     def validate_payout(self, context='Validation'):
         while self.payout < 75:
