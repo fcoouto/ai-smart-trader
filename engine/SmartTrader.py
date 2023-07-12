@@ -343,12 +343,33 @@ class SmartTrader:
             sleep(1)
 
     def validate_expiry_time(self, context='Validation'):
-        while self.expiry_time is not None and self.expiry_time != '01:00':
+        while not self.is_expiry_time_fixed():
+            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                   f"{utils.tmsg.italic}- Expiry Time is not set to [fixed] as I would expect."
+                   f"\n"
+                   f"\n\t  - I'll set it up for us.{utils.tmsg.endc}")
+
+            tmsg.print(context=context, msg=msg, clear=True)
+
+            # Waiting PB
+            msg = "Toggling Expiry Time to Fixed (CTRL + C to cancel)"
+            wait_secs = 1
+            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            # Executing playbook
+            self.execute_playbook(playbook_id='toggle_expiry_time')
+
+        print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
+        sleep(1)
+
+        while self.expiry_time != '01:00':
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Expiry Time is currently set to [{self.expiry_time}], "
                    f"but I'm more expirienced with [01:00]."
                    f"\n"
-                   f"\n\t  - Let me try to change it. :){utils.tmsg.endc}")
+                   f"\n\t  - Let me try to update it.{utils.tmsg.endc}")
 
             tmsg.print(context=context, msg=msg, clear=True)
 
@@ -363,9 +384,8 @@ class SmartTrader:
             self.execute_playbook(playbook_id='set_expiry_time', expiry_time='01:00')
             self.read_element(element_id='expiry_time')
 
-            if self.expiry_time == '01:00':
-                print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
-                sleep(1)
+            print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
+            sleep(1)
 
     def validate_payout(self, context='Validation'):
         while self.payout < 75:
@@ -376,7 +396,7 @@ class SmartTrader:
                 tmsg.print(context=context, msg=msg, clear=True)
 
                 # Waiting PB
-                msg = "Waiting for payout get better again (CTRL + C to cancel)"
+                msg = "Waiting for payout get higher again (CTRL + C to cancel)"
                 wait_secs = 60
                 items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
@@ -422,6 +442,16 @@ class SmartTrader:
         zone_region = self.get_zone_region(context_id=self.broker['id'],
                                            zone_id=zone_id,
                                            confidence=0.90)
+        if zone_region:
+            # Zone [alert_not_in_sync] has been found
+            # Which means session has expired.
+            return True
+
+    def is_expiry_time_fixed(self):
+        zone_id = 'expiry_time_fixed'
+        zone_region = self.get_zone_region(context_id=self.broker['id'],
+                                           zone_id=zone_id,
+                                           confidence=0.98)
         if zone_region:
             # Zone [alert_not_in_sync] has been found
             # Which means session has expired.
@@ -1161,6 +1191,9 @@ class SmartTrader:
             elif element_id == 'btn_activate':
                 element['x'] = zone_center_x
                 element['y'] = zone_center_y
+            elif element_id == 'toggle_expiry_time':
+                element['x'] = zone_region.left + 505
+                element['y'] = zone_region.top + 20
             elif element_id == 'btn_expiry_time':
                 element['x'] = zone_region.left + 460
                 element['y'] = zone_region.top + 75
@@ -1688,6 +1721,9 @@ class SmartTrader:
         if self.trade_size != trade_size:
             self.click_element(element_id='trade_size', clicks=2)
             pyautogui.typewrite("%.2f" % trade_size)
+
+    def playbook_toggle_expiry_time(self):
+        self.click_element(element_id='toggle_expiry_time', wait_when_done=0.250)
 
     def playbook_set_expiry_time(self, expiry_time='01:00'):
         self.click_element(element_id='btn_expiry_time', wait_when_done=0.500)

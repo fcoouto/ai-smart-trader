@@ -36,6 +36,7 @@ LOCATE_CONFIDENCE = 0.85
 MAX_TRIES_READING_ELEMENT = 3
 PLAYBOOK_LONG_ACTION = {
     'activate_super_strike': 5,
+    'activate_fixed_expiry_time': 2,
     'go_to_url': 7,
     'go_to_trading_page': 7,
     'iqcent_chart_setup': 35,
@@ -474,6 +475,11 @@ BROKERS = {
             'close': {
                 'zone': 'footer',
                 'type': 'float',
+                'x': None,
+                'y': None
+            },
+            'toggle_expiry_time': {
+                'zone': 'footer',
                 'x': None,
                 'y': None
             },
