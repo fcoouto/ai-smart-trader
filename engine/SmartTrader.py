@@ -1451,7 +1451,7 @@ class SmartTrader:
                                  stdin=None,
                                  stdout=None,
                                  stderr=None).pid
-        sleep(7)
+        sleep(10)
 
         # Changing focus
         self.mouse_event_on_neutral_area(event='click', area_id='within_app')
