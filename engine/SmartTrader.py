@@ -1284,13 +1284,13 @@ class SmartTrader:
                 element['x'] = zone_region.left + 25
                 element['y'] = zone_region.top + 200
             elif element_id == 'navitem_ema_settings_tab1':
-                element['x'] = zone_region.left + 42
+                element['x'] = zone_region.left + 50
                 element['y'] = zone_region.top + 65
             elif element_id == 'navitem_ema_settings_tab2':
                 element['x'] = zone_region.left + 110
                 element['y'] = zone_region.top + 65
             elif element_id == 'navitem_rsi_settings_tab1':
-                element['x'] = zone_region.left + 42
+                element['x'] = zone_region.left + 50
                 element['y'] = zone_region.top + 65
             elif element_id == 'navitem_rsi_settings_tab2':
                 element['x'] = zone_region.left + 110
