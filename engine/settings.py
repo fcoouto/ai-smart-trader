@@ -35,7 +35,6 @@ LOCATE_CONFIDENCE = 0.85
 MAX_TRIES_READING_ELEMENT = 3
 PLAYBOOK_LONG_ACTION = {
     'activate_super_strike': 5,
-    'activate_fixed_expiry_time': 2,
     'go_to_url': 7,
     'go_to_trading_page': 7,
     'iqcent_chart_setup': 35,
@@ -43,6 +42,7 @@ PLAYBOOK_LONG_ACTION = {
     'refresh_page': 7,
     'set_trade_size': 2,
     'set_expiry_time': 5,
+    'toggle_expiry_time': 2,
     'tv_reset': 10,
 }
 PATH_LOCK = 'lock'
