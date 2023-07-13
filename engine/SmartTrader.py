@@ -1032,7 +1032,7 @@ class SmartTrader:
             # self.high.insert(0, h)
             # self.low.insert(0, l)
             # self.close.insert(0, c)
-            self.close.insert(0, close)
+            # self.close.insert(0, close)
 
             # self.change.insert(0, change)
             # self.change_pct.insert(0, change_pct)
