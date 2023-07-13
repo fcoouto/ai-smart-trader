@@ -606,7 +606,7 @@ class SmartTrader:
                             # Go try to find it again
                             continue
 
-                        if tries >= 5:
+                        if tries >= settings.MAX_TRIES_LOCATING_ELEMENT:
                             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
                                    f"- I couldn't find zone_region for [{zone_id}]. "
                                    f"\n\t- I see you are logged in just fine but things are not quite in place yet."
