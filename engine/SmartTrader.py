@@ -149,7 +149,7 @@ class SmartTrader:
                 balance = self.read_element(element_id='balance')
                 clock = self.read_element(element_id='clock')
                 payout = self.read_element(element_id='payout')
-                chart_data = self.read_element(element_id='chart_data')
+                chart_data = self.read_element(element_id='chart_data', is_async=True)
                 trade_size = self.read_element(element_id='trade_size')
                 expiry_time = self.read_element(element_id='expiry_time')
 
