@@ -691,9 +691,10 @@ class SmartTrader:
                 elif element_id == 'ema_72':
                     if platform.system().lower() == 'linux':
                         left = width * 0.49
+                        top = height * 0.87
                     else:
                         left = width * 0.465
-                    top = height * 0.89
+                        top = height * 0.89
                     right = width * 0.70
                     bottom = height
                 elif element_id == 'clock':
