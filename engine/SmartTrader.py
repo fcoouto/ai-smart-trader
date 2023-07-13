@@ -792,7 +792,7 @@ class SmartTrader:
 
     def read_element(self, element_id, is_async=False, **kwargs):
         if is_async:
-            return self.read_element_async(element_id=element_id)
+            return self.read_element_async(element_id=element_id, **kwargs)
 
         # Error handler wrapper of each [read_{element_id}] function
         result = None
@@ -870,6 +870,8 @@ class SmartTrader:
         f_read = f"read_{element_id}"
         if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
             while not is_processed:
+                if tries > 1:
+                    print(f'{element_id}... Oops!')
                 tries += 1
 
                 try:
@@ -1014,9 +1016,9 @@ class SmartTrader:
     async def read_chart_data(self):
         results = await asyncio.gather(
             # self.read_ohlc(),
-            self.read_element_async(element_id='close', auto_update=False),
-            self.read_element_async(element_id='ema_72'),
-            self.read_element_async(element_id='rsi')
+            self.read_element(element_id='close', is_async=True, auto_update=False),
+            self.read_element(element_id='ema_72', is_async=True),
+            self.read_element(element_id='rsi', is_async=True)
             # self.read_close(auto_update=False),
             # self.read_ema_72(),
             # self.read_rsi(),
