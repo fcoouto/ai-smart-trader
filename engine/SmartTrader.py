@@ -803,8 +803,8 @@ class SmartTrader:
         if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
             while not is_processed:
                 if tries > 1:
-                    print(f'{element_id}: Ooops!')
-                    
+                    print(f'{element_id}: Ooops {tries}')
+
                 tries += 1
 
                 try:
