@@ -149,7 +149,7 @@ class SmartTrader:
                 balance = self.read_element(element_id='balance')
                 clock = self.read_element(element_id='clock')
                 payout = self.read_element(element_id='payout')
-                chart_data = self.read_element(element_id='chart_data', is_async=True)
+                chart_data = self.read_element(element_id='chart_data')
                 trade_size = self.read_element(element_id='trade_size')
                 expiry_time = self.read_element(element_id='expiry_time')
 
@@ -802,6 +802,9 @@ class SmartTrader:
         f_read = f"read_{element_id}"
         if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
             while not is_processed:
+                if tries > 1:
+                    print(f'{element_id}: Ooops!')
+                    
                 tries += 1
 
                 try:
