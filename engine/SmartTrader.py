@@ -1013,7 +1013,7 @@ class SmartTrader:
     async def read_chart_data(self):
         results = await asyncio.gather(
             # self.read_ohlc(),
-            self.read_close(),
+            self.read_close(update_lastest=False),
             self.read_ema_72(),
             self.read_rsi(),
             return_exceptions=True
@@ -1032,11 +1032,11 @@ class SmartTrader:
             # self.high.insert(0, h)
             # self.low.insert(0, l)
             # self.close.insert(0, c)
-            # self.close.insert(0, close)
 
             # self.change.insert(0, change)
             # self.change_pct.insert(0, change_pct)
 
+            self.close.insert(0, close)
             self.ema_72.insert(0, ema_72)
             self.rsi.insert(0, rsi)
 
@@ -1055,7 +1055,7 @@ class SmartTrader:
         self.ema_72.clear()
         self.rsi.clear()
 
-    async def read_close(self):
+    async def read_close(self, update_lastest=True):
         element_id = 'close'
 
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
@@ -1064,8 +1064,9 @@ class SmartTrader:
         value = utils.str_to_float(value)
 
         now_seconds = utils.now_seconds()
-        if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
-            self.close[0] = value
+        if update_lastest:
+            if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
+                self.close[0] = value
 
         return value
 
