@@ -155,7 +155,7 @@ class SmartTrader:
 
                 print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
                       f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-                      f"\nchart_data: {str(chart_data)}")
+                      f"\nchart_data: {str(chart_data)}\n")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -790,7 +790,7 @@ class SmartTrader:
             if text:
                 return text
 
-    def read_element(self, element_id, is_async=False):
+    def read_element(self, element_id, is_async=False, **kwargs):
         if is_async:
             return self.read_element_async(element_id=element_id)
 
@@ -807,16 +807,16 @@ class SmartTrader:
                 try:
                     if asyncio.iscoroutinefunction(read):
                         # Creating an event loop
-                        result = asyncio.run(read())
+                        result = asyncio.run(read(**kwargs))
                     else:
-                        result = read()
+                        result = read(**kwargs)
                     is_processed = True
 
                 except RuntimeError as err:
                     if 'asyncio.run() cannot be called from a running event loop' in str(err):
                         # An event loop is running already
                         # Let's just create a task for it
-                        result = asyncio.create_task(read())
+                        result = asyncio.create_task(read(**kwargs))
                         is_processed = True
 
                 except Exception as err:
@@ -847,9 +847,9 @@ class SmartTrader:
                         self.run_validation()
 
                         if asyncio.iscoroutinefunction(read):
-                            result = asyncio.run(read())
+                            result = asyncio.run(read(**kwargs))
                         else:
-                            result = read()
+                            result = read(**kwargs)
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
@@ -861,7 +861,7 @@ class SmartTrader:
 
         return result
 
-    async def read_element_async(self, element_id):
+    async def read_element_async(self, element_id, **kwargs):
         # Error handler wrapper of each [read_{element_id}] function
         result = None
         tries = 0
@@ -874,9 +874,9 @@ class SmartTrader:
 
                 try:
                     if asyncio.iscoroutinefunction(read):
-                        result = await read()
+                        result = await read(**kwargs)
                     else:
-                        result = read()
+                        result = read(**kwargs)
                     is_processed = True
                 except Exception as err:
                     if tries >= settings.MAX_TRIES_READING_ELEMENT:
@@ -906,9 +906,9 @@ class SmartTrader:
                         self.run_validation()
 
                         if asyncio.iscoroutinefunction(read):
-                            result = await read()
+                            result = await read(**kwargs)
                         else:
-                            result = read()
+                            result = read(**kwargs)
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
@@ -1014,10 +1014,13 @@ class SmartTrader:
     async def read_chart_data(self):
         results = await asyncio.gather(
             # self.read_ohlc(),
-            self.read_close(auto_update=False),
-            self.read_ema_72(),
-            self.read_rsi(),
-            return_exceptions=True
+            self.read_element_async(element_id='close', auto_update=False),
+            self.read_element_async(element_id='ema_72'),
+            self.read_element_async(element_id='rsi')
+            # self.read_close(auto_update=False),
+            # self.read_ema_72(),
+            # self.read_rsi(),
+            # return_exceptions=True
         )
 
         # o, h, l, c, change, change_pct = results[0]
