@@ -143,19 +143,19 @@ class SmartTrader:
                     self.read_element(element_id=element_id)
 
         # DEBUG
-        if settings.DEBUG_OCR:
-            while True:
-                asset = self.read_element(element_id='asset')
-                balance = self.read_element(element_id='balance')
-                clock = self.read_element(element_id='clock')
-                payout = self.read_element(element_id='payout')
-                chart_data = self.read_element(element_id='chart_data')
-                trade_size = self.read_element(element_id='trade_size')
-                expiry_time = self.read_element(element_id='expiry_time')
-
-                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
-                      f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-                      f"\nchart_data: {str(chart_data)}\n")
+        # if settings.DEBUG_OCR:
+        #     while True:
+        #         asset = self.read_element(element_id='asset')
+        #         balance = self.read_element(element_id='balance')
+        #         clock = self.read_element(element_id='clock')
+        #         payout = self.read_element(element_id='payout')
+        #         chart_data = self.read_element(element_id='chart_data')
+        #         trade_size = self.read_element(element_id='trade_size')
+        #         expiry_time = self.read_element(element_id='expiry_time')
+        #
+        #         print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
+        #               f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
+        #               f"\nchart_data: {str(chart_data)}\n")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -802,9 +802,6 @@ class SmartTrader:
         f_read = f"read_{element_id}"
         if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
             while not is_processed:
-                if tries > 1:
-                    print(f'{element_id}: Ooops {tries}')
-
                 tries += 1
 
                 try:
@@ -873,8 +870,6 @@ class SmartTrader:
         f_read = f"read_{element_id}"
         if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
             while not is_processed:
-                if tries > 1:
-                    print(f'{element_id}: Ooops!')
                 tries += 1
 
                 try:
@@ -884,7 +879,7 @@ class SmartTrader:
                         result = read(**kwargs)
                     is_processed = True
                 except Exception as err:
-                    if tries >= settings.MAX_TRIES_READING_ELEMENT:
+                    if tries > settings.MAX_TRIES_READING_ELEMENT:
                         # Something is going on here... Refresh page
                         msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
                                f"- That's weird... While reading [{element_id}], I noticed this:"
@@ -1019,9 +1014,6 @@ class SmartTrader:
     async def read_chart_data(self):
         results = await asyncio.gather(
             # self.read_ohlc(),
-            # self.read_element(element_id='close', is_async=True, auto_update=False),
-            # self.read_element(element_id='ema_72', is_async=True),
-            # self.read_element(element_id='rsi', is_async=True)
             self.read_close(auto_update=False),
             self.read_ema_72(),
             self.read_rsi(),
