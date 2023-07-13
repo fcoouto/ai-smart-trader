@@ -1012,32 +1012,36 @@ class SmartTrader:
 
     async def read_chart_data(self):
         results = await asyncio.gather(
-            self.read_ohlc(),
+            # self.read_ohlc(),
+            self.read_close(),
             self.read_ema_72(),
             self.read_rsi(),
             return_exceptions=True
         )
 
-        o, h, l, c, change, change_pct = results[0]
-        ema_72 = results[1]
-        rsi = results[2]
+        # o, h, l, c, change, change_pct = results[0]
+        close = results[0]
+        ema_72 = results[2]
+        rsi = results[3]
 
         now_seconds = utils.now_seconds()
         if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
             self.datetime.insert(0, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
-            self.open.insert(0, o)
-            self.high.insert(0, h)
-            self.low.insert(0, l)
-            self.close.insert(0, c)
+            # self.open.insert(0, o)
+            # self.high.insert(0, h)
+            # self.low.insert(0, l)
+            # self.close.insert(0, c)
+            self.close.insert(0, close)
 
-            self.change.insert(0, change)
-            self.change_pct.insert(0, change_pct)
+            # self.change.insert(0, change)
+            # self.change_pct.insert(0, change_pct)
 
             self.ema_72.insert(0, ema_72)
             self.rsi.insert(0, rsi)
 
-        return [o, h, l, c, change, change_pct, ema_72, rsi]
+        # return [o, h, l, c, change, change_pct, ema_72, rsi]
+        return [close, ema_72, rsi]
 
     def reset_chart_data(self):
         self.datetime.clear()
