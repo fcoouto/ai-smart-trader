@@ -823,7 +823,7 @@ class SmartTrader:
                         is_processed = True
 
                 except Exception as err:
-                    if tries >= settings.MAX_TRIES_READING_ELEMENT:
+                    if tries > settings.MAX_TRIES_READING_ELEMENT:
                         # Something is going on here... Refresh page
                         msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
                                f"- That's weird... While reading [{element_id}], I noticed this:"
