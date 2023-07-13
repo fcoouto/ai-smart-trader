@@ -695,7 +695,7 @@ class SmartTrader:
                     else:
                         left = width * 0.465
                         top = height * 0.89
-                    right = width * 0.70
+                    right = width * 0.75
                     bottom = height
                 elif element_id == 'clock':
                     left = width * 0.29
