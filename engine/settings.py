@@ -109,7 +109,7 @@ BROKERS = {
             'header': {
                 'id': 'header',
                 'region': None,
-                'locate_confidence': 0.82,
+                'locate_confidence': 0.88,
                 'is_mandatory': True,
                 'has_login_info': True,
                 'elements': ['balance', 'asset']
@@ -117,7 +117,7 @@ BROKERS = {
             'chart_top': {
                 'id': 'chart_top',
                 'region': None,
-                'locate_confidence': 0.82,
+                'locate_confidence': 0.80,
                 'is_mandatory': True,
                 'elements': ['ohlc', 'ema_72', 'clock'],
             },
