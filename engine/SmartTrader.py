@@ -1021,8 +1021,8 @@ class SmartTrader:
 
         # o, h, l, c, change, change_pct = results[0]
         close = results[0]
-        ema_72 = results[2]
-        rsi = results[3]
+        ema_72 = results[1]
+        rsi = results[2]
 
         now_seconds = utils.now_seconds()
         if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
