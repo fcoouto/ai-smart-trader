@@ -1696,7 +1696,7 @@ class SmartTrader:
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
 
-    def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=5):
+    def playbok_tv_configure_indicator_rsi(self, length, color='white', opacity=5):
         # Opening Settings
         self.click_element(element_id='btn_rsi_settings', wait_when_done=0.300)
 
