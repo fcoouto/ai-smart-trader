@@ -723,14 +723,14 @@ class SmartTrader:
                     bottom = height
                 elif element_id == 'expiry_time':
                     left = width * 0.70
-                    top = height * 0.34
-                    right = width * 0.815
-                    bottom = height * 0.49
+                    top = height * 0.32
+                    right = width * 0.81
+                    bottom = height * 0.52
                 elif element_id == 'payout':
                     left = width * 0.10
                     top = height * 0.78
                     right = width * 0.22
-                    bottom = height * 0.95
+                    bottom = height * 0.94
 
         img = img.crop([left, top, right, bottom])
         return img
