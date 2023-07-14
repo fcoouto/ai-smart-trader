@@ -4,7 +4,7 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = False
+DEBUG_OCR = True
 DEBUG_HISTORY = True
 DEBUG_PERFORMANCE = True
 
@@ -62,13 +62,13 @@ if platform.system().lower() == 'windows':
 
     PATH_BROWSER = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
     BROWSER_WIDTH = 654
-    BROWSER_HEIGHT = 813
+    BROWSER_HEIGHT = 838
 elif platform.system().lower() == 'linux':
     PATH_TESSERACT = os.path.join('/usr', 'bin', 'tesseract')
 
     PATH_BROWSER = os.path.join('/opt', 'google', 'chrome', 'google-chrome')
     BROWSER_WIDTH = 638
-    BROWSER_HEIGHT = 798
+    BROWSER_HEIGHT = 823
 
 CORE_DATA = {
     'asset': 'string',

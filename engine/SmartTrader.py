@@ -143,19 +143,19 @@ class SmartTrader:
                     self.read_element(element_id=element_id)
 
         # DEBUG
-        # if settings.DEBUG_OCR:
-        #     while True:
-        #         asset = self.read_element(element_id='asset')
-        #         balance = self.read_element(element_id='balance')
-        #         clock = self.read_element(element_id='clock')
-        #         payout = self.read_element(element_id='payout')
-        #         chart_data = self.read_element(element_id='chart_data')
-        #         trade_size = self.read_element(element_id='trade_size')
-        #         expiry_time = self.read_element(element_id='expiry_time')
-        #
-        #         print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
-        #               f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-        #               f"\nchart_data: {str(chart_data)}\n")
+        if settings.DEBUG_OCR:
+            while True:
+                asset = self.read_element(element_id='asset')
+                balance = self.read_element(element_id='balance')
+                clock = self.read_element(element_id='clock')
+                payout = self.read_element(element_id='payout')
+                chart_data = self.read_element(element_id='chart_data')
+                trade_size = self.read_element(element_id='trade_size')
+                expiry_time = self.read_element(element_id='expiry_time')
+
+                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
+                      f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
+                      f"\nchart_data: {str(chart_data)}\n")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -685,22 +685,21 @@ class SmartTrader:
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.15
-                    top = height * 0.725
+                    top = height * 0.72
                     right = width
-                    bottom = height * 0.84
+                    bottom = height * 0.83
                 elif element_id == 'ema_72':
                     if platform.system().lower() == 'linux':
                         left = width * 0.49
-                        top = height * 0.86
                     else:
                         left = width * 0.465
-                        top = height * 0.89
+                    top = height * 0.86
                     right = width * 0.75
                     bottom = height
                 elif element_id == 'clock':
                     left = width * 0.29
                     top = height * 0.18
-                    right = width * 0.435
+                    right = width * 0.44
                     bottom = height * 0.34
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
@@ -714,14 +713,14 @@ class SmartTrader:
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     left = width * 0.15
-                    top = height * 0.46
+                    top = height * 0.43
                     right = width * 0.34
-                    bottom = height * 0.60
+                    bottom = height * 0.58
                 if element_id == 'close':
                     left = width * 0.38
-                    top = height * 0.76
+                    top = height * 0.75
                     right = width * 0.63
-                    bottom = height
+                    bottom = height * 0.98
                 elif element_id == 'expiry_time':
                     left = width * 0.70
                     top = height * 0.33
@@ -1182,7 +1181,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 410
                 element['y'] = zone_region.top + 90
             elif element_id == 'btn_ema_settings':
-                element['x'] = zone_region.left + 220
+                element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + 135
             elif element_id == 'btn_rsi_settings':
                 element['x'] = zone_region.left + 175
@@ -1279,7 +1278,7 @@ class SmartTrader:
                 element['y'] = zone_center_y
             elif element_id == 'slider_background_opacity':
                 element['x'] = zone_region.left + 260
-                element['y'] = zone_region.top + 200
+                element['y'] = zone_region.top + 215
             elif element_id == 'navitem_chart_settings_tab1':
                 element['x'] = zone_region.left + 25
                 element['y'] = zone_region.top + 80
