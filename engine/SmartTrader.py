@@ -725,7 +725,7 @@ class SmartTrader:
                     left = width * 0.70
                     top = height * 0.32
                     right = width * 0.81
-                    bottom = height * 0.52
+                    bottom = height * 0.45
                 elif element_id == 'payout':
                     left = width * 0.10
                     top = height * 0.78
