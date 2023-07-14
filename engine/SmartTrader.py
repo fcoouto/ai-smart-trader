@@ -2079,7 +2079,7 @@ class SmartTrader:
                     msg = "Reseting Lookup Trigger (CTRL + C to cancel)"
                     wait_secs = 7
                     items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                    for item in utils.progress_bar(items, prefix=msg):
+                    for item in utils.progress_bar(items, prefix=msg, reverse=True):
                         sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                     # Reseting [reading_chart_duration]
