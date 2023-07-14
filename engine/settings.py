@@ -117,7 +117,7 @@ BROKERS = {
             'chart_top': {
                 'id': 'chart_top',
                 'region': None,
-                'locate_confidence': 0.80,
+                'locate_confidence': 0.75,
                 'is_mandatory': True,
                 'elements': ['ohlc', 'ema_72', 'clock'],
             },
