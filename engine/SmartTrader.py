@@ -706,14 +706,14 @@ class SmartTrader:
                     if platform.system().lower() == 'linux':
                         left = width * 0.69
                     else:
-                        left = width * 0.67
+                        left = width * 0.62
                     top = height * 0.03
                     right = width
                     bottom = height * 0.25
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     left = width * 0.15
-                    top = height * 0.43
+                    top = height * 0.44
                     right = width * 0.34
                     bottom = height * 0.60
                 if element_id == 'close':
@@ -725,12 +725,12 @@ class SmartTrader:
                     left = width * 0.70
                     top = height * 0.32
                     right = width * 0.81
-                    bottom = height * 0.45
+                    bottom = height * 0.46
                 elif element_id == 'payout':
                     left = width * 0.10
                     top = height * 0.78
                     right = width * 0.22
-                    bottom = height * 0.94
+                    bottom = height * 0.95
 
         img = img.crop([left, top, right, bottom])
         return img
