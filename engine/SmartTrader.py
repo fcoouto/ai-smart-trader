@@ -706,7 +706,7 @@ class SmartTrader:
                     if platform.system().lower() == 'linux':
                         left = width * 0.70
                     else:
-                        left = width * 0.65
+                        left = width * 0.67
                     top = height * 0.03
                     right = width
                     bottom = height * 0.25
