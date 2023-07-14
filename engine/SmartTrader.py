@@ -730,7 +730,7 @@ class SmartTrader:
                     left = width * 0.10
                     top = height * 0.79
                     right = width * 0.22
-                    bottom = height * 0.97
+                    bottom = height * 0.94
 
         img = img.crop([left, top, right, bottom])
         return img
