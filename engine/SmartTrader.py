@@ -1222,15 +1222,6 @@ class SmartTrader:
             elif element_id == 'checkbox_rsi_settings_upper_limit':
                 element['x'] = zone_region.left + 30
                 element['y'] = zone_region.top + 227
-            elif element_id == 'checkbox_rsi_settings_middle_limit':
-                element['x'] = zone_region.left + 30
-                element['y'] = zone_region.top + 280
-            elif element_id == 'checkbox_rsi_settings_lower_limit':
-                element['x'] = zone_region.left + 30
-                element['y'] = zone_region.top + 225
-            elif element_id == 'checkbox_rsi_settings_hlines_bg':
-                element['x'] = zone_region.left + 30
-                element['y'] = zone_region.top + 280
             elif element_id == 'item_color_white':
                 element['x'] = zone_region.left + 20
                 element['y'] = zone_region.top + 25
@@ -1727,12 +1718,18 @@ class SmartTrader:
 
         # [tab2] Toggle [upper_limit]
         self.click_element(element_id='checkbox_rsi_settings_upper_limit')
-        #
+
         # [tab2] Toggle [middle_limit]
-        self.click_element(element_id='checkbox_rsi_settings_middle_limit')
-        #
-        # # [tab2] Toggle [hlines_bg]
-        # self.click_element(element_id='checkbox_rsi_settings_hlines_bg')
+        pyautogui.press('tab')
+        pyautogui.press('space')
+
+        # [tab2] Toggle [lower_limit]
+        pyautogui.press('tab')
+        pyautogui.press('space')
+
+        # [tab2] Toggle [hlines_bg]
+        pyautogui.press('tab')
+        pyautogui.press('space')
 
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
