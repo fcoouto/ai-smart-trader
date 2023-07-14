@@ -307,6 +307,12 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
+            'checkbox_rsi_settings_middle_limit': {
+                'context': 'tv',
+                'zone': 'rsi_settings_tab2',
+                'x': None,
+                'y': None
+            },
             'checkbox_rsi_settings_lower_limit': {
                 'context': 'tv',
                 'zone': 'rsi_settings_tab2',
