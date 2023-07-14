@@ -1181,7 +1181,10 @@ class SmartTrader:
                 element['x'] = zone_region.left + 475
                 element['y'] = zone_region.top + 90
             elif element_id == 'btn_ema_settings':
-                element['x'] = zone_region.left + 215
+                if platform.system().lower() == 'linux':
+                    element['x'] = zone_region.left + 220
+                else:
+                    element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + 135
             elif element_id == 'btn_rsi_settings':
                 element['x'] = zone_region.left + 175
@@ -1665,7 +1668,7 @@ class SmartTrader:
         pyautogui.typewrite(hint, interval=0.05)
         pyautogui.press('down')
         pyautogui.press('enter')
-        pyautogui.press('escape')
+        pyautogui.press('escape', 'escape')
 
     def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=5, precision=5):
         # Opening Settings
