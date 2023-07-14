@@ -196,7 +196,7 @@ BROKERS = {
                 'context': 'tv',
                 'id': 'chart_settings_tab4_top',
                 'region': None,
-                'locate_confidence': 0.75,
+                'locate_confidence': 0.80,
             },
             'colors_opacity': {
                 'context': 'tv',
