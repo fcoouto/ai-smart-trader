@@ -728,9 +728,9 @@ class SmartTrader:
                     bottom = height * 0.49
                 elif element_id == 'payout':
                     left = width * 0.10
-                    top = height * 0.81
+                    top = height * 0.78
                     right = width * 0.22
-                    bottom = height * 0.97
+                    bottom = height * 0.95
 
         img = img.crop([left, top, right, bottom])
         return img
