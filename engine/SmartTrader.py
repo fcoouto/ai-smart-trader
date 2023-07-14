@@ -690,7 +690,7 @@ class SmartTrader:
                     bottom = height * 0.83
                 elif element_id == 'ema_72':
                     if platform.system().lower() == 'linux':
-                        left = width * 0.53
+                        left = width * 0.52
                     else:
                         left = width * 0.465
                     top = height * 0.85
@@ -720,7 +720,7 @@ class SmartTrader:
                     left = width * 0.38
                     top = height * 0.77
                     right = width * 0.63
-                    bottom = height
+                    bottom = height * 0.98
                 elif element_id == 'expiry_time':
                     left = width * 0.70
                     top = height * 0.32
