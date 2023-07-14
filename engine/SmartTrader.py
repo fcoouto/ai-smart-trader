@@ -1668,7 +1668,8 @@ class SmartTrader:
         pyautogui.typewrite(hint, interval=0.05)
         pyautogui.press('down')
         pyautogui.press('enter')
-        pyautogui.press('escape', 'escape')
+        pyautogui.press('escape')
+        pyautogui.press('escape')
 
     def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=5, precision=5):
         # Opening Settings
