@@ -1182,12 +1182,15 @@ class SmartTrader:
                 element['y'] = zone_region.top + 90
             elif element_id == 'btn_ema_settings':
                 if platform.system().lower() == 'linux':
-                    element['x'] = zone_region.left + 220
+                    element['x'] = zone_region.left + 230
                 else:
                     element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + 135
             elif element_id == 'btn_rsi_settings':
-                element['x'] = zone_region.left + 175
+                if platform.system().lower() == 'linux':
+                    element['x'] = zone_region.left + 190
+                else:
+                    element['x'] = zone_region.left + 175
                 element['y'] = zone_region.top + 225
             elif element_id == 'btn_chart_remove_indicators':
                 element['x'] = zone_center_x
