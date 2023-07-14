@@ -1265,7 +1265,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 225
                 element['y'] = zone_region.top + 230
             elif element_id == 'input_ema_settings_color':
-                element['x'] = zone_region.left + 140
+                element['x'] = zone_region.left + 190
                 element['y'] = zone_region.top + 130
             elif element_id == 'input_ema_settings_length':
                 element['x'] = zone_region.left + 190
