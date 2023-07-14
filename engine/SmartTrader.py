@@ -143,19 +143,19 @@ class SmartTrader:
                     self.read_element(element_id=element_id)
 
         # DEBUG
-        # if settings.DEBUG_OCR:
-        #     while True:
-        #         asset = self.read_element(element_id='asset')
-        #         balance = self.read_element(element_id='balance')
-        #         clock = self.read_element(element_id='clock')
-        #         payout = self.read_element(element_id='payout')
-        #         chart_data = self.read_element(element_id='chart_data')
-        #         trade_size = self.read_element(element_id='trade_size')
-        #         expiry_time = self.read_element(element_id='expiry_time')
-        #
-        #         print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
-        #               f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-        #               f"\nchart_data: {str(chart_data)}\n")
+        if settings.DEBUG_OCR:
+            while True:
+                asset = self.read_element(element_id='asset')
+                balance = self.read_element(element_id='balance')
+                clock = self.read_element(element_id='clock')
+                payout = self.read_element(element_id='payout')
+                chart_data = self.read_element(element_id='chart_data')
+                trade_size = self.read_element(element_id='trade_size')
+                expiry_time = self.read_element(element_id='expiry_time')
+
+                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
+                      f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
+                      f"\nchart_data: {str(chart_data)}\n")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -684,8 +684,8 @@ class SmartTrader:
                     bottom = height * 0.52
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
-                    left = width * 0.15
-                    top = height * 0.72
+                    left = width * 0.12
+                    top = height * 0.70
                     right = width
                     bottom = height * 0.83
                 elif element_id == 'ema_72':
@@ -693,44 +693,44 @@ class SmartTrader:
                         left = width * 0.49
                     else:
                         left = width * 0.465
-                    top = height * 0.86
+                    top = height * 0.85
                     right = width * 0.75
                     bottom = height
                 elif element_id == 'clock':
-                    left = width * 0.29
+                    left = width * 0.27
                     top = height * 0.18
-                    right = width * 0.44
+                    right = width * 0.43
                     bottom = height * 0.34
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
                     if platform.system().lower() == 'linux':
-                        left = width * 0.61
+                        left = width * 0.67
                     else:
-                        left = width * 0.59
-                    top = height * 0.04
+                        left = width * 0.65
+                    top = height * 0.03
                     right = width
                     bottom = height * 0.25
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     left = width * 0.15
-                    top = height * 0.43
+                    top = height * 0.45
                     right = width * 0.34
-                    bottom = height * 0.58
+                    bottom = height * 0.60
                 if element_id == 'close':
                     left = width * 0.38
-                    top = height * 0.75
+                    top = height * 0.77
                     right = width * 0.63
                     bottom = height
                 elif element_id == 'expiry_time':
                     left = width * 0.70
-                    top = height * 0.33
+                    top = height * 0.34
                     right = width * 0.815
-                    bottom = height * 0.47
+                    bottom = height * 0.49
                 elif element_id == 'payout':
                     left = width * 0.10
-                    top = height * 0.79
+                    top = height * 0.81
                     right = width * 0.22
-                    bottom = height * 0.94
+                    bottom = height * 0.97
 
         img = img.crop([left, top, right, bottom])
         return img
@@ -1178,7 +1178,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 240
                 element['y'] = zone_region.top + 20
             elif element_id == 'btn_chart_indicators':
-                element['x'] = zone_region.left + 410
+                element['x'] = zone_region.left + 475
                 element['y'] = zone_region.top + 90
             elif element_id == 'btn_ema_settings':
                 element['x'] = zone_region.left + 215
@@ -1188,10 +1188,10 @@ class SmartTrader:
                 element['y'] = zone_region.top + 225
             elif element_id == 'btn_chart_remove_indicators':
                 element['x'] = zone_center_x
-                element['y'] = zone_region.top + 145
+                element['y'] = zone_region.top + 267
             elif element_id == 'btn_chart_settings':
                 element['x'] = zone_center_x
-                element['y'] = zone_region.top + 235
+                element['y'] = zone_region.top + 355
             elif element_id == 'btn_super_strike':
                 element['x'] = zone_region.left + 305
                 element['y'] = zone_region.top + 20
@@ -1212,10 +1212,13 @@ class SmartTrader:
                 element['y'] = zone_region.top + 125
             elif element_id == 'checkbox_chart_settings_bar_change_values':
                 element['x'] = zone_region.left + 80
-                element['y'] = zone_region.top + 245
+                element['y'] = zone_region.top + 280
             elif element_id == 'checkbox_rsi_settings_upper_limit':
                 element['x'] = zone_region.left + 30
-                element['y'] = zone_region.top + 175
+                element['y'] = zone_region.top + 227
+            elif element_id == 'checkbox_rsi_settings_middle_limit':
+                element['x'] = zone_region.left + 30
+                element['y'] = zone_region.top + 280
             elif element_id == 'checkbox_rsi_settings_lower_limit':
                 element['x'] = zone_region.left + 30
                 element['y'] = zone_region.top + 225
@@ -1238,47 +1241,47 @@ class SmartTrader:
                 element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + zone_region.height
             elif element_id == 'input_chart_settings_body_green':
-                element['x'] = zone_region.left + 235
-                element['y'] = zone_region.top + 145
+                element['x'] = zone_region.left + 212
+                element['y'] = zone_region.top + 180
             elif element_id == 'input_chart_settings_body_red':
-                element['x'] = zone_region.left + 280
-                element['y'] = zone_region.top + 145
+                element['x'] = zone_region.left + 255
+                element['y'] = zone_region.top + 180
             elif element_id == 'input_chart_settings_wick_green':
-                element['x'] = zone_region.left + 235
-                element['y'] = zone_region.top + 245
+                element['x'] = zone_region.left + 212
+                element['y'] = zone_region.top + 280
             elif element_id == 'input_chart_settings_wick_red':
-                element['x'] = zone_region.left + 280
-                element['y'] = zone_region.top + 245
+                element['x'] = zone_region.left + 255
+                element['y'] = zone_region.top + 280
             elif element_id == 'input_chart_settings_background':
                 element['x'] = zone_region.left + 235
                 element['y'] = zone_region.top + 95
             elif element_id == 'input_chart_settings_grid_lines_v':
-                element['x'] = zone_region.left + 235
-                element['y'] = zone_region.top + 145
+                element['x'] = zone_region.left + 225
+                element['y'] = zone_region.top + 180
             elif element_id == 'input_chart_settings_grid_lines_h':
-                element['x'] = zone_region.left + 235
-                element['y'] = zone_region.top + 195
+                element['x'] = zone_region.left + 225
+                element['y'] = zone_region.top + 230
             elif element_id == 'input_ema_settings_color':
                 element['x'] = zone_region.left + 140
                 element['y'] = zone_region.top + 130
             elif element_id == 'input_ema_settings_length':
-                element['x'] = zone_region.left + 130
+                element['x'] = zone_region.left + 190
                 element['y'] = zone_region.top + 130
             elif element_id == 'input_ema_settings_precision':
-                element['x'] = zone_region.left + 140
-                element['y'] = zone_region.top + 180
+                element['x'] = zone_region.left + 190
+                element['y'] = zone_region.top + 275
             elif element_id == 'input_rsi_settings_color':
                 element['x'] = zone_region.left + 220
                 element['y'] = zone_region.top + 130
             elif element_id == 'input_rsi_settings_length':
-                element['x'] = zone_region.left + 130
+                element['x'] = zone_region.left + 190
                 element['y'] = zone_region.top + 130
             elif element_id == 'input_url':
                 element['x'] = zone_region.left + zone_region.width + 50
                 element['y'] = zone_center_y
             elif element_id == 'slider_background_opacity':
                 element['x'] = zone_region.left + 260
-                element['y'] = zone_region.top + 215
+                element['y'] = zone_region.top + 250
             elif element_id == 'navitem_chart_settings_tab1':
                 element['x'] = zone_region.left + 25
                 element['y'] = zone_region.top + 80
@@ -1501,6 +1504,9 @@ class SmartTrader:
         # Typing URL
         pyautogui.typewrite(url, interval=0.05)
 
+        # Ignore suggestions
+        pyautogui.press('delete')
+
         # Go
         pyautogui.press('enter')
 
@@ -1629,10 +1635,10 @@ class SmartTrader:
         self.click_element(element_id='navitem_chart_settings_tab4', wait_when_done=0.300)
 
         # [tab4] Setting [color]
-        self.click_element(element_id='input_chart_settings_background', wait_when_done=0.300)
-        self.click_element(element_id=f'item_color_{bg_color}')
-        pyautogui.press('escape')
-        sleep(0.050)
+        # self.click_element(element_id='input_chart_settings_background', wait_when_done=0.300)
+        # self.click_element(element_id=f'item_color_{bg_color}')
+        # pyautogui.press('escape')
+        # sleep(0.050)
 
         # [tab4] Setting [grid_lines_v] opacity
         self.click_element(element_id='input_chart_settings_grid_lines_v', wait_when_done=0.300)
@@ -1661,7 +1667,7 @@ class SmartTrader:
         pyautogui.press('enter')
         pyautogui.press('escape')
 
-    def playbok_tv_configure_indicator_ema(self, length, color='black', opacity=25, precision=5):
+    def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=5, precision=5):
         # Opening Settings
         self.click_element(element_id='btn_ema_settings', wait_when_done=0.300)
 
@@ -1690,7 +1696,7 @@ class SmartTrader:
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
 
-    def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=25):
+    def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=5):
         # Opening Settings
         self.click_element(element_id='btn_rsi_settings', wait_when_done=0.300)
 
@@ -1714,12 +1720,12 @@ class SmartTrader:
 
         # [tab2] Toggle [upper_limit]
         self.click_element(element_id='checkbox_rsi_settings_upper_limit')
-
-        # [tab2] Toggle [lower_limit]
-        self.click_element(element_id='checkbox_rsi_settings_lower_limit')
-
-        # [tab2] Toggle [hlines_bg]
-        self.click_element(element_id='checkbox_rsi_settings_hlines_bg')
+        #
+        # [tab2] Toggle [middle_limit]
+        self.click_element(element_id='checkbox_rsi_settings_middle_limit')
+        #
+        # # [tab2] Toggle [hlines_bg]
+        # self.click_element(element_id='checkbox_rsi_settings_hlines_bg')
 
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
