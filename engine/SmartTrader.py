@@ -2132,7 +2132,13 @@ class SmartTrader:
     async def strategies_lookup(self, context):
         msg = "Applying strategies"
         result = {'reading_chart_duration': None}
-        strategies = settings.TRADING_STRATEGIES.copy()
+
+        # Defining [strategies]
+
+        strategies = ['ema_rsi_8020']
+        if 'OTC' not in self.asset:
+            # For OTC assets, go safe
+            strategies.append('ema_rsi_50')
 
         # Reading Chart data
         start = datetime.now()
