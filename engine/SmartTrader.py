@@ -1579,11 +1579,15 @@ class SmartTrader:
 
     def playbook_tv_reset(self):
         # Reseting chart
-        self.click_element(element_id='area_chart_background', duration=0.400)
-        pyautogui.hotkey('alt', 'r')
+        self.playbook_tv_reset_chart()
 
         # Removing all indicators
         self.playbook_tv_remove_all_indicators()
+
+    def playbook_tv_reset_chart(self):
+        # Reseting chart
+        self.click_element(element_id='area_chart_background', duration=0.400)
+        pyautogui.hotkey('alt', 'r')
 
     def playbook_tv_remove_all_indicators(self):
         self.click_element(element_id='area_chart_background', button='right', duration=0.400)
@@ -1819,13 +1823,20 @@ class SmartTrader:
     def playbook_move_to_candle(self, i_candle):
         x_latest_candle = 489
         y = 400
-        candle_width = 6
+
+        if platform.system().lower() == 'linux':
+            candle_width = 5
+        else:
+            candle_width = 6
 
         x_candle = 489 - (candle_width * i_candle)
         pyautogui.moveTo(x=x_candle, y=y)
 
     def playbook_read_past_candles(self, amount_candles=1):
         has_been_reset = None
+
+        # Reseting chart (zooms and deslocation)
+        self.playbook_tv_reset_chart()
 
         if len(self.datetime) < amount_candles:
             # It's going to be the first time we'll have that amount of data
