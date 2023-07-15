@@ -1823,7 +1823,7 @@ class SmartTrader:
     def playbook_move_to_candle(self, i_candle):
         # Defining [x_last_candle] and [candle_width] based on system (or font used)
         if platform.system().lower() == 'linux':
-            x_latest_candle = 486
+            x_latest_candle = 484
             candle_width = 5
         else:
             x_latest_candle = 489
