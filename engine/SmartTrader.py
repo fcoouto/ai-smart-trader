@@ -849,6 +849,12 @@ class SmartTrader:
                             result = asyncio.run(read(**kwargs))
                         else:
                             result = read(**kwargs)
+
+                if is_processed and result is None:
+                    # It's been processed, but content is None
+                    # Try again...
+                    is_processed = False
+
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
