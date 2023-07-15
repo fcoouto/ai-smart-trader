@@ -1794,10 +1794,11 @@ class SmartTrader:
     def playbook_activate_super_strike(self):
         # Activationg [super_Strike] mode
         self.click_element(element_id='btn_super_strike', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=0.250)
-        self.click_element(element_id='btn_activate', wait_when_done=0.250)
-        self.click_element(element_id='btn_activate', wait_when_done=0.250)
-        
+
+        self.move_to_element(element_id='btn_activate', duration=0.250)
+        pyautogui.mouseDown()
+        sleep(0.250)
+        pyautogui.mouseUp()
 
         # Leaving [super_strike] menu
         self.mouse_event_on_neutral_area(area_id='screen_center_25')
