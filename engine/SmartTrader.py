@@ -1799,6 +1799,7 @@ class SmartTrader:
         pyautogui.mouseDown()
         sleep(0.050)
         pyautogui.mouseUp()
+        sleep(1)
 
         # Leaving [super_strike] menu
         self.mouse_event_on_neutral_area(area_id='screen_center_25')
