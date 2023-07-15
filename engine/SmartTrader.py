@@ -143,19 +143,19 @@ class SmartTrader:
                     self.read_element(element_id=element_id)
 
         # DEBUG
-        # if settings.DEBUG_OCR:
-        #     while True:
-        #         asset = self.read_element(element_id='asset')
-        #         balance = self.read_element(element_id='balance')
-        #         clock = self.read_element(element_id='clock')
-        #         payout = self.read_element(element_id='payout')
-        #         chart_data = self.read_element(element_id='chart_data')
-        #         trade_size = self.read_element(element_id='trade_size')
-        #         expiry_time = self.read_element(element_id='expiry_time')
-        #
-        #         print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
-        #               f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-        #               f"\nchart_data: {str(chart_data)}\n")
+        if settings.DEBUG_OCR:
+            while True:
+                asset = self.read_element(element_id='asset')
+                balance = self.read_element(element_id='balance')
+                clock = self.read_element(element_id='clock')
+                payout = self.read_element(element_id='payout')
+                chart_data = self.read_element(element_id='chart_data')
+                trade_size = self.read_element(element_id='trade_size')
+                expiry_time = self.read_element(element_id='expiry_time')
+
+                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
+                      f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
+                      f"\nchart_data: {str(chart_data)}\n")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -673,10 +673,7 @@ class SmartTrader:
         if self.broker['id'] == 'iqcent':
             if zone_id == 'header':
                 if element_id == 'asset':
-                    if platform.system().lower() == 'linux':
-                        left = width * 0.07
-                    else:
-                        left = width * 0.09
+                    left = width * 0.07
                     top = height * 0.26
                     right = width * 0.40
                     bottom = height * 0.52
@@ -688,29 +685,32 @@ class SmartTrader:
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.12
-                    top = height * 0.70
+                    top = height * 0.69
                     right = width
                     bottom = height * 0.83
                 elif element_id == 'ema_72':
                     if platform.system().lower() == 'linux':
                         left = width * 0.52
                     else:
-                        left = width * 0.465
+                        left = width * 0.445
                     top = height * 0.85
                     right = width * 0.75
                     bottom = height
                 elif element_id == 'clock':
-                    left = width * 0.275
+                    if platform.system().lower() == 'linux':
+                        left = width * 0.275
+                    else:
+                        left = width * 0.26
                     top = height * 0.18
-                    right = width * 0.43
+                    right = width * 0.425
                     bottom = height * 0.35
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
                     if platform.system().lower() == 'linux':
                         left = width * 0.685
                     else:
-                        left = width * 0.62
-                    top = height * 0.02
+                        left = width * 0.615
+                    top = height * 0.01
                     right = width
                     bottom = height * 0.25
             elif zone_id == 'footer':
@@ -718,22 +718,22 @@ class SmartTrader:
                     left = width * 0.15
                     top = height * 0.45
                     right = width * 0.34
-                    bottom = height * 0.60
+                    bottom = height * 0.61
                 if element_id == 'close':
                     left = width * 0.38
                     top = height * 0.77
                     right = width * 0.63
-                    bottom = height * 0.98
+                    bottom = height * 0.985
                 elif element_id == 'expiry_time':
                     left = width * 0.70
                     top = height * 0.32
                     right = width * 0.81
-                    bottom = height * 0.46
+                    bottom = height * 0.465
                 elif element_id == 'payout':
                     left = width * 0.10
                     top = height * 0.78
                     right = width * 0.22
-                    bottom = height * 0.95
+                    bottom = height * 0.96
 
         img = img.crop([left, top, right, bottom])
         return img
