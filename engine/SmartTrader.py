@@ -1793,7 +1793,7 @@ class SmartTrader:
 
     def playbook_activate_super_strike(self):
         # Activationg [super_Strike] mode
-        self.click_element(element_id='btn_super_strike', wait_when_done=1)
+        self.click_element(element_id='btn_super_strike', wait_when_done=2)
 
         self.move_to_element(element_id='btn_activate', duration=0.250)
         self.click_element(element_id='btn_activate', wait_when_done=2)
