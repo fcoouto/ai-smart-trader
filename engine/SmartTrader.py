@@ -1796,7 +1796,7 @@ class SmartTrader:
         self.click_element(element_id='btn_super_strike', wait_when_done=2)
 
         # Clicking [input_url]
-        self.click_element(element_id='input_url')
+        self.click_element(element_id='input_url', wait_when_done=0.250)
 
         # Moving to [btn_activate] using the keyboard (click_element didn't work for this one)
         pyautogui.hotkey('shift', 'tab')
