@@ -673,10 +673,13 @@ class SmartTrader:
         if self.broker['id'] == 'iqcent':
             if zone_id == 'header':
                 if element_id == 'asset':
+                    if platform.system().lower() == 'linux':
+                        bottom = height * 0.53
+                    else:
+                        bottom = height * 0.52
                     left = width * 0.07
                     top = height * 0.26
                     right = width * 0.40
-                    bottom = height * 0.52
                 elif element_id == 'balance':
                     left = width * 0.505
                     top = height * 0.26
@@ -684,13 +687,13 @@ class SmartTrader:
                     bottom = height * 0.52
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
-                    left = width * 0.12
+                    left = width * 0.11
                     top = height * 0.69
                     right = width
                     bottom = height * 0.83
                 elif element_id == 'ema_72':
                     if platform.system().lower() == 'linux':
-                        left = width * 0.52
+                        left = width * 0.50
                     else:
                         left = width * 0.445
                     top = height * 0.85
@@ -698,7 +701,7 @@ class SmartTrader:
                     bottom = height
                 elif element_id == 'clock':
                     if platform.system().lower() == 'linux':
-                        left = width * 0.275
+                        left = width * 0.26
                     else:
                         left = width * 0.26
                     top = height * 0.18
@@ -715,19 +718,26 @@ class SmartTrader:
                     bottom = height * 0.25
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
+                    if platform.system().lower() == 'linux':
+                        top = height * 0.43
+                        bottom = height * 0.59
+                    else:
+                        top = height * 0.45
+                        bottom = height * 0.61
                     left = width * 0.15
-                    top = height * 0.45
                     right = width * 0.34
-                    bottom = height * 0.61
                 if element_id == 'close':
+                    if platform.system().lower() == 'linux':
+                        top = height * 0.75
+                    else:
+                        top = height * 0.77
                     left = width * 0.38
-                    top = height * 0.77
                     right = width * 0.63
                     bottom = height * 0.985
                 elif element_id == 'expiry_time':
-                    left = width * 0.70
+                    left = width * 0.71
                     top = height * 0.32
-                    right = width * 0.81
+                    right = width * 0.82
                     bottom = height * 0.465
                 elif element_id == 'payout':
                     left = width * 0.10
