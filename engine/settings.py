@@ -40,6 +40,7 @@ PLAYBOOK_LONG_ACTION = {
     'go_to_trading_page': 7,
     'iqcent_chart_setup': 35,
     'log_in': 25,
+    'read_past_candles': 10,
     'refresh_page': 7,
     'set_trade_size': 2,
     'set_expiry_time': 5,

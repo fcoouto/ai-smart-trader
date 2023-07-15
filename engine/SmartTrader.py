@@ -188,6 +188,9 @@ class SmartTrader:
         # Validating [super_strike]
         self.validate_super_strike(context=context)
 
+        # Validating last candle data
+        self.execute_playbook(playbook_id='read_past_candles', amount_candles=1)
+
     def get_trading_url(self):
         url = None
 
@@ -1052,8 +1055,7 @@ class SmartTrader:
             # self.read_ohlc(),
             self.read_close(auto_update=False),
             self.read_ema_72(),
-            self.read_rsi(),
-            # return_exceptions=True
+            self.read_rsi()
         )
 
         # o, h, l, c, change, change_pct = results[0]
@@ -1070,14 +1072,11 @@ class SmartTrader:
             # self.low.insert(0, l)
             # self.close.insert(0, c)
 
-            # self.change.insert(0, change)
-            # self.change_pct.insert(0, change_pct)
-
             self.close.insert(0, close)
             self.ema_72.insert(0, ema_72)
             self.rsi.insert(0, rsi)
 
-        # return [o, h, l, c, change, change_pct, ema_72, rsi]
+        # return [o, h, l, c, ema_72, rsi]
         return [close, ema_72, rsi]
 
     def reset_chart_data(self):
@@ -1125,10 +1124,10 @@ class SmartTrader:
         h = utils.str_to_float(ohlc[1][1:])
         l = utils.str_to_float(ohlc[2][1:])
         c = utils.str_to_float(ohlc[3][1:])
-        change = utils.str_to_float("%.6f" % (c - o))
-        change_pct = utils.distance_percent(v1=c, v2=o)
+        # change = utils.str_to_float("%.6f" % (c - o))
+        # change_pct = utils.distance_percent(v1=c, v2=o)
 
-        return [o, h, l, c, change, change_pct]
+        return [o, h, l, c]
 
     async def read_ema_72(self):
         element_id = 'ema_72'
@@ -1776,9 +1775,6 @@ class SmartTrader:
             self.click_element(element_id='trade_size', clicks=2)
             pyautogui.typewrite("%.2f" % trade_size)
 
-    def playbook_toggle_expiry_time(self):
-        self.click_element(element_id='toggle_expiry_time', wait_when_done=0.250)
-
     def playbook_set_expiry_time(self, expiry_time='01:00'):
         self.click_element(element_id='btn_expiry_time', wait_when_done=0.500)
 
@@ -1790,6 +1786,9 @@ class SmartTrader:
 
         # Waiting CSS components
         sleep(0.500)
+
+    def playbook_toggle_expiry_time(self):
+        self.click_element(element_id='toggle_expiry_time', wait_when_done=0.250)
 
     def playbook_activate_super_strike(self):
         # Activationg [super_Strike] mode
@@ -1816,6 +1815,44 @@ class SmartTrader:
 
         # Moving focus to [neutral_are]
         self.mouse_event_on_neutral_area(area_id='within_app')
+
+    def playbook_move_to_candle(self, i_candle):
+        x_latest_candle = 489
+        y = 400
+        candle_width = 6
+
+        x_candle = 489 - (candle_width * i_candle)
+        pyautogui.moveTo(x=x_candle, y=y)
+
+    def playbook_read_past_candles(self, amount_candles=1):
+        has_been_reset = None
+
+        if len(self.datetime) < amount_candles:
+            # It's going to be the first time we'll have that amount of data
+            self.reset_chart_data()
+            has_been_reset = True
+
+        for i_candle in range(amount_candles, 0, -1):
+            # Reverse iteration from candle X to latest candle
+            self.playbook_move_to_candle(i_candle=i_candle)
+
+            datetime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+            o, h, l, c = asyncio.run(self.read_ohlc())
+            ema_72 = asyncio.run(self.read_ema_72())
+            rsi = asyncio.run(self.read_rsi())
+
+            if has_been_reset:
+                self.datetime.insert(0, datetime)
+                self.close.insert(0, c)
+                self.ema_72.insert(0, ema_72)
+                self.rsi.insert(0, rsi)
+            else:
+                self.datetime[i_candle - 1] = datetime
+                self.close[i_candle - 1] = c
+                self.ema_72[i_candle - 1] = ema_72
+                self.rsi[i_candle - 1] = rsi
+
+        self.mouse_event_on_neutral_area(event='click', area_id='within_app')
 
     async def playbook_open_trade(self, side, trade_size):
         self.playbook_set_trade_size(trade_size=trade_size)
@@ -2185,9 +2222,8 @@ class SmartTrader:
         result = {'reading_chart_duration': None}
 
         # Defining [strategies]
-
         strategies = ['ema_rsi_8020']
-        if 'OTC' not in self.asset:
+        if 'otc' not in self.asset.lower():
             # For OTC assets, go safe
             strategies.append('ema_rsi_50')
 
@@ -2196,6 +2232,10 @@ class SmartTrader:
         await self.read_element(element_id='chart_data', is_async=True)
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
+
+        print(f'close: {self.close}')
+        print(f'ema_72: {self.ema_72}')
+        print(f'rsi: {self.rsi}')
 
         # Executing tasks
         tasks = []
