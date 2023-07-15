@@ -1253,7 +1253,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 510
                 element['y'] = zone_region.top + 125
             elif element_id == 'checkbox_chart_settings_bar_change_values':
-                element['x'] = zone_region.left + 80
+                element['x'] = zone_region.left + 83
                 element['y'] = zone_region.top + 280
             elif element_id == 'checkbox_rsi_settings_upper_limit':
                 element['x'] = zone_region.left + 30
