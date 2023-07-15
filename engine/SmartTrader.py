@@ -580,7 +580,8 @@ class SmartTrader:
                             sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                         # Executing playbook
-                        self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
+                        # self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
+                        self.execute_playbook(playbook_id='go_to_trading_page')
 
                         msg = f"\t  - Done !"
                         tmsg.print(context=context, msg=msg)
