@@ -1240,7 +1240,7 @@ class SmartTrader:
                 element['y'] = zone_region.top + 20
             elif element_id == 'btn_activate':
                 element['x'] = zone_center_x
-                element['y'] = zone_center_y + 15
+                element['y'] = zone_center_y
             elif element_id == 'toggle_expiry_time':
                 element['x'] = zone_region.left + 505
                 element['y'] = zone_region.top + 20
@@ -1794,8 +1794,10 @@ class SmartTrader:
     def playbook_activate_super_strike(self):
         # Activationg [super_Strike] mode
         self.click_element(element_id='btn_super_strike', wait_when_done=1)
-        self.move_to_element(element_id='btn_activate', duration=1, wait_when_done=0.250)
-        self.click_element(element_id='btn_activate', duration=1, wait_when_done=0.500)
+        self.click_element(element_id='btn_activate', wait_when_done=0.250)
+        self.click_element(element_id='btn_activate', wait_when_done=0.250)
+        self.click_element(element_id='btn_activate', wait_when_done=0.250)
+        
 
         # Leaving [super_strike] menu
         self.mouse_event_on_neutral_area(area_id='screen_center_25')
