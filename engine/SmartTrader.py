@@ -2246,10 +2246,6 @@ class SmartTrader:
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
 
-        print(f'close: {self.close}')
-        print(f'ema_72: {self.ema_72}')
-        print(f'rsi: {self.rsi}')
-
         # Executing tasks
         tasks = []
         async with asyncio.TaskGroup() as tg:
