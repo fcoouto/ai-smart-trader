@@ -1214,7 +1214,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 240
                 element['y'] = zone_region.top + 20
             elif element_id == 'btn_chart_indicators':
-                element['x'] = zone_region.left + 475
+                element['x'] = zone_region.left + 420
                 element['y'] = zone_region.top + 90
             elif element_id == 'btn_ema_settings':
                 if platform.system().lower() == 'linux':
