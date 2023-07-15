@@ -143,19 +143,19 @@ class SmartTrader:
                     self.read_element(element_id=element_id)
 
         # DEBUG
-        if settings.DEBUG_OCR:
-            while True:
-                asset = self.read_element(element_id='asset')
-                balance = self.read_element(element_id='balance')
-                clock = self.read_element(element_id='clock')
-                payout = self.read_element(element_id='payout')
-                chart_data = self.read_element(element_id='chart_data')
-                trade_size = self.read_element(element_id='trade_size')
-                expiry_time = self.read_element(element_id='expiry_time')
-
-                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
-                      f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-                      f"\nchart_data: {str(chart_data)}\n")
+        # if settings.DEBUG_OCR:
+        #     while True:
+        #         asset = self.read_element(element_id='asset')
+        #         balance = self.read_element(element_id='balance')
+        #         clock = self.read_element(element_id='clock')
+        #         payout = self.read_element(element_id='payout')
+        #         chart_data = self.read_element(element_id='chart_data')
+        #         trade_size = self.read_element(element_id='trade_size')
+        #         expiry_time = self.read_element(element_id='expiry_time')
+        #
+        #         print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
+        #               f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
+        #               f"\nchart_data: {str(chart_data)}\n")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -713,7 +713,7 @@ class SmartTrader:
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     left = width * 0.15
-                    top = height * 0.44
+                    top = height * 0.45
                     right = width * 0.34
                     bottom = height * 0.60
                 if element_id == 'close':
@@ -1795,12 +1795,17 @@ class SmartTrader:
         # Activationg [super_Strike] mode
         self.click_element(element_id='btn_super_strike', wait_when_done=2)
 
+        # Using the keyboard to get to [btn_activate] (click_element didn't work on Ubuntu)
+
         # Clicking [input_url]
         self.click_element(element_id='input_url', wait_when_done=0.250)
 
-        # Moving to [btn_activate] using the keyboard (click_element didn't work for this one)
+        # Moving to [btn_activate]
         pyautogui.hotkey('shift', 'tab')
         pyautogui.hotkey('shift', 'tab')
+        if platform.system().lower() == 'windows':
+            # An extra SHIFT-TAB
+            pyautogui.hotkey('shift', 'tab')
 
         # Toggling [btn_activate]
         pyautogui.press('space')
