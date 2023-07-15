@@ -1794,16 +1794,16 @@ class SmartTrader:
     def playbook_activate_super_strike(self):
         # Activationg [super_Strike] mode
         self.click_element(element_id='btn_super_strike', wait_when_done=2)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
-        self.click_element(element_id='btn_activate', wait_when_done=1)
+
+        # Clicking [input_url]
+        self.click_element(element_id='input_url')
+
+        # Moving to [btn_activate] using the keyboard (click_element didn't work for this one)
+        pyautogui.hotkey('shift', 'tab')
+        pyautogui.hotkey('shift', 'tab')
+
+        # Toggling [btn_activate]
+        pyautogui.press('space')
 
         # Leaving [super_strike] menu
         self.mouse_event_on_neutral_area(area_id='screen_center_25')
