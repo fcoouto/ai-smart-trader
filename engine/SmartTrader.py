@@ -849,11 +849,24 @@ class SmartTrader:
                             result = asyncio.run(read(**kwargs))
                         else:
                             result = read(**kwargs)
+                        is_processed = True
 
                 if is_processed and result is None:
                     # It's been processed, but content is None
                     # Try again...
                     is_processed = False
+
+                    if tries >= settings.MAX_TRIES_READING_ELEMENT:
+                        msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                               f"- I'm trying to read [{element_id}]. "
+                               f"\n\t- I could locate its region on screen, but I keep reading [{result}]."
+                               f"\n"
+                               f"\n\t- This was my {tries}th attempt, but no success. :/"
+                               f"\n\t- For this one, I'll need some human support. :){utils.tmsg.endc}")
+                        tmsg.print(msg=msg, clear=True)
+
+                        msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
+                        tmsg.input(msg=msg)
 
         else:
             # Function not found
@@ -914,6 +927,24 @@ class SmartTrader:
                             result = await read(**kwargs)
                         else:
                             result = read(**kwargs)
+                        is_processed = True
+
+                if is_processed and result is None:
+                    # It's been processed, but content is None
+                    # Try again...
+                    is_processed = False
+
+                    if tries >= settings.MAX_TRIES_READING_ELEMENT:
+                        msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                               f"- I'm trying to read [{element_id}]. "
+                               f"\n\t- I could locate its region on screen, but I keep reading [{result}]."
+                               f"\n"
+                               f"\n\t- This was my {tries}th attempt, but no success. :/"
+                               f"\n\t- For this one, I'll need some human support. :){utils.tmsg.endc}")
+                        tmsg.print(msg=msg, clear=True)
+
+                        msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
+                        tmsg.input(msg=msg)
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
