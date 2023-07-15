@@ -707,10 +707,10 @@ class SmartTrader:
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
                     if platform.system().lower() == 'linux':
-                        left = width * 0.69
+                        left = width * 0.685
                     else:
                         left = width * 0.62
-                    top = height * 0.03
+                    top = height * 0.02
                     right = width
                     bottom = height * 0.25
             elif zone_id == 'footer':
