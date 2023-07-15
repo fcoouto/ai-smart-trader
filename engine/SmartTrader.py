@@ -1850,9 +1850,9 @@ class SmartTrader:
             self.playbook_move_to_candle(i_candle=i_candle)
 
             datetime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-            o, h, l, c = asyncio.run(self.read_ohlc())
-            ema_72 = asyncio.run(self.read_ema_72())
-            rsi = asyncio.run(self.read_rsi())
+            o, h, l, c = self.read_element(element_id='ohlc')
+            ema_72 = self.read_element(element_id='ema_72')
+            rsi = self.read_element(element_id='rsi')
 
             if has_been_reset:
                 self.datetime.insert(0, datetime)
