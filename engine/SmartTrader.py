@@ -1821,13 +1821,15 @@ class SmartTrader:
         self.mouse_event_on_neutral_area(area_id='within_app')
 
     def playbook_move_to_candle(self, i_candle):
-        x_latest_candle = 489
-        y = 400
-
+        # Defining [x_last_candle] and [candle_width] based on system (or font used)
         if platform.system().lower() == 'linux':
+            x_latest_candle = 486
             candle_width = 5
         else:
+            x_latest_candle = 489
             candle_width = 6
+
+        y = 400
 
         x_candle = 489 - (candle_width * i_candle)
         pyautogui.moveTo(x=x_candle, y=y)
