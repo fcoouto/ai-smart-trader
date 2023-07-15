@@ -1831,7 +1831,7 @@ class SmartTrader:
 
         y = 400
 
-        x_candle = 489 - (candle_width * i_candle)
+        x_candle = x_latest_candle - (candle_width * i_candle)
         pyautogui.moveTo(x=x_candle, y=y)
 
     def playbook_read_past_candles(self, amount_candles=1):
