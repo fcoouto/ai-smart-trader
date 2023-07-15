@@ -1796,8 +1796,7 @@ class SmartTrader:
         self.click_element(element_id='btn_super_strike', wait_when_done=1)
 
         self.move_to_element(element_id='btn_activate', duration=0.250)
-        pyautogui.mouseDown()
-        pyautogui.mouseUp()
+        self.click_element(element_id='btn_activate', wait_when_done=2)
         sleep(1)
 
         # Leaving [super_strike] menu
