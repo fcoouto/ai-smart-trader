@@ -1797,7 +1797,6 @@ class SmartTrader:
 
         self.move_to_element(element_id='btn_activate', duration=0.250)
         pyautogui.mouseDown()
-        sleep(0.050)
         pyautogui.mouseUp()
         sleep(1)
 
