@@ -2175,7 +2175,7 @@ class SmartTrader:
                 self.run_validation()
 
             # Last candle data PB
-            msg = "Consolidating last candle's data"
+            msg = "Reading last candle's data"
 
             if not os.path.exists(long_action_lock_file):
                 for item in utils.progress_bar([0], prefix=msg):
