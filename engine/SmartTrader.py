@@ -166,6 +166,8 @@ class SmartTrader:
         #   . payout?
 
         context = 'Validation'
+        lock_file = os.path.join(settings.PATH_LOCK,
+                                 f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
 
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
@@ -189,7 +191,8 @@ class SmartTrader:
         self.validate_super_strike(context=context)
 
         # Validating last candle data
-        self.execute_playbook(playbook_id='read_past_candles', amount_candles=1)
+        if not os.path.exists(lock_file):
+            self.execute_playbook(playbook_id='read_past_candles', amount_candles=1)
 
     def get_trading_url(self):
         url = None
@@ -307,7 +310,7 @@ class SmartTrader:
 
                 # Executing playbook
                 self.execute_playbook(playbook_id='go_to_trading_page')
-                self.run_validation()
+                self.set_zones()
             else:
                 msg = f"{utils.tmsg.italic}\n\t  - I couldn't fix it. :/ {utils.tmsg.endc}"
                 tmsg.print(context=context, msg=msg)
@@ -857,7 +860,7 @@ class SmartTrader:
 
                         # Executing playbook
                         self.execute_playbook(playbook_id='go_to_trading_page')
-                        self.run_validation()
+                        self.set_zones()
 
                         if asyncio.iscoroutinefunction(read):
                             result = asyncio.run(read(**kwargs))
@@ -935,7 +938,7 @@ class SmartTrader:
 
                         # Executing playbook
                         self.execute_playbook(playbook_id='go_to_trading_page')
-                        self.run_validation()
+                        self.set_zones()
 
                         if asyncio.iscoroutinefunction(read):
                             result = await read(**kwargs)
