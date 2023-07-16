@@ -166,8 +166,6 @@ class SmartTrader:
         #   . payout?
 
         context = 'Validation'
-        lock_file = os.path.join(settings.PATH_LOCK,
-                                 f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
 
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
@@ -189,10 +187,6 @@ class SmartTrader:
 
         # Validating [super_strike]
         self.validate_super_strike(context=context)
-
-        # Validating last candle data
-        if not os.path.exists(lock_file):
-            self.execute_playbook(playbook_id='read_past_candles', amount_candles=1)
 
     def get_trading_url(self):
         url = None
@@ -310,7 +304,7 @@ class SmartTrader:
 
                 # Executing playbook
                 self.execute_playbook(playbook_id='go_to_trading_page')
-                self.set_zones()
+                self.run_validation()
             else:
                 msg = f"{utils.tmsg.italic}\n\t  - I couldn't fix it. :/ {utils.tmsg.endc}"
                 tmsg.print(context=context, msg=msg)
@@ -860,7 +854,7 @@ class SmartTrader:
 
                         # Executing playbook
                         self.execute_playbook(playbook_id='go_to_trading_page')
-                        self.set_zones()
+                        self.run_validation()
 
                         if asyncio.iscoroutinefunction(read):
                             result = asyncio.run(read(**kwargs))
@@ -938,7 +932,7 @@ class SmartTrader:
 
                         # Executing playbook
                         self.execute_playbook(playbook_id='go_to_trading_page')
-                        self.set_zones()
+                        self.run_validation()
 
                         if asyncio.iscoroutinefunction(read):
                             result = await read(**kwargs)
@@ -2117,16 +2111,15 @@ class SmartTrader:
 
     def start(self):
         msg = "Validating\n"
-        tmsg.print(context='Warming Up!',
-                   msg=msg,
-                   clear=True)
-        self.run_validation()
+        tmsg.print(context='Warming Up!', msg=msg, clear=True)
 
         long_action_lock_file = os.path.join(settings.PATH_LOCK,
                                              f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
 
-        # First run using estimated time (2 seconds)
-        reading_chart_duration = default_reading_duration = timedelta(seconds=2).total_seconds()
+        self.run_validation()
+
+        # First run using estimated time (1.5 seconds)
+        reading_chart_duration = default_reading_duration = timedelta(seconds=1.5).total_seconds()
         lookup_trigger = 60 - default_reading_duration
 
         while True:
@@ -2180,6 +2173,13 @@ class SmartTrader:
             msg = "Quick validation"
             for item in utils.progress_bar([0], prefix=msg):
                 self.run_validation()
+
+            # Last candle data PB
+            msg = "Consolidating last candle's data"
+
+            if not os.path.exists(long_action_lock_file):
+                for item in utils.progress_bar([0], prefix=msg):
+                    self.execute_playbook(playbook_id='read_past_candles', amount_candles=1)
 
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
