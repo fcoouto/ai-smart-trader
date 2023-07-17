@@ -2446,11 +2446,17 @@ class SmartTrader:
                                           trade_size=trade_size)
             else:
                 # Draw
-                await self.close_trade(strategy_id=strategy_id,
-                                       result=result)
-                await self.open_trade(strategy_id=strategy_id,
-                                      side=position['side'],
-                                      trade_size=last_trade['trade_size'])
+                if amount_trades == 1:
+                    # Draw on first trade
+                    # Abort it
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+                else:
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=last_trade['trade_size'])
 
         else:
             # No open position
@@ -2521,7 +2527,7 @@ class SmartTrader:
                                                          result=result)
 
                 elif position['side'] == 'up':
-                    if self.rsi[0] < 38:
+                    if self.rsi[0] < 28:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2531,7 +2537,7 @@ class SmartTrader:
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
                 elif position['side'] == 'down':
-                    if self.rsi[0] > 62:
+                    if self.rsi[0] > 72:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2556,11 +2562,17 @@ class SmartTrader:
                                           trade_size=trade_size)
             else:
                 # Draw
-                await self.close_trade(strategy_id=strategy_id,
-                                       result=result)
-                await self.open_trade(strategy_id=strategy_id,
-                                      side=position['side'],
-                                      trade_size=last_trade['trade_size'])
+                if amount_trades == 1:
+                    # Draw on first trade
+                    # Abort it
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+                else:
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=last_trade['trade_size'])
 
         else:
             # No open position
