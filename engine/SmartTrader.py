@@ -1854,11 +1854,11 @@ class SmartTrader:
         x_latest_candle = self.region['x']
 
         if platform.system().lower() == 'linux':
-            x_latest_candle += 492
+            x_latest_candle += 491
             candle_width = 6
         else:
-            x_latest_candle += 496
-            candle_width = 7
+            x_latest_candle += 494
+            candle_width = 5
 
         area_chart_background = self.get_element(element_id='area_chart_background')
         y = area_chart_background['y']
