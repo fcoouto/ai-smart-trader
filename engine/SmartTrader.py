@@ -1851,19 +1851,19 @@ class SmartTrader:
 
     def playbook_move_to_candle(self, i_candle):
         # Defining [x_last_candle] and [candle_width] based on system (or font used)
-        x_candle1 = self.region['x']
+        x_candle_0 = self.region['x']
 
         if platform.system().lower() == 'linux':
-            x_candle1 += 482
+            x_candle_0 += 488
             candle_width = 6
         else:
-            x_candle1 += 485
+            x_candle_0 += 490
             candle_width = 5
 
         area_chart_background = self.get_element(element_id='area_chart_background')
         y = area_chart_background['y']
 
-        x_candle = x_candle1 - (candle_width * i_candle)
+        x_candle = x_candle_0 - (candle_width * i_candle)
         pyautogui.moveTo(x=x_candle, y=y)
 
     def playbook_read_previous_candles(self, amount_candles=1):
