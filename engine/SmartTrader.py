@@ -1858,6 +1858,8 @@ class SmartTrader:
             x_latest_candle = 496
             candle_width = 7
 
+        x_latest_candle += self.region['x']
+
         area_chart_background = self.get_element(element_id='area_chart_background')
         y = area_chart_background['y']
 
