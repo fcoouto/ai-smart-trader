@@ -1851,14 +1851,14 @@ class SmartTrader:
 
     def playbook_move_to_candle(self, i_candle):
         # Defining [x_last_candle] and [candle_width] based on system (or font used)
+        x_latest_candle = self.region['x']
+
         if platform.system().lower() == 'linux':
-            x_latest_candle = 492
+            x_latest_candle += 492
             candle_width = 6
         else:
-            x_latest_candle = 496
+            x_latest_candle += 496
             candle_width = 7
-
-        x_latest_candle += self.region['x']
 
         area_chart_background = self.get_element(element_id='area_chart_background')
         y = area_chart_background['y']
