@@ -96,6 +96,8 @@ class SmartTrader:
         self.asset = asset
         self.initial_trade_size = initial_trade_size
 
+        print(self.region)
+
         # Setting [credentials]
         self.validate_credentials()
 
@@ -1866,7 +1868,7 @@ class SmartTrader:
         x_candle = x_latest_candle - (candle_width * i_candle)
         pyautogui.moveTo(x=x_candle, y=y)
 
-    def playbook_read_past_candles(self, amount_candles=1):
+    def playbook_read_previous_candles(self, amount_candles=1):
         action = 'update'
 
         # Reseting chart (zooms and deslocation)
@@ -2258,10 +2260,10 @@ class SmartTrader:
                 self.run_validation()
 
             # Last candle data PB
-            msg = "Reading last candle's data"
+            msg = "Reading previous candle's data"
             if not os.path.exists(long_action_lock_file):
                 for item in utils.progress_bar([0], prefix=msg):
-                    self.execute_playbook(playbook_id='read_past_candles', amount_candles=1)
+                    self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
 
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
