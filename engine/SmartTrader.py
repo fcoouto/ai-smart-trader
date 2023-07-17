@@ -714,7 +714,7 @@ class SmartTrader:
                         left = width * 0.685
                     else:
                         left = width * 0.615
-                    top = height * 0.01
+                    top = 0
                     right = width
                     bottom = height * 0.25
             elif zone_id == 'footer':
