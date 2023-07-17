@@ -1858,7 +1858,8 @@ class SmartTrader:
             x_latest_candle = 496
             candle_width = 7
 
-        y = 400
+        area_chart_background = self.get_element(element_id='area_chart_background')
+        y = area_chart_background['y']
 
         x_candle = x_latest_candle - (candle_width * i_candle)
         pyautogui.moveTo(x=x_candle, y=y)
