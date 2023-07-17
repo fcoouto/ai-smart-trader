@@ -96,8 +96,6 @@ class SmartTrader:
         self.asset = asset
         self.initial_trade_size = initial_trade_size
 
-        print(self.region)
-
         # Setting [credentials]
         self.validate_credentials()
 
@@ -1856,10 +1854,10 @@ class SmartTrader:
         x_latest_candle = self.region['x']
 
         if platform.system().lower() == 'linux':
-            x_latest_candle += 491
+            x_latest_candle += 488
             candle_width = 6
         else:
-            x_latest_candle += 494
+            x_latest_candle += 490
             candle_width = 5
 
         area_chart_background = self.get_element(element_id='area_chart_background')
