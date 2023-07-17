@@ -2343,10 +2343,6 @@ class SmartTrader:
             # For OTC assets, go safe
             strategies.append('ema_rsi_50')
 
-        print(self.close)
-        print(self.ema_72)
-        print(self.rsi)
-
         # Reading [close] and [rsi]
         start = datetime.now()
         await self.read_element(element_id='chart_data',
@@ -2354,10 +2350,6 @@ class SmartTrader:
                                 element_ids=['close', 'rsi'])
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
-
-        print(self.close)
-        print(self.ema_72)
-        print(self.rsi)
 
         # Executing tasks
         tasks = []
