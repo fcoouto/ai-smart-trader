@@ -2326,8 +2326,6 @@ class SmartTrader:
                 sleep(waiting_time)
 
             refresh_page_countdown -= 1
-            if refresh_page_countdown <= 0:
-                refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
 
     async def strategies_lookup(self, context):
         msg = "Applying strategies"
