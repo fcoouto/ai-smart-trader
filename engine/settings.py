@@ -15,6 +15,7 @@ MIN_BALANCE = 100
 CHART_DATA_MIN_SECONDS = 58
 CHART_DATA_MAX_SECONDS = 7
 CHART_DATA_READING_LIMIT_SECONDS = 5
+REFRESH_PAGE_EVERY_MINUTES = 15
 
 # TRADING
 TRADING_STRATEGIES = ['ema_rsi_50', 'ema_rsi_8020']
@@ -39,7 +40,7 @@ PLAYBOOK_LONG_ACTION = {
     'go_to_url': 7,
     'go_to_trading_page': 7,
     'iqcent_chart_setup': 35,
-    'log_in': 25,
+    'log_in': 30,
     'read_past_candles': 10,
     'refresh_page': 7,
     'set_trade_size': 2,
@@ -51,6 +52,7 @@ PATH_LOCK = 'lock'
 LOCK_FILE_EXTENSION = '.lck'
 LOCK_LONG_ACTION_FILENAME = 'long_action'
 PATH_DATA = 'data'
+PATH_DATA_CHART = os.path.join(PATH_DATA, 'chart')
 PATH_SS = 'ocr'
 PATH_SS_TEMPLATE = os.path.join(PATH_SS, 'template', platform.system().lower())
 PATH_SS_CONFIG = os.path.join(os.getcwd(), 'ocr', 'config')

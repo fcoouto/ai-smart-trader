@@ -149,7 +149,7 @@ class SmartTrader:
                 balance = self.read_element(element_id='balance')
                 clock = self.read_element(element_id='clock')
                 payout = self.read_element(element_id='payout')
-                chart_data = self.read_element(element_id='chart_data')
+                chart_data = self.read_element(element_id='chart_data', element_ids=None)
                 trade_size = self.read_element(element_id='trade_size')
                 expiry_time = self.read_element(element_id='expiry_time')
 
@@ -170,8 +170,9 @@ class SmartTrader:
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
 
+        # DEPRECATED: Page is being refreshed periodically to avoid other issues
         # Validating [clock]
-        self.validate_clock(context=context)
+        # self.validate_clock(context=context)
 
         # Validating [balance]
         self.validate_balance(context=context)
@@ -577,8 +578,10 @@ class SmartTrader:
                             sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                         # Executing playbook
-                        # self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
-                        self.execute_playbook(playbook_id='go_to_trading_page')
+                        if zone_id == 'chart_top':
+                            self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
+                        else:
+                            self.execute_playbook(playbook_id='go_to_trading_page')
 
                         msg = f"\t  - Done !"
                         tmsg.print(context=context, msg=msg)
@@ -1058,34 +1061,31 @@ class SmartTrader:
 
         return self.trade_size
 
-    async def read_chart_data(self):
-        results = await asyncio.gather(
-            # self.read_ohlc(),
-            self.read_close(auto_update=False),
-            self.read_ema_72(),
-            self.read_rsi()
-        )
+    async def read_chart_data(self, element_ids=None):
+        # Reads [chart_data] plus add an entry in [self.datetime]
+        tasks = []
+        result = []
 
-        # o, h, l, c, change, change_pct = results[0]
-        close = results[0]
-        ema_72 = results[1]
-        rsi = results[2]
+        if element_ids is None:
+            # Default chart elements
+            element_ids = ['close', 'ema_72', 'rsi']
 
+        action = None
         now_seconds = utils.now_seconds()
         if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
+            action = 'insert'
             self.datetime.insert(0, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
-            # self.open.insert(0, o)
-            # self.high.insert(0, h)
-            # self.low.insert(0, l)
-            # self.close.insert(0, c)
+        async with asyncio.TaskGroup() as tg:
+            for element_id in element_ids:
+                tasks.append(tg.create_task(self.read_element(element_id=element_id,
+                                                              is_async=True,
+                                                              action=action)))
 
-            self.close.insert(0, close)
-            self.ema_72.insert(0, ema_72)
-            self.rsi.insert(0, rsi)
+        for task in tasks:
+            result.append(task.result())
 
-        # return [o, h, l, c, ema_72, rsi]
-        return [close, ema_72, rsi]
+        return result
 
     def reset_chart_data(self):
         self.datetime.clear()
@@ -1099,7 +1099,7 @@ class SmartTrader:
         self.ema_72.clear()
         self.rsi.clear()
 
-    async def read_close(self, auto_update=True):
+    async def read_close(self, action=None):
         element_id = 'close'
 
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
@@ -1107,14 +1107,14 @@ class SmartTrader:
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
-        now_seconds = utils.now_seconds()
-        if auto_update:
-            if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
-                self.close[0] = value
+        if action == 'update':
+            self.close[0] = value
+        elif action == 'insert':
+            self.close.insert(0, value)
 
         return value
 
-    async def read_ohlc(self):
+    async def read_ohlc(self, action=None):
         # Returns [open, high, low, close, change]
         element_id = 'ohlc'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
@@ -1135,21 +1135,46 @@ class SmartTrader:
         # change = utils.str_to_float("%.6f" % (c - o))
         # change_pct = utils.distance_percent(v1=c, v2=o)
 
+        if action == 'update':
+            self.open[0] = o
+            self.high[0] = h
+            self.low[0] = l
+            self.close[0] = c
+        elif action == 'insert':
+            self.open.insert(0, o)
+            self.high.insert(0, h)
+            self.low.insert(0, l)
+            self.close.insert(0, c)
+
         return [o, h, l, c]
 
-    async def read_ema_72(self):
+    async def read_ema_72(self, action=None):
         element_id = 'ema_72'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
-        return utils.str_to_float(value)
+        value = utils.str_to_float(value)
 
-    async def read_rsi(self):
+        if action == 'update':
+            self.ema_72[0] = value
+        elif action == 'insert':
+            self.ema_72.insert(0, value)
+
+        return value
+
+    async def read_rsi(self, action=None):
         element_id = 'rsi'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
-        return utils.str_to_float(value)
+        value = utils.str_to_float(value)
+
+        if action == 'update':
+            self.rsi[0] = value
+        elif action == 'insert':
+            self.rsi.insert(0, value)
+
+        return value
 
     def read_expiry_time(self):
         element_id = 'expiry_time'
@@ -1524,7 +1549,7 @@ class SmartTrader:
             pyautogui.typewrite(self.broker['credentials']['password'], interval=0.05)
 
             # Confirming login
-            self.click_element(element_id='btn_login_confirm', wait_when_done=5)
+            self.click_element(element_id='btn_login_confirm', wait_when_done=10)
 
     def playbook_refresh_page(self):
         pyautogui.click(x=self.region['center_x'], y=self.region['center_y'])
@@ -1834,8 +1859,8 @@ class SmartTrader:
             x_latest_candle = 484
             candle_width = 5
         else:
-            x_latest_candle = 489
-            candle_width = 6
+            x_latest_candle = 496
+            candle_width = 7
 
         y = 400
 
@@ -1843,7 +1868,7 @@ class SmartTrader:
         pyautogui.moveTo(x=x_candle, y=y)
 
     def playbook_read_past_candles(self, amount_candles=1):
-        has_been_reset = None
+        action = 'update'
 
         # Reseting chart (zooms and deslocation)
         self.playbook_tv_reset_chart()
@@ -1851,27 +1876,22 @@ class SmartTrader:
         if len(self.datetime) < amount_candles:
             # It's going to be the first time we'll have that amount of data
             self.reset_chart_data()
-            has_been_reset = True
+            action = 'insert'
 
         for i_candle in range(amount_candles, 0, -1):
             # Reverse iteration from candle X to latest candle
             self.playbook_move_to_candle(i_candle=i_candle)
 
             datetime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-            o, h, l, c = self.read_element(element_id='ohlc')
-            ema_72 = self.read_element(element_id='ema_72')
-            rsi = self.read_element(element_id='rsi')
+            self.read_element(element_id='ohlc', action=action)
+            self.read_element(element_id='ema_72', action=action)
+            self.read_element(element_id='rsi', action=action)
 
-            if has_been_reset:
+            if action == 'insert':
                 self.datetime.insert(0, datetime)
-                self.close.insert(0, c)
-                self.ema_72.insert(0, ema_72)
-                self.rsi.insert(0, rsi)
             else:
-                self.datetime[i_candle - 1] = datetime
-                self.close[i_candle - 1] = c
-                self.ema_72[i_candle - 1] = ema_72
-                self.rsi[i_candle - 1] = rsi
+                # Not updating datetime for now...
+                pass
 
         self.mouse_event_on_neutral_area(event='click', area_id='within_app')
 
@@ -1930,6 +1950,57 @@ class SmartTrader:
         df.fillna('', inplace=True)
 
         return df
+
+    def write_chart_data(self):
+        # Writing [chart_data] into a CSV file
+        if len(self.datetime) < 3:
+            # Not enough data yet
+            return None
+
+        headers = 'datetime,close,ema_72,rsi'
+
+        asset = re.sub("[^A-z]", "", self.asset)
+        today = datetime.utcnow().date()
+
+        # Creating folder [settings.PATH_DATA_CHART], if doesn't exist yet
+        if not os.path.exists(settings.PATH_DATA_CHART):
+            os.mkdir(settings.PATH_DATA_CHART)
+
+        # [runtime_data] Preparing
+        include_headers = False
+        file = os.path.join(settings.PATH_DATA_CHART,
+                            f'{asset}_runtime.{today}.csv')
+        data = f'{self.datetime[0]},' \
+               f'{self.close[0]},' \
+               f'{self.ema_72[0]},' \
+               f'{self.rsi[0]}'
+
+        if not os.path.exists(file):
+            include_headers = True
+
+        # [runtime_data] Writing
+        with open(file=file, mode='a') as f:
+            if include_headers:
+                f.write(f'{headers}\n')
+            f.write(f'{data}\n')
+
+        # [corrected_data] Preparing
+        include_headers = False
+        file = os.path.join(settings.PATH_DATA_CHART,
+                            f'{asset}_corrected.{today}.csv')
+        data = f'{self.datetime[1]},' \
+               f'{self.close[1]},' \
+               f'{self.ema_72[1]},' \
+               f'{self.rsi[1]}'
+
+        if not os.path.exists(file):
+            include_headers = True
+
+        # [corrected_data] Writing
+        with open(file=file, mode='a') as f:
+            if include_headers:
+                f.write(f'{headers}\n')
+            f.write(f'{data}\n')
 
     ''' Loss Management '''
 
@@ -2082,7 +2153,7 @@ class SmartTrader:
         # Running concurrently
         await asyncio.gather(
             self.execute_playbook(playbook_id='open_trade', side=side, trade_size=trade_size),
-            self.read_element(element_id='close', is_async=True)
+            self.read_element(element_id='close', is_async=True, action='update')
         )
 
         now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -2113,13 +2184,15 @@ class SmartTrader:
         msg = "Validating\n"
         tmsg.print(context='Warming Up!', msg=msg, clear=True)
 
+        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
+
         long_action_lock_file = os.path.join(settings.PATH_LOCK,
                                              f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
 
         self.run_validation()
 
         # First run using estimated time (1.5 seconds)
-        reading_chart_duration = default_reading_duration = timedelta(seconds=1.5).total_seconds()
+        reading_chart_duration = default_reading_duration = timedelta(seconds=1).total_seconds()
         lookup_trigger = 60 - default_reading_duration
 
         while True:
@@ -2147,7 +2220,7 @@ class SmartTrader:
                 tb_positions = tabulate(df, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
-            validation_trigger = random.randrange(start=22000, stop=42000) / 1000
+            validation_trigger = random.randrange(start=15000, stop=30000) / 1000
 
             # Waiting PB
             msg = "Watching Price Action"
@@ -2161,13 +2234,24 @@ class SmartTrader:
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Checking token (only if mouse/keyboard are not being used)
-            if utils.does_file_exist(path=long_action_lock_file) is False and len(self.ongoing_positions) == 0:
+            if not os.path.exists(long_action_lock_file) and len(self.ongoing_positions) == 0:
                 # Focusing on App
                 self.mouse_event_on_neutral_area(event='click', area_id='within_app')
                 sleep(1)
                 if self.is_alerting_session_ended():
                     # Alert 401 popping up... Session expired.
-                    self.execute_playbook(playbook_id='go_to_trading_page')
+                    msg = "Session expired... Refreshing page"
+                    for item in utils.progress_bar([0], prefix=msg):
+                        self.execute_playbook(playbook_id='go_to_trading_page')
+                        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
+
+                elif refresh_page_countdown <= 0:
+                    # [bug-fix] Refreshing page here
+                    # It prevents chart to show wrong data (flat candles, clock delay)
+                    msg = "Refreshing page"
+                    for item in utils.progress_bar([0], prefix=msg):
+                        self.execute_playbook(playbook_id='refresh_page')
+                        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
 
             # Validation PB
             msg = "Quick validation"
@@ -2176,7 +2260,6 @@ class SmartTrader:
 
             # Last candle data PB
             msg = "Reading last candle's data"
-
             if not os.path.exists(long_action_lock_file):
                 for item in utils.progress_bar([0], prefix=msg):
                     self.execute_playbook(playbook_id='read_past_candles', amount_candles=1)
@@ -2201,7 +2284,7 @@ class SmartTrader:
                                                    duration=reading_chart_duration):
                     # Waiting PB
                     msg = "Reseting Lookup Trigger (CTRL + C to cancel)"
-                    wait_secs = 7
+                    wait_secs = 5
                     items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                     for item in utils.progress_bar(items, prefix=msg, reverse=True):
                         sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
@@ -2224,6 +2307,8 @@ class SmartTrader:
                         # Refreshing page
                         self.execute_playbook(playbook_id='go_to_trading_page')
 
+                self.write_chart_data()
+
             else:
                 # Missed candle data (too late)
 
@@ -2244,6 +2329,10 @@ class SmartTrader:
                 waiting_time = 5
                 sleep(waiting_time)
 
+            refresh_page_countdown -= 1
+            if refresh_page_countdown <= 0:
+                refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
+
     async def strategies_lookup(self, context):
         msg = "Applying strategies"
         result = {'reading_chart_duration': None}
@@ -2254,11 +2343,21 @@ class SmartTrader:
             # For OTC assets, go safe
             strategies.append('ema_rsi_50')
 
-        # Reading Chart data
+        print(self.close)
+        print(self.ema_72)
+        print(self.rsi)
+
+        # Reading [close] and [rsi]
         start = datetime.now()
-        await self.read_element(element_id='chart_data', is_async=True)
+        await self.read_element(element_id='chart_data',
+                                is_async=True,
+                                element_ids=['close', 'rsi'])
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
+
+        print(self.close)
+        print(self.ema_72)
+        print(self.rsi)
 
         # Executing tasks
         tasks = []
@@ -2276,6 +2375,9 @@ class SmartTrader:
                            f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
                     tmsg.input(msg=msg, clear=True)
                     exit()
+
+        # Reading [ema_72]
+        await self.read_element(element_id='ema_72', is_async=True, action='insert')
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
@@ -2363,12 +2465,13 @@ class SmartTrader:
 
         else:
             # No open position
+
             if len(self.datetime) >= 2:
-                dst_price_ema_72 = utils.distance_percent(v1=self.close[1], v2=self.ema_72[1])
+                dst_price_ema_72 = utils.distance_percent(v1=self.close[1], v2=self.ema_72[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema_72[0] or dst_price_ema_72 < -0.0005:
+                if self.close[0] > self.ema_72[0] or dst_price_ema_72 < -0.00072:
                     # Price is above [ema_72] or far bellow [ema_72]
 
                     if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 70:
@@ -2376,7 +2479,7 @@ class SmartTrader:
                                                             side='up',
                                                             trade_size=trade_size)
 
-                elif self.close[0] < self.ema_72[0] or dst_price_ema_72 > 0.0005:
+                elif self.close[0] < self.ema_72[0] or dst_price_ema_72 > 0.00072:
                     # Price is bellow [ema_72] or far above [ema_72]
                     if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 30:
                         # Trend Following
@@ -2473,7 +2576,7 @@ class SmartTrader:
         else:
             # No open position
             if len(self.datetime) >= 2:
-                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[1])
+                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
                 rsi_bullish_from = 39
                 rsi_bullish_min = 51
                 rsi_bullish_max = 80
