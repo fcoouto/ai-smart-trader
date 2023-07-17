@@ -1653,7 +1653,7 @@ class SmartTrader:
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
         self.playbok_tv_configure_indicator_rsi(length=3)
 
-    def playbook_tv_set_chart_settings(self, candle_opacity=5, bg_color='white'):
+    def playbook_tv_set_chart_settings(self, candle_opacity=2, bg_color='white'):
         # Opening Chart Settings
         self.click_element(element_id='area_chart_background', button='right', wait_when_done=0.300)
         self.click_element(element_id='btn_chart_settings', wait_when_done=0.300)
@@ -1738,7 +1738,7 @@ class SmartTrader:
         pyautogui.press('escape')
         pyautogui.press('escape')
 
-    def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=5, precision=5):
+    def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=2, precision=5):
         # Opening Settings
         self.click_element(element_id='btn_ema_settings', wait_when_done=0.300)
 
@@ -1767,7 +1767,7 @@ class SmartTrader:
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
 
-    def playbok_tv_configure_indicator_rsi(self, length, color='white', opacity=5):
+    def playbok_tv_configure_indicator_rsi(self, length, color='white', opacity=2):
         # Opening Settings
         self.click_element(element_id='btn_rsi_settings', wait_when_done=0.300)
 
