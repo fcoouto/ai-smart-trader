@@ -1136,14 +1136,14 @@ class SmartTrader:
         # change_pct = utils.distance_percent(v1=c, v2=o)
 
         if action == 'update':
-            self.open[0] = o
-            self.high[0] = h
-            self.low[0] = l
+            # self.open[0] = o
+            # self.high[0] = h
+            # self.low[0] = l
             self.close[0] = c
         elif action == 'insert':
-            self.open.insert(0, o)
-            self.high.insert(0, h)
-            self.low.insert(0, l)
+            # self.open.insert(0, o)
+            # self.high.insert(0, h)
+            # self.low.insert(0, l)
             self.close.insert(0, c)
 
         return [o, h, l, c]
