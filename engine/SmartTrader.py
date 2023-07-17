@@ -294,6 +294,17 @@ class SmartTrader:
 
                 # Executing playbook
                 self.execute_playbook(playbook_id='sync_clock_with_ntp_server')
+
+            elif tries == 2:
+                # Waiting PB
+                msg = "Refreshing page (CTRL + C to cancel)"
+                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                # Executing playbook
+                self.execute_playbook(playbook_id='go_to_trading_page')
+                self.run_validation()
             else:
                 msg = f"{utils.tmsg.italic}\n\t  - I couldn't fix it. :/ {utils.tmsg.endc}"
                 tmsg.print(context=context, msg=msg)
