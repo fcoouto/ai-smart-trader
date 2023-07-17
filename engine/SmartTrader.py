@@ -1953,7 +1953,7 @@ class SmartTrader:
 
     def write_chart_data(self):
         # Writing [chart_data] into a CSV file
-        if len(self.datetime) < 3:
+        if len(self.datetime) < 2:
             # Not enough data yet
             return None
 
