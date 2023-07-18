@@ -878,9 +878,6 @@ class SmartTrader:
                         msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
                         tmsg.input(msg=msg)
 
-            # Wait a little bit for next try
-            sleep(0.100)
-
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
@@ -960,8 +957,6 @@ class SmartTrader:
                         msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
                         tmsg.input(msg=msg)
 
-            # Wait a little bit for next try
-            sleep(0.100)
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
