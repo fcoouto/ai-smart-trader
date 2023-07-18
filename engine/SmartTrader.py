@@ -2251,9 +2251,9 @@ class SmartTrader:
             if str(self.agent_id).endswith('1'):
                 validation_trigger = 15
             elif str(self.agent_id).endswith('2'):
-                validation_trigger = 25
+                validation_trigger = 22.5
             elif str(self.agent_id).endswith('3'):
-                validation_trigger = 35
+                validation_trigger = 30
 
             # Waiting PB
             msg = "Watching Price Action"
