@@ -1552,6 +1552,9 @@ class SmartTrader:
             # Confirming login
             self.click_element(element_id='btn_login_confirm', wait_when_done=10)
 
+            # Waiting for page to load
+            sleep(7)
+
     def playbook_refresh_page(self):
         pyautogui.click(x=self.region['center_x'], y=self.region['center_y'])
         pyautogui.hotkey('shift', 'f5')
