@@ -2727,7 +2727,7 @@ class SmartTrader:
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema_72[0] and self.close[1] > self.ema_72[0]:
+                if self.close[2] > self.ema_72[0] and self.close[0] > self.ema_72[0]:
                     if self.rsi[2] > 30 and self.rsi[1] > 30 and self.rsi[0] > 30:
                         if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
                             # Price is forming a bullish pivot
@@ -2735,7 +2735,7 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
-                elif self.close[0] < self.ema_72[0] and self.close[1] < self.ema_72[0]:
+                elif self.close[2] < self.ema_72[0] and self.close[0] < self.ema_72[0]:
                     if self.rsi[2] < 70 and self.rsi[1] < 70 and self.rsi[0] < 70:
                         if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
                             # Price is forming a bearish pivot
