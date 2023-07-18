@@ -142,8 +142,6 @@ class SmartTrader:
 
                     self.read_element(element_id=element_id)
 
-        self.playbook_move_to_candle(i_candle=1)
-
         # DEBUG
         if settings.DEBUG_OCR:
             while True:
@@ -1325,6 +1323,9 @@ class SmartTrader:
             elif element_id == 'input_chart_settings_grid_lines_h':
                 element['x'] = zone_region.left + 225
                 element['y'] = zone_region.top + 230
+            elif element_id == 'input_chart_settings_scale_lines':
+                element['x'] = zone_region.left + 225
+                element['y'] = zone_region.top + 110
             elif element_id == 'input_ema_settings_color':
                 element['x'] = zone_region.left + 190
                 element['y'] = zone_region.top + 130
@@ -1651,7 +1652,7 @@ class SmartTrader:
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
         self.playbok_tv_configure_indicator_rsi(length=3)
 
-    def playbook_tv_set_chart_settings(self, candle_opacity=5, bg_color='white'):
+    def playbook_tv_set_chart_settings(self, candle_opacity=5, scale_lines_color='white'):
         # Opening Chart Settings
         self.click_element(element_id='area_chart_background', button='right', wait_when_done=0.300)
         self.click_element(element_id='btn_chart_settings', wait_when_done=0.300)
@@ -1702,12 +1703,6 @@ class SmartTrader:
         # Opening Tab 4
         self.click_element(element_id='navitem_chart_settings_tab4', wait_when_done=0.300)
 
-        # [tab4] Setting [color]
-        # self.click_element(element_id='input_chart_settings_background', wait_when_done=0.300)
-        # self.click_element(element_id=f'item_color_{bg_color}')
-        # pyautogui.press('escape')
-        # sleep(0.050)
-
         # [tab4] Setting [grid_lines_v] opacity
         self.click_element(element_id='input_chart_settings_grid_lines_v', wait_when_done=0.300)
         self.click_element(element_id='input_color_opacity', clicks=2)
@@ -1719,6 +1714,20 @@ class SmartTrader:
         self.click_element(element_id='input_chart_settings_grid_lines_h', wait_when_done=0.300)
         self.click_element(element_id='input_color_opacity', clicks=2)
         pyautogui.typewrite('0')
+        pyautogui.press('escape')
+        sleep(0.050)
+
+        # [tab4] Moving to the scrollable area
+        self.move_to_element(element_id='input_chart_settings_grid_lines_h')
+        # [tab4] Scrolling down
+        pyautogui.scroll(-500)
+        sleep(0.300)
+
+        # [tab4] Setting [scale_lines] color
+        self.click_element(element_id='input_chart_settings_scale_lines', wait_when_done=0.300)
+        self.click_element(element_id=f'item_color_{scale_lines_color}')
+        self.click_element(element_id='input_color_opacity', clicks=2)
+        pyautogui.typewrite('100')
         pyautogui.press('escape')
         sleep(0.050)
 

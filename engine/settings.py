@@ -380,6 +380,12 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
+            'input_chart_settings_scale_lines': {
+                'context': 'tv',
+                'zone': 'chart_settings_tab4_mid',
+                'x': None,
+                'y': None
+            },
             'input_ema_settings_color': {
                 'context': 'tv',
                 'zone': 'ema_settings_tab2',
