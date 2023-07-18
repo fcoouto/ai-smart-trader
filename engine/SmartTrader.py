@@ -2361,10 +2361,11 @@ class SmartTrader:
         result = {'reading_chart_duration': None}
 
         # Defining [strategies]
-        strategies = ['ema_rsi_8020']
-        if 'otc' not in self.asset.lower():
-            # For OTC assets, go safe
-            strategies.append('ema_rsi_50')
+        strategies = settings.TRADING_STRATEGIES.copy()
+        # strategies = ['ema_rsi_8020']
+        # if 'otc' not in self.asset.lower():
+        #     # For OTC assets, go safe
+        #     strategies.append('ema_rsi_50')
 
         # Reading [close] and [rsi]
         start = datetime.now()
@@ -2638,4 +2639,100 @@ class SmartTrader:
         return position
 
     async def strategy_rsi_high_low(self):
-        pass
+        strategy_id = 'rsi_high_low'
+
+        if strategy_id in self.ongoing_positions:
+            position = self.ongoing_positions[strategy_id]
+        else:
+            position = None
+
+        if position:
+            # Has position open
+            result = None
+            last_trade = position['trades'][-1]
+            amount_trades = len(position['trades'])
+
+            if position['side'] == 'up':
+                # up
+                if self.close[0] > last_trade['open_price']:
+                    result = 'gain'
+                elif self.close[0] < last_trade['open_price']:
+                    result = 'loss'
+                else:
+                    result = 'draw'
+
+            else:
+                # down
+                if self.close[0] < last_trade['open_price']:
+                    result = 'gain'
+                elif self.close[0] > last_trade['open_price']:
+                    result = 'loss'
+                else:
+                    result = 'draw'
+
+            # Checking [result]
+            if result == 'gain':
+                position = await self.close_position(strategy_id=strategy_id,
+                                                     result=result)
+            elif result == 'loss':
+                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                    # No more tries
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+
+                elif position['side'] == 'up':
+                    if self.rsi[0] < self.rsi[amount_trades + 1]:
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+                elif position['side'] == 'down':
+                    if self.rsi[0] > self.rsi[amount_trades + 1]:
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                if not position['result']:
+                    # Martingale
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+
+                    if self.recovery_mode:
+                        trade_size = self.get_optimal_trade_size()
+                    else:
+                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
+
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=trade_size)
+            else:
+                # Draw
+                if amount_trades == 1:
+                    # Draw on first trade
+                    # Abort it
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+                else:
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=last_trade['trade_size'])
+
+        else:
+            # No open position
+            if len(self.datetime) >= 3:
+
+                trade_size = self.get_optimal_trade_size()
+
+                if self.rsi[1] < self.rsi[2] < self.rsi[0] and self.rsi[1] < self.rsi[0]:
+                    # Price is forming a bullish pivot
+                    position = await self.open_position(strategy_id=strategy_id,
+                                                        side='up',
+                                                        trade_size=trade_size)
+
+                elif self.rsi[1] > self.rsi[2] > self.rsi[0] and self.rsi[1] > self.rsi[0]:
+                    # Price is forming a bearish pivot
+                    position = await self.open_position(strategy_id=strategy_id,
+                                                        side='down',
+                                                        trade_size=trade_size)
+        return position
