@@ -2726,12 +2726,14 @@ class SmartTrader:
 
                 if self.rsi[1] < self.rsi[2] < self.rsi[0] and self.rsi[1] < self.rsi[0]:
                     # Price is forming a bullish pivot
+                    print(self.rsi[:3])
                     position = await self.open_position(strategy_id=strategy_id,
                                                         side='up',
                                                         trade_size=trade_size)
 
                 elif self.rsi[1] > self.rsi[2] > self.rsi[0] and self.rsi[1] > self.rsi[0]:
                     # Price is forming a bearish pivot
+                    print(self.rsi[:3])
                     position = await self.open_position(strategy_id=strategy_id,
                                                         side='down',
                                                         trade_size=trade_size)
