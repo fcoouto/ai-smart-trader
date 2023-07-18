@@ -410,6 +410,12 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
+            'input_url': {
+                'context': 'chrome',
+                'zone': 'navbar_url',
+                'x': None,
+                'y': None
+            },
             'navitem_ema_settings_tab1': {
                 'context': 'tv',
                 'zone': 'ema_settings_tab1',
@@ -534,12 +540,13 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
-            'input_url': {
-                'context': 'chrome',
-                'zone': 'navbar_url',
+            'area_bottom_right_conner': {
+                'context': 'tv',
+                'zone': 'area_bottom_right_conner',
                 'x': None,
                 'y': None
             },
+
         }
     }
 }

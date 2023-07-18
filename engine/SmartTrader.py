@@ -142,6 +142,8 @@ class SmartTrader:
 
                     self.read_element(element_id=element_id)
 
+        self.playbook_move_to_candle(i_candle=1)
+
         # DEBUG
         if settings.DEBUG_OCR:
             while True:
@@ -1851,21 +1853,22 @@ class SmartTrader:
 
     def playbook_move_to_candle(self, i_candle):
         # Defining [x_last_candle] and [candle_width] based on system (or font used)
-        x_candle_0 = self.region['x']
+        zone_id = 'area_bottom_right_conner'
+        chart_conner = self.get_zone_region(context_id='tv',
+                                            zone_id=zone_id,
+                                            confidence=0.98)
+
+        x_candle_0_center = chart_conner.left - 63
 
         if platform.system().lower() == 'linux':
-            x_candle_0 += 488
             candle_width = 6
         else:
-            x_candle_0 += 490
             candle_width = 5
 
         area_chart_background = self.get_element(element_id='area_chart_background')
         y = area_chart_background['y']
 
-        print(f'i_candle: {i_candle}')
-
-        x_candle = x_candle_0 - (candle_width * i_candle)
+        x_candle = x_candle_0_center - (candle_width * i_candle)
         pyautogui.moveTo(x=x_candle, y=y)
 
         # Trial: Give it some time for CSS loading
