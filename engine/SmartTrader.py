@@ -1867,7 +1867,7 @@ class SmartTrader:
         # Moving focus to [neutral_are]
         self.mouse_event_on_neutral_area(area_id='within_app')
 
-    def playbook_move_to_candle(self, i_candle):
+    async def playbook_move_to_candle(self, i_candle):
         # Defining [x_last_candle] and [candle_width] based on system (or font used)
         zone_id = 'area_bottom_right_conner'
         chart_conner = self.get_zone_region(context_id='tv',
@@ -1903,7 +1903,7 @@ class SmartTrader:
 
         for i_candle in range(amount_candles, 0, -1):
             # Reverse iteration from candle X to latest candle
-            self.playbook_move_to_candle(i_candle=i_candle)
+            await self.playbook_move_to_candle(i_candle=i_candle)
 
             datetime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
             await asyncio.gather(
