@@ -1325,7 +1325,7 @@ class SmartTrader:
                 element['y'] = zone_region.top + 230
             elif element_id == 'input_chart_settings_scale_lines':
                 element['x'] = zone_region.left + 225
-                element['y'] = zone_region.top + 110
+                element['y'] = zone_region.top + 170
             elif element_id == 'input_ema_settings_color':
                 element['x'] = zone_region.left + 190
                 element['y'] = zone_region.top + 130
@@ -1737,6 +1737,7 @@ class SmartTrader:
 
         # Exiting Chart Settings
         pyautogui.press('escape')
+        self.mouse_event_on_neutral_area(event='move_to', area_id='bellow_app')
 
     def playbook_tv_add_indicator(self, hint):
         # Opening [btn_chart_indicators] element
