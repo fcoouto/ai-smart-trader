@@ -2724,21 +2724,38 @@ class SmartTrader:
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema_72[0]:
-                    # Price above [ema_72]
-                    if self.rsi[1] < self.rsi[2] < self.rsi[0] and self.rsi[1] < self.rsi[0]:
+                if self.rsi[2] > 40 and self.rsi[1] > 40 and self.rsi[0] > 40:
+                    if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
                         # Price is forming a bullish pivot
                         print(self.rsi[:3])
                         position = await self.open_position(strategy_id=strategy_id,
                                                             side='up',
                                                             trade_size=trade_size)
 
-                elif self.close[0] < self.ema_72[0]:
-                    # Price bellow [ema_72]
-                    if self.rsi[1] > self.rsi[2] > self.rsi[0] and self.rsi[1] > self.rsi[0]:
+                elif self.rsi[2] < 60 and self.rsi[1] < 60 and self.rsi[0] < 60:
+                    if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
                         # Price is forming a bearish pivot
                         print(self.rsi[:3])
                         position = await self.open_position(strategy_id=strategy_id,
                                                             side='down',
                                                             trade_size=trade_size)
+
+
+                # if self.close[0] > self.ema_72[0]:
+                #     # Price above [ema_72]
+                #     if self.rsi[1] < self.rsi[2] < self.rsi[0] and self.rsi[1] < self.rsi[0]:
+                #         # Price is forming a bullish pivot
+                #         print(self.rsi[:3])
+                #         position = await self.open_position(strategy_id=strategy_id,
+                #                                             side='up',
+                #                                             trade_size=trade_size)
+                #
+                # elif self.close[0] < self.ema_72[0]:
+                #     # Price bellow [ema_72]
+                #     if self.rsi[1] > self.rsi[2] > self.rsi[0] and self.rsi[1] > self.rsi[0]:
+                #         # Price is forming a bearish pivot
+                #         print(self.rsi[:3])
+                #         position = await self.open_position(strategy_id=strategy_id,
+                #                                             side='down',
+                #                                             trade_size=trade_size)
         return position
