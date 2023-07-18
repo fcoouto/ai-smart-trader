@@ -1895,7 +1895,7 @@ class SmartTrader:
         # Trial: Give it some time for CSS loading
         sleep(0.100)
 
-    def playbook_read_previous_candles(self, amount_candles=1):
+    async def playbook_read_previous_candles(self, amount_candles=1):
         action = 'update'
 
         # Reseting chart (zooms and deslocation)
@@ -1911,9 +1911,11 @@ class SmartTrader:
             self.playbook_move_to_candle(i_candle=i_candle)
 
             datetime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-            self.read_element(element_id='ohlc', action=action)
-            self.read_element(element_id='ema_72', action=action)
-            self.read_element(element_id='rsi', action=action)
+            await asyncio.gather(
+                self.read_element(element_id='ohlc', is_async=True, action=action),
+                self.read_element(element_id='ema_72', is_async=True, action=action),
+                self.read_element(element_id='rsi', is_async=True, action=action)
+            )
 
             if action == 'insert':
                 self.datetime.insert(0, datetime)
@@ -2290,7 +2292,7 @@ class SmartTrader:
             msg = "Reading previous candle's data"
             if not os.path.exists(long_action_lock_file):
                 for item in utils.progress_bar([0], prefix=msg):
-                    self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
+                    asyncio.run(self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1))
 
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
