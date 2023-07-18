@@ -655,7 +655,7 @@ class SmartTrader:
 
         # Expanding image in 300%
         width, height = img.size
-        img = img.resize([int(width * 5), int(height * 5)])
+        img = img.resize([int(width * 4), int(height * 4)])
 
         if save_to:
             img.save(save_to)
@@ -2217,7 +2217,7 @@ class SmartTrader:
         self.run_validation()
 
         # First run using estimated time (1.5 seconds)
-        reading_chart_duration = default_reading_duration = timedelta(seconds=1).total_seconds()
+        reading_chart_duration = default_reading_duration = timedelta(seconds=0.750).total_seconds()
         lookup_trigger = 60 - default_reading_duration
 
         while True:
