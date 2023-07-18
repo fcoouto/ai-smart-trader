@@ -878,6 +878,9 @@ class SmartTrader:
                         msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
                         tmsg.input(msg=msg)
 
+            # Wait a little bit for next try
+            sleep(0.100)
+
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
@@ -906,6 +909,7 @@ class SmartTrader:
                     else:
                         result = read(**kwargs)
                     is_processed = True
+
                 except Exception as err:
                     if tries > settings.MAX_TRIES_READING_ELEMENT:
                         # Something is going on here... Refresh page
@@ -955,6 +959,9 @@ class SmartTrader:
 
                         msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
                         tmsg.input(msg=msg)
+
+            # Wait a little bit for next try
+            sleep(0.100)
         else:
             # Function not found
             msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
