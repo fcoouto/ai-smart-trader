@@ -655,7 +655,7 @@ class SmartTrader:
 
         # Expanding image in 300%
         width, height = img.size
-        img = img.resize([int(width * 4), int(height * 4)])
+        img = img.resize([int(width * 5), int(height * 5)])
 
         if save_to:
             img.save(save_to)
