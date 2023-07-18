@@ -2507,23 +2507,6 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
-
-                elif dst_price_ema_72 > 0.00072:
-                    # Price is distant from [ema_72]. Trend is probably loosing strength
-
-                    if self.close[0] < self.ema_72[0]:
-                        # Price is bellow [ema_72]
-                        if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 70:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
-                    elif self.close[0] > self.ema_72[0]:
-                        # Price is above [ema_72]
-                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 30:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
-
         return position
 
     async def strategy_ema_rsi_50(self):
@@ -2643,14 +2626,6 @@ class SmartTrader:
                                                                     side='up',
                                                                     trade_size=trade_size)
 
-                        elif dst_price_ema_72 > 0.0007:
-                            # Price is too far from [ema_72] (probably losing strength)
-                            if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
-                                # Against Trend
-                                position = await self.open_position(strategy_id=strategy_id,
-                                                                    side='down',
-                                                                    trade_size=trade_size)
-
                     elif self.close[0] < self.ema_72[0]:
                         # Price is bellow [ema_72]
 
@@ -2660,13 +2635,7 @@ class SmartTrader:
                                 position = await self.open_position(strategy_id=strategy_id,
                                                                     side='down',
                                                                     trade_size=trade_size)
-
-                        elif dst_price_ema_72 > 0.0007:
-                            # Price is too far from [ema_72] (probably losing strength)
-                            if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
-                                # Against Trend
-                                position = await self.open_position(strategy_id=strategy_id,
-                                                                    side='up',
-                                                                    trade_size=trade_size)
-
         return position
+
+    async def strategy_rsi_high_low(self):
+        pass
