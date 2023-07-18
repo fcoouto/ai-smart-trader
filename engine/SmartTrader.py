@@ -655,7 +655,7 @@ class SmartTrader:
 
         # Expanding image in 300%
         width, height = img.size
-        img = img.resize([int(width * 4), int(height * 4)])
+        img = img.resize([int(width * 5), int(height * 5)])
 
         if save_to:
             img.save(save_to)
@@ -1558,7 +1558,7 @@ class SmartTrader:
         self.set_awareness('payout_low', False)
 
         # Waiting for page to load
-        sleep(5)
+        sleep(7)
 
     def playbook_go_to_url(self, url=None):
         # Cleaning field
