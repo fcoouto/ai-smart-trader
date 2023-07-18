@@ -1720,7 +1720,11 @@ class SmartTrader:
         # [tab4] Moving to the scrollable area
         self.move_to_element(element_id='input_chart_settings_grid_lines_h')
         # [tab4] Scrolling down
-        pyautogui.scroll(-500)
+        if platform.system().lower() == 'linux':
+            scroll_clicks = -3
+        else:
+            scroll_clicks = -490
+        pyautogui.scroll(scroll_clicks)
         sleep(0.300)
 
         # [tab4] Setting [scale_lines] color
