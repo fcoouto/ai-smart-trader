@@ -1053,7 +1053,8 @@ class SmartTrader:
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
 
-        # Make sure it's a time format here
+        # Validating [clock] format
+        datetime.fromisoformat(f'{datetime.now().date().isoformat()} {value}')
 
         self.clock = value
         return self.clock
