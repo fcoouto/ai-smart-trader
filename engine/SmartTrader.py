@@ -1674,7 +1674,7 @@ class SmartTrader:
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
         self.playbok_tv_configure_indicator_rsi(length=3)
 
-    def playbook_tv_set_chart_settings(self, candle_opacity=5, scale_lines_color='white'):
+    def playbook_tv_set_chart_settings(self, candle_opacity=0, scale_lines_color='white'):
         # Opening Chart Settings
         self.click_element(element_id='area_chart_background', button='right', wait_when_done=0.300)
         self.click_element(element_id='btn_chart_settings', wait_when_done=0.300)
