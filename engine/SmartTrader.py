@@ -673,18 +673,15 @@ class SmartTrader:
         if self.broker['id'] == 'iqcent':
             if zone_id == 'header':
                 if element_id == 'asset':
-                    if platform.system().lower() == 'linux':
-                        bottom = height * 0.525
-                    else:
-                        bottom = height * 0.52
                     left = width * 0.07
                     top = height * 0.26
                     right = width * 0.40
+                    bottom = height * 0.525
                 elif element_id == 'balance':
                     left = width * 0.505
                     top = height * 0.26
                     right = width * 0.80
-                    bottom = height * 0.52
+                    bottom = height * 0.525
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.11
@@ -709,10 +706,10 @@ class SmartTrader:
                     bottom = height * 0.35
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
-                    left = width * 0.665
+                    left = width * 0.67
                     top = 0
                     right = width * 0.925
-                    bottom = height * 0.24
+                    bottom = height * 0.235
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     if platform.system().lower() == 'linux':
