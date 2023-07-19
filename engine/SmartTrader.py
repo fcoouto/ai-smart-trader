@@ -813,7 +813,7 @@ class SmartTrader:
             while not is_processed:
                 tries += 1
 
-                if element_id == 'rsi':
+                if tries > 1:
                     print(f'{element_id}: {datetime.now().time()} Running attempt {tries}...')
 
                 try:
