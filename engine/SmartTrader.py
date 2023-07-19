@@ -2763,7 +2763,7 @@ class SmartTrader:
 
         else:
             # No open position
-            if len(self.datetime) >= 2:
+            if len(self.datetime) >= 3:
                 dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
                 rsi_bullish_from = 39
                 rsi_bullish_min = 51
