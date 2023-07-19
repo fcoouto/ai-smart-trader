@@ -813,6 +813,9 @@ class SmartTrader:
             while not is_processed:
                 tries += 1
 
+                if element_id == 'rsi':
+                    print(f'{element_id}: {datetime.now().time()} Running attempt {tries}...')
+
                 try:
                     if asyncio.iscoroutinefunction(read):
                         # Creating an event loop
@@ -1039,6 +1042,9 @@ class SmartTrader:
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
+
+        # Make sure it's a time format here
+
         self.clock = value
         return self.clock
 
@@ -1870,7 +1876,7 @@ class SmartTrader:
         # Moving focus to [neutral_are]
         self.mouse_event_on_neutral_area(area_id='within_app')
 
-    async def playbook_move_to_candle(self, i_candle):
+    def playbook_move_to_candle(self, i_candle):
         # Defining [x_last_candle] and [candle_width] based on system (or font used)
         zone_id = 'area_bottom_right_conner'
         chart_conner = self.get_zone_region(context_id='tv',
@@ -1893,7 +1899,7 @@ class SmartTrader:
         # Trial: Give it some time for CSS loading
         sleep(0.250)
 
-    async def playbook_read_previous_candles(self, amount_candles=1):
+    def playbook_read_previous_candles(self, amount_candles=1):
         action = 'update'
 
         # Reseting chart (zooms and deslocation)
@@ -1906,14 +1912,13 @@ class SmartTrader:
 
         for i_candle in range(amount_candles, 0, -1):
             # Reverse iteration from candle X to latest candle
-            await self.playbook_move_to_candle(i_candle=i_candle)
+            self.playbook_move_to_candle(i_candle=i_candle)
 
             datetime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-            await asyncio.gather(
-                self.read_element(element_id='ohlc', is_async=True, action=action),
-                self.read_element(element_id='ema_72', is_async=True, action=action),
-                self.read_element(element_id='rsi', is_async=True, action=action)
-            )
+
+            self.read_element(element_id='ohlc', action=action),
+            self.read_element(element_id='ema_72', action=action),
+            self.read_element(element_id='rsi', action=action)
 
             if action == 'insert':
                 self.datetime.insert(0, datetime)
@@ -2254,6 +2259,8 @@ class SmartTrader:
                 validation_trigger = 22.5
             elif str(self.agent_id).endswith('3'):
                 validation_trigger = 30
+            else:
+                validation_trigger = 37.5
 
             # Waiting PB
             msg = "Watching Price Action"
@@ -2295,7 +2302,7 @@ class SmartTrader:
             msg = "Reading previous candle's data"
             if not os.path.exists(long_action_lock_file):
                 for item in utils.progress_bar([0], prefix=msg):
-                    asyncio.run(self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1))
+                    self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
 
             if validation_trigger <= utils.now_seconds() < lookup_trigger:
                 # Ready for Trading
@@ -2377,9 +2384,10 @@ class SmartTrader:
 
         # Reading [close] and [rsi]
         start = datetime.now()
-        await self.read_element(element_id='chart_data',
-                                is_async=True,
-                                element_ids=['close', 'rsi'])
+
+        element_ids = ['close', 'rsi']
+        await self.read_chart_data(element_ids=element_ids)
+
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
 
