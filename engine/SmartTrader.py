@@ -674,7 +674,7 @@ class SmartTrader:
             if zone_id == 'header':
                 if element_id == 'asset':
                     if platform.system().lower() == 'linux':
-                        bottom = height * 0.53
+                        bottom = height * 0.525
                     else:
                         bottom = height * 0.52
                     left = width * 0.07
