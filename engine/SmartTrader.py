@@ -712,7 +712,7 @@ class SmartTrader:
                     left = width * 0.665
                     top = 0
                     right = width * 0.925
-                    bottom = height * 0.25
+                    bottom = height * 0.24
             elif zone_id == 'footer':
                 if element_id == 'trade_size':
                     if platform.system().lower() == 'linux':
