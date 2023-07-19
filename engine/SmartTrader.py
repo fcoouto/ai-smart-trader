@@ -116,7 +116,7 @@ class SmartTrader:
                    f"\n\t- I couldn't find the key [{k}] within object [self.awareness]! :/"
                    f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit()
+            raise RuntimeError(f'Awareness key [{k}] not found.')
 
     ''' Validations '''
 
@@ -224,7 +224,7 @@ class SmartTrader:
 
             msg = f"{utils.tmsg.italic}\n\t- I'll leave you for know. Take your time. {utils.tmsg.endc}"
             tmsg.input(context=context, msg=msg)
-            exit()
+            raise RuntimeError(f'File holding credencial keys [{key_file}] not found.')
 
     def validate_balance(self, context='Validation'):
         if self.balance == 0:
@@ -308,7 +308,7 @@ class SmartTrader:
             else:
                 msg = f"{utils.tmsg.italic}\n\t  - I couldn't fix it. :/ {utils.tmsg.endc}"
                 tmsg.print(context=context, msg=msg)
-                exit()
+                raise RuntimeError(f'Issue could not be fixed.')
 
             # Retrieving [now] and reading [clock] for next loop
             now = datetime.utcnow()
@@ -888,7 +888,7 @@ class SmartTrader:
                    f"\n- I couldn't find function [{f_read}]!"
                    f"\n- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit()
+            raise RuntimeError(f'Function [{f_read}] not found.')
 
         return result
 
@@ -977,7 +977,7 @@ class SmartTrader:
                    f"\n- I couldn't find function [{f_read}]!"
                    f"\n- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit()
+            raise RuntimeError(f'Function [{f_read}] not found.')
 
         return result
 
@@ -1410,7 +1410,7 @@ class SmartTrader:
                    f"\n\t- I couldn't find area [{area_id}] within object [self.broker.neutral_zones]! :/"
                    f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit()
+            exit(0)
 
         if event == 'click':
             pyautogui.click(x=x, y=y)
@@ -1503,7 +1503,7 @@ class SmartTrader:
                    f"\n\t- I couldn't find the playbook [{playbook_id}]! :/"
                    f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
-            exit()
+            raise RuntimeError(f'Playbook [{playbook_id}] not found.')
 
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
@@ -2105,7 +2105,7 @@ class SmartTrader:
                     self.loss_management_write_to_file()
 
                     tmsg.print(msg=msg, clear=True)
-                    exit()
+                    raise RuntimeError(f'Stop Loss has been activated.')
 
             else:
                 # [recovery_mode] is not activated yet
@@ -2417,7 +2417,7 @@ class SmartTrader:
                            f"\n\t- I couldn't find a function for strategy [{strategy}].! :/"
                            f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
                     tmsg.input(msg=msg, clear=True)
-                    exit()
+                    raise RuntimeError(f'Strategy [{strategy}] not found.')
 
         # Reading [ema_72]
         await self.read_element(element_id='ema_72', is_async=True, action='insert')
