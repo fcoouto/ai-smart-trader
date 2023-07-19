@@ -2418,6 +2418,11 @@ class SmartTrader:
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
 
+        print(f'close: {self.close[0]}')
+        print(f'open: {self.open[0]} | {self.open[1]}')
+        print(f'high: {self.high[0]} | {self.high[1]}')
+        print(f'low: {self.low[0]} | {self.low[1]}')
+
         # Executing tasks
         tasks = []
         async with asyncio.TaskGroup() as tg:
