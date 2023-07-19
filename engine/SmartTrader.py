@@ -913,6 +913,13 @@ class SmartTrader:
                         result = read(**kwargs)
                     is_processed = True
 
+                except RuntimeError as err:
+                    if 'asyncio.run() cannot be called from a running event loop' in str(err):
+                        # An event loop is running already
+                        # Let's just create a task for it
+                        result = asyncio.create_task(read(**kwargs))
+                        is_processed = True
+
                 except Exception as err:
                     if tries > settings.MAX_TRIES_READING_ELEMENT:
                         # Something is going on here... Refresh page
@@ -2429,6 +2436,108 @@ class SmartTrader:
 
     async def strategy_ema_rsi_8020(self):
         strategy_id = 'ema_rsi_8020'
+
+        if strategy_id in self.ongoing_positions:
+            position = self.ongoing_positions[strategy_id]
+        else:
+            position = None
+
+        if position:
+            # Has position open
+            result = None
+            last_trade = position['trades'][-1]
+            amount_trades = len(position['trades'])
+
+            if position['side'] == 'up':
+                # up
+                if self.close[0] > last_trade['open_price']:
+                    result = 'gain'
+                elif self.close[0] < last_trade['open_price']:
+                    result = 'loss'
+                else:
+                    result = 'draw'
+
+            else:
+                # down
+                if self.close[0] < last_trade['open_price']:
+                    result = 'gain'
+                elif self.close[0] > last_trade['open_price']:
+                    result = 'loss'
+                else:
+                    result = 'draw'
+
+            if result == 'gain':
+                position = await self.close_position(strategy_id=strategy_id,
+                                                     result=result)
+            elif result == 'loss':
+                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                    # No more tries
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+
+                elif position['side'] == 'up' and self.rsi[0] < 20:
+                    # Abort it
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+                elif position['side'] == 'down' and self.rsi[0] > 80:
+                    # Abort it
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+
+                if not position['result']:
+                    # Martingale
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+
+                    if self.recovery_mode:
+                        trade_size = self.get_optimal_trade_size()
+                    else:
+                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
+
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=trade_size)
+            else:
+                # Draw
+                if amount_trades == 1:
+                    # Draw on first trade
+                    # Abort it
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+                else:
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=last_trade['trade_size'])
+
+        else:
+            # No open position
+
+            if len(self.datetime) >= 2:
+                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
+
+                trade_size = self.get_optimal_trade_size()
+
+                if dst_price_ema_72 < 0.0005:
+                    # Price is close to [ema_72]
+
+                    if self.close[0] > self.ema_72[0]:
+                        # Price is above [ema_72]
+                        if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 70:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='up',
+                                                                trade_size=trade_size)
+                    elif self.close[0] < self.ema_72[0]:
+                        # Price is bellow [ema_72]
+                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 30:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=trade_size)
+        return position
+
+    async def strategy_ema_rsi_7030(self):
+        strategy_id = 'ema_rsi_7030'
 
         if strategy_id in self.ongoing_positions:
             position = self.ongoing_positions[strategy_id]
