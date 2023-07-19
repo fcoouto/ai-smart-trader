@@ -269,7 +269,7 @@ class SmartTrader:
         delta = now - app_now
         tries = 0
 
-        while abs(delta.total_seconds()) > 1.5:
+        while abs(delta.total_seconds()) > 1:
             # Out of sync confirmed
 
             wait_secs = 3
@@ -1126,7 +1126,7 @@ class SmartTrader:
 
         return value
 
-    async def read_ohlc(self, action=None):
+    async def read_ohlc(self, insert_fields=None, update_fields=None):
         # Returns [open, high, low, close, change]
         element_id = 'ohlc'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
@@ -1147,16 +1147,33 @@ class SmartTrader:
         # change = utils.str_to_float("%.6f" % (c - o))
         # change_pct = utils.distance_percent(v1=c, v2=o)
 
-        if action == 'update':
-            # self.open[0] = o
-            # self.high[0] = h
-            # self.low[0] = l
-            self.close[0] = c
-        elif action == 'insert':
-            # self.open.insert(0, o)
-            # self.high.insert(0, h)
-            # self.low.insert(0, l)
-            self.close.insert(0, c)
+        if update_fields:
+            for field in update_fields:
+                if field.lower() == 'open':
+                    self.open[0] = o
+                    self.open.insert(0, None)
+                elif field.lower() == 'high':
+                    self.high[0] = h
+                    self.high.insert(0, None)
+                elif field.lower() == 'low':
+                    self.low[0] = l
+                    self.low.insert(0, None)
+                elif field.lower() == 'close':
+                    self.close[0] = c
+
+        if insert_fields:
+            for field in insert_fields:
+                if field.lower() == 'open':
+                    self.open.insert(0, o)
+                    self.open.insert(0, None)
+                elif field.lower() == 'high':
+                    self.high.insert(0, h)
+                    self.high.insert(0, None)
+                elif field.lower() == 'low':
+                    self.low.insert(0, l)
+                    self.low.insert(0, None)
+                elif field.lower() == 'close':
+                    self.close.insert(0, c)
 
         return [o, h, l, c]
 
@@ -1909,6 +1926,8 @@ class SmartTrader:
 
     def playbook_read_previous_candles(self, amount_candles=1):
         action = 'update'
+        ohcl_to_insert = ['open', 'high', 'low']
+        ohcl_to_update = ['close']
 
         # Reseting chart (zooms and deslocation)
         self.playbook_tv_reset_chart()
@@ -1917,6 +1936,8 @@ class SmartTrader:
             # It's going to be the first time we'll have that amount of data
             self.reset_chart_data()
             action = 'insert'
+            ohcl_to_insert = ['open', 'high', 'low', 'close']
+            ohcl_to_update = None
 
         for i_candle in range(amount_candles, 0, -1):
             # Reverse iteration from candle X to latest candle
@@ -1924,7 +1945,9 @@ class SmartTrader:
 
             datetime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
-            self.read_element(element_id='ohlc', action=action),
+            self.read_element(element_id='ohlc',
+                              insert_fields=ohcl_to_insert,
+                              update_fields=ohcl_to_update),
             self.read_element(element_id='ema_72', action=action),
             self.read_element(element_id='rsi', action=action)
 
@@ -2385,10 +2408,6 @@ class SmartTrader:
 
         # Defining [strategies]
         strategies = settings.TRADING_STRATEGIES.copy()
-        # strategies = ['ema_rsi_8020']
-        # if 'otc' not in self.asset.lower():
-        #     # For OTC assets, go safe
-        #     strategies.append('ema_rsi_50')
 
         # Reading [close] and [rsi]
         start = datetime.now()
@@ -2683,19 +2702,30 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[1] > self.ema_72[1] and self.close[0] < self.ema_72[0]:
+                    elif self.close[1] > self.ema_72[0] > self.close[0]:
                         # [close] crossed [ema_72] up
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
+
+                    elif self.close[0] < self.low[1]:
+                        # Price is broke last [low]
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
                 elif position['side'] == 'down':
                     if self.rsi[0] > 72:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[1] < self.ema_72[1] and self.close[0] > self.ema_72[0]:
+                    elif self.close[1] < self.ema_72[0] < self.close[0]:
                         # [close] crossed [ema_72] down
                         # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                    elif self.close[0] > self.high[1]:
+                        # Price is broke last [high]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
 
