@@ -903,6 +903,9 @@ class SmartTrader:
             while not is_processed:
                 tries += 1
 
+                if tries > 1:
+                    print(f'{element_id}: {datetime.now().time()} Running attempt {tries}...')
+
                 try:
                     if asyncio.iscoroutinefunction(read):
                         result = await read(**kwargs)
