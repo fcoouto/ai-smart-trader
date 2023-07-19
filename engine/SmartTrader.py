@@ -149,7 +149,7 @@ class SmartTrader:
                 balance = self.read_element(element_id='balance')
                 clock = self.read_element(element_id='clock')
                 payout = self.read_element(element_id='payout')
-                chart_data = self.read_element(element_id='chart_data', element_ids=None)
+                chart_data = asyncio.run(self.read_chart_data(element_ids=None))
                 trade_size = self.read_element(element_id='trade_size')
                 expiry_time = self.read_element(element_id='expiry_time')
 
@@ -812,6 +812,8 @@ class SmartTrader:
         if hasattr(self, f_read) and callable(read := getattr(self, f_read)):
             while not is_processed:
                 tries += 1
+
+                print(f'tries:')
 
                 if element_id == 'rsi':
                     print(f'{element_id}: {datetime.now().time()} Running attempt {tries}...')
