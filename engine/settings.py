@@ -18,7 +18,7 @@ CHART_DATA_READING_LIMIT_SECONDS = 5
 REFRESH_PAGE_EVERY_MINUTES = 15
 
 # TRADING
-TRADING_STRATEGIES = ['ema_rsi_50', 'ema_rsi_8020']
+TRADING_STRATEGIES = ['ema_rsi_50', 'ema_rsi_7030', 'ema_rsi_8020']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
