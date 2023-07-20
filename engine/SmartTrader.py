@@ -2741,9 +2741,37 @@ class SmartTrader:
                 position = await self.close_position(strategy_id=strategy_id,
                                                      result=result)
             elif result == 'loss':
-                # No more tries
-                position = await self.close_position(strategy_id=strategy_id,
-                                                     result=result)
+                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                    # No more tries
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+
+                elif position['side'] == 'up':
+                    if self.close[0] < self.low_1[0]:
+                        # Price broke last [low]
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                elif position['side'] == 'down':
+                    if self.close[0] > self.high_1[0]:
+                        # Price broke last [high]
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                if not position['result']:
+                    # Martingale
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+
+                    if self.recovery_mode:
+                        trade_size = self.get_optimal_trade_size()
+                    else:
+                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
+
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=trade_size)
+
             else:
                 # Draw
                 # No more tries
