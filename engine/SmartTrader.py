@@ -2789,8 +2789,8 @@ class SmartTrader:
                                                         side='up',
                                                         trade_size=trade_size)
                 elif self.rsi[2] < 82 and self.rsi[1] < 82 < self.rsi[0]:
-                    # Price crossing down 18-level
+                    # Price crossing up 82-level
                     position = await self.open_position(strategy_id=strategy_id,
-                                                        side='up',
+                                                        side='down',
                                                         trade_size=trade_size)
         return position
