@@ -2418,10 +2418,10 @@ class SmartTrader:
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
 
-        print(f'close: {self.close[:3]}')
-        print(f'open: {self.open[:3]}')
-        print(f'high: {self.high[:3]}')
-        print(f'low: {self.low[:3]}')
+        print(f'close: {self.close[:6]}')
+        print(f'open: {self.open[:6]}')
+        print(f'high: {self.high[:6]}')
+        print(f'low: {self.low[:6]}')
 
         # Executing tasks
         tasks = []
