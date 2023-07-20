@@ -2125,7 +2125,7 @@ class SmartTrader:
                 # [recovery_mode] is not activated yet
                 min_position_loss = (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[0] +
                                      self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[1] +
-                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[2]) * 2
+                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[2])
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
