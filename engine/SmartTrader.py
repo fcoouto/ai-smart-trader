@@ -2541,7 +2541,7 @@ class SmartTrader:
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema[0] or dst_price_ema < -0.0012:
+                if self.close[0] > self.ema[0] or dst_price_ema < -0.0010:
                     # Price is above [ema] or far bellow it (0.10%)
 
                     if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
@@ -2553,8 +2553,8 @@ class SmartTrader:
                                                             side='up',
                                                             trade_size=trade_size)
 
-                elif self.close[0] < self.ema[0] or dst_price_ema > 0.0012:
-                    # Price is bellow [ema] or far above it (0.10%
+                elif self.close[0] < self.ema[0] or dst_price_ema > 0.0010:
+                    # Price is bellow [ema] or far above it (0.10%)
 
                     if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                         position = await self.open_position(strategy_id=strategy_id,
@@ -2699,8 +2699,8 @@ class SmartTrader:
                                                             trade_size=trade_size)
         return position
 
-    async def strategy_rsi_pivots(self):
-        strategy_id = 'rsi_pivots'
+    async def strategy_contrarian(self):
+        strategy_id = 'contrarian'
 
         if strategy_id in self.ongoing_positions:
             position = self.ongoing_positions[strategy_id]
@@ -2741,7 +2741,7 @@ class SmartTrader:
                 position = await self.close_position(strategy_id=strategy_id,
                                                      result=result)
             elif result == 'loss':
-                if amount_trades >= 2:
+                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
                     # No more tries
                     position = await self.close_position(strategy_id=strategy_id,
                                                          result=result)
@@ -2768,9 +2768,6 @@ class SmartTrader:
                     else:
                         trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
 
-                    # Forcing [trade_size]
-                    trade_size = 1.00
-
                     await self.open_trade(strategy_id=strategy_id,
                                           side=position['side'],
                                           trade_size=trade_size)
@@ -2784,37 +2781,16 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             if len(self.datetime) >= 3:
+                trade_size = self.get_optimal_trade_size()
 
-                # Forcing [trade_size]
-                trade_size = 1.00
-
-                var_rsi_0_1 = abs(self.rsi[0] - self.rsi[1])
-
-                if var_rsi_0_1 > 18:
-                    # Variation between rsi[0] and rsi[1] is good enough
-
-                    if (self.close[2] > self.ema[0] and
-                        self.close[1] > self.ema[0] and
-                            self.close[0] > self.ema[0]):
-                        # Price is consolidated above [ema]
-
-                        if self.rsi[1] > 62:
-                            if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
-                                # Bullish Trend
-                                position = await self.open_position(strategy_id=strategy_id,
-                                                                    side='up',
-                                                                    trade_size=trade_size)
-
-                    elif (self.close[2] < self.ema[0] and
-                          self.close[1] < self.ema[0] and
-                          self.close[0] < self.ema[0]):
-                        # Price is consolidated bellow [ema]
-
-                        if self.rsi[1] < 38:
-                            if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
-                                # Bearish Trend
-                                position = await self.open_position(strategy_id=strategy_id,
-                                                                    side='down',
-                                                                    trade_size=trade_size)
-
+                if self.rsi[2] > 18 and self.rsi[1] > 18 > self.rsi[0]:
+                    # Price crossing down 18-level
+                    position = await self.open_position(strategy_id=strategy_id,
+                                                        side='up',
+                                                        trade_size=trade_size)
+                elif self.rsi[2] < 82 and self.rsi[1] < 82 < self.rsi[0]:
+                    # Price crossing down 18-level
+                    position = await self.open_position(strategy_id=strategy_id,
+                                                        side='up',
+                                                        trade_size=trade_size)
         return position
