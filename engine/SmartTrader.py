@@ -2567,119 +2567,6 @@ class SmartTrader:
                                                                 trade_size=trade_size)
         return position
 
-    async def strategy_ema_rsi_7030(self):
-        strategy_id = 'ema_rsi_7030'
-
-        if strategy_id in self.ongoing_positions:
-            position = self.ongoing_positions[strategy_id]
-        else:
-            position = None
-
-        if position:
-            # Has position open
-            result = None
-            last_trade = position['trades'][-1]
-            amount_trades = len(position['trades'])
-
-            if position['side'] == 'up':
-                # up
-                if self.close[0] > last_trade['open_price']:
-                    result = 'gain'
-                elif self.close[0] < last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
-
-            else:
-                # down
-                if self.close[0] < last_trade['open_price']:
-                    result = 'gain'
-                elif self.close[0] > last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
-
-            if result == 'gain':
-                position = await self.close_position(strategy_id=strategy_id,
-                                                     result=result)
-            elif result == 'loss':
-                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
-                    # No more tries
-                    position = await self.close_position(strategy_id=strategy_id,
-                                                         result=result)
-
-                elif position['side'] == 'up':
-                    if self.rsi[0] < 20:
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                    elif self.close[0] < self.low_1[0]:
-                        # Price broke last [low]
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                elif position['side'] == 'down':
-                    if self.rsi[0] > 80:
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                    elif self.close[0] > self.high_1[0]:
-                        # Price broke last [high]
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                if not position['result']:
-                    # Martingale
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-
-                    if self.recovery_mode:
-                        trade_size = self.get_optimal_trade_size()
-                    else:
-                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
-
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=trade_size)
-            else:
-                # Draw
-                if amount_trades == 1:
-                    # Draw on first trade
-                    # Abort it
-                    position = await self.close_position(strategy_id=strategy_id,
-                                                         result=result)
-                else:
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=last_trade['trade_size'])
-
-        if position is None or position['result']:
-            # No open position
-
-            if len(self.datetime) >= 2:
-                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
-
-                trade_size = self.get_optimal_trade_size()
-
-                if dst_price_ema_72 < 0.0005:
-                    # Price is close to [ema_72]
-
-                    if self.close[0] > self.ema_72[0]:
-                        # Price is above [ema_72]
-                        if self.rsi[1] <= 30 <= self.rsi[0] <= 80:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
-                    elif self.close[0] < self.ema_72[0]:
-                        # Price is bellow [ema_72]
-                        if self.rsi[1] >= 70 >= self.rsi[0] >= 20:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
-        return position
-
     async def strategy_ema_rsi_50(self):
         strategy_id = 'ema_rsi_50'
 
@@ -2874,23 +2761,37 @@ class SmartTrader:
                         self.close[0] > self.ema_72[0]):
                     # Price is consolidated above [ema_72]
 
-                    if self.rsi[2] > 30 and self.rsi[1] > 30 and self.rsi[0] > 30:
-                        if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
-                            # Price is forming a bullish pivot
-                            print(self.rsi[:3])
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
+                    if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
+                        # Bullish Trend
+                        print(self.rsi[:3])
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='up',
+                                                            trade_size=trade_size)
+
                 elif (self.close[2] < self.ema_72[0] and
                         self.close[1] < self.ema_72[0] and
                         self.close[0] < self.ema_72[0]):
                     # Price is consolidated bellow [ema_72]
 
-                    if self.rsi[2] < 70 and self.rsi[1] < 70 and self.rsi[0] < 70:
-                        if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
-                            # Price is forming a bearish pivot
-                            print(self.rsi[:3])
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
+                    if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
+                        # Bearish Trend
+                        print(self.rsi[:3])
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='down',
+                                                            trade_size=trade_size)
+
+                elif self.rsi[1] < 38:
+                    if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
+                        # Bullish Reversal
+                        print(self.rsi[:3])
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='up',
+                                                            trade_size=trade_size)
+                elif self.rsi[1] > 62:
+                    if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
+                        # Bearish Reversal
+                        print(self.rsi[:3])
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='down',
+                                                            trade_size=trade_size)
         return position
