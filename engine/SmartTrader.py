@@ -2746,7 +2746,7 @@ class SmartTrader:
                 position = await self.close_position(strategy_id=strategy_id,
                                                      result=result)
             elif result == 'loss':
-                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                if amount_trades >= 2:
                     # No more tries
                     position = await self.close_position(strategy_id=strategy_id,
                                                          result=result)
