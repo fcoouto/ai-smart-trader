@@ -2712,6 +2712,11 @@ class SmartTrader:
         else:
             position = None
 
+        print(f'close: {self.close[:3]}')
+        print(f'high_1: {self.high_1[:3]}')
+        print(f'low_1: {self.low_1[:3]}')
+        print(f'rsi: {self.rsi[:3]}')
+
         if position:
             # Has position open
             result = None
@@ -2792,14 +2797,12 @@ class SmartTrader:
                     if self.rsi[1] < 38:
                         if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
                             # Bullish Reversal
-                            print(self.rsi[:3])
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
                     elif self.rsi[1] > 62:
                         if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
                             # Bearish Reversal
-                            print(self.rsi[:3])
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
@@ -2812,7 +2815,6 @@ class SmartTrader:
                         if self.rsi[1] > 62:
                             if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
                                 # Bullish Trend
-                                print(self.rsi[:3])
                                 position = await self.open_position(strategy_id=strategy_id,
                                                                     side='up',
                                                                     trade_size=trade_size)
@@ -2825,7 +2827,6 @@ class SmartTrader:
                         if self.rsi[1] < 38:
                             if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
                                 # Bearish Trend
-                                print(self.rsi[:3])
                                 position = await self.open_position(strategy_id=strategy_id,
                                                                     side='down',
                                                                     trade_size=trade_size)
