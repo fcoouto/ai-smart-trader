@@ -2547,7 +2547,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
 
-            if len(self.datetime) >= 2:
+            if len(self.datetime) >= 3:
                 dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
 
                 trade_size = self.get_optimal_trade_size()
@@ -2561,9 +2561,18 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
+                        elif self.rsi[2] <= 20 and 30 <= self.rsi[0] <= 80:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='up',
+                                                                trade_size=trade_size)
+
                     elif self.close[0] < self.ema_72[0]:
                         # Price is bellow [ema_72]
                         if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=trade_size)
+                        elif self.rsi[2] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
