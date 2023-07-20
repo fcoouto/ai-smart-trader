@@ -2758,7 +2758,7 @@ class SmartTrader:
 
                 var_rsi_0_1 = abs(self.rsi[0] - self.rsi[1])
 
-                if var_rsi_0_1 > 15:
+                if var_rsi_0_1 > 10:
                     # Variation between rsi[0] and rsi[1] is good enough
 
                     if self.rsi[1] < 38:
