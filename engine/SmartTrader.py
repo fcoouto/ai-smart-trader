@@ -2533,38 +2533,37 @@ class SmartTrader:
                                           side=position['side'],
                                           trade_size=last_trade['trade_size'])
 
-        if position is None or position['result']:
+        else:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema[0])
+                dst_price_ema = utils.distance_percent(v1=self.close[1], v2=self.ema[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if dst_price_ema < 0.0005:
-                    # Price is close to [ema]
+                if self.close[0] > self.ema[0] or dst_price_ema < -0.0012:
+                    # Price is above [ema] or far bellow it (0.10%)
 
-                    if self.close[0] > self.ema[0]:
-                        # Price is above [ema]
-                        if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
-                        elif self.rsi[2] <= 20 and 30 <= self.rsi[0] <= 80:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
+                    if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='up',
+                                                            trade_size=trade_size)
+                    elif self.rsi[2] <= 20 and 30 <= self.rsi[0] <= 80:
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='up',
+                                                            trade_size=trade_size)
 
-                    elif self.close[0] < self.ema[0]:
-                        # Price is bellow [ema]
-                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
-                        elif self.rsi[2] >= 80 and 70 >= self.rsi[0] >= 20:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
+                elif self.close[0] < self.ema[0] or dst_price_ema > 0.0012:
+                    # Price is bellow [ema] or far above it (0.10%
+
+                    if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='down',
+                                                            trade_size=trade_size)
+                    elif self.rsi[2] >= 80 and 70 >= self.rsi[0] >= 20:
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='down',
+                                                            trade_size=trade_size)
         return position
 
     async def strategy_ema_rsi_50(self):
@@ -2669,7 +2668,6 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema[0])
                 rsi_bullish_from = 39
                 rsi_bullish_min = 51
                 rsi_bullish_max = 80
@@ -2677,31 +2675,28 @@ class SmartTrader:
                 rsi_bearish_min = 49
                 rsi_bearish_max = 20
 
-                if dst_price_ema > 0.0001618:
-                    # Price is not too close to [ema] (0.01618%)
+                trade_size = self.get_optimal_trade_size()
 
-                    trade_size = self.get_optimal_trade_size()
+                if (self.close[2] > self.ema[0] and
+                        self.close[1] > self.ema[0] and
+                        self.close[0] > self.ema[0]):
+                    # Price is consolidated above [ema]
+                    if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
+                        # Trend Following
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='up',
+                                                            trade_size=trade_size)
 
-                    if (self.close[2] > self.ema[0] and
-                            self.close[1] > self.ema[0] and
-                            self.close[0] > self.ema[0]):
-                        # Price is consolidated above [ema]
-                        if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
-                            # Trend Following
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
+                elif (self.close[2] < self.ema[0] and
+                      self.close[1] < self.ema[0] and
+                      self.close[0] < self.ema[0]):
+                    # Price is consolidated bellow [ema]
 
-                    elif (self.close[2] < self.ema[0] and
-                          self.close[1] < self.ema[0] and
-                          self.close[0] < self.ema[0]):
-                        # Price is consolidated bellow [ema]
-
-                        if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
-                            # Trend Following
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
+                    if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
+                        # Trend Following
+                        position = await self.open_position(strategy_id=strategy_id,
+                                                            side='down',
+                                                            trade_size=trade_size)
         return position
 
     async def strategy_rsi_pivots(self):
