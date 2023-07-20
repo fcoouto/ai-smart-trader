@@ -2746,18 +2746,6 @@ class SmartTrader:
                     position = await self.close_position(strategy_id=strategy_id,
                                                          result=result)
 
-                elif position['side'] == 'up':
-                    if self.close[0] < self.low_1[0]:
-                        # Price broke last [low]
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                elif position['side'] == 'down':
-                    if self.close[0] > self.high_1[0]:
-                        # Price broke last [high]
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
                 if not position['result']:
                     # Martingale
                     await self.close_trade(strategy_id=strategy_id,
@@ -2783,13 +2771,15 @@ class SmartTrader:
             if len(self.datetime) >= 3:
                 trade_size = self.get_optimal_trade_size()
 
-                if self.rsi[2] > 18 and self.rsi[1] > 18 > self.rsi[0]:
-                    # Price crossing down 18-level
+                if ((self.rsi[2] > 18 and self.rsi[1] > 18 > self.rsi[0]) or
+                        (self.rsi[2] > 5 and self.rsi[1] > 5 > self.rsi[0])):
+                    # Price crossing down 18 or 6
                     position = await self.open_position(strategy_id=strategy_id,
                                                         side='up',
                                                         trade_size=trade_size)
-                elif self.rsi[2] < 82 and self.rsi[1] < 82 < self.rsi[0]:
-                    # Price crossing up 82-level
+                elif ((self.rsi[2] < 82 and self.rsi[1] < 82 < self.rsi[0]) or
+                        (self.rsi[2] < 95 and self.rsi[1] < 95 < self.rsi[0])):
+                    # Price crossing up 82 or 94
                     position = await self.open_position(strategy_id=strategy_id,
                                                         side='down',
                                                         trade_size=trade_size)
