@@ -2773,6 +2773,9 @@ class SmartTrader:
                     else:
                         trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
 
+                    # Forcing [trade_size]
+                    trade_size = 1.00
+
                     await self.open_trade(strategy_id=strategy_id,
                                           side=position['side'],
                                           trade_size=trade_size)
@@ -2787,7 +2790,8 @@ class SmartTrader:
             # No open position
             if len(self.datetime) >= 3:
 
-                trade_size = self.get_optimal_trade_size()
+                # Forcing [trade_size]
+                trade_size = 1.00
 
                 var_rsi_0_1 = abs(self.rsi[0] - self.rsi[1])
 
