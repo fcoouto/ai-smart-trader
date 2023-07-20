@@ -63,7 +63,7 @@ class SmartTrader:
     change = []
     change_pct = []
 
-    ema_72 = []
+    ema = []
     rsi = []
 
     position_history = []
@@ -688,7 +688,7 @@ class SmartTrader:
                     top = height * 0.69
                     right = width
                     bottom = height * 0.83
-                elif element_id == 'ema_72':
+                elif element_id == 'ema':
                     if platform.system().lower() == 'linux':
                         left = width * 0.50
                     else:
@@ -1080,7 +1080,7 @@ class SmartTrader:
 
         if element_ids is None:
             # Default chart elements
-            element_ids = ['close', 'ema_72', 'rsi']
+            element_ids = ['close', 'ema', 'rsi']
 
         action = None
         now_seconds = utils.now_seconds()
@@ -1108,7 +1108,7 @@ class SmartTrader:
         self.change.clear()
         self.change_pct.clear()
 
-        self.ema_72.clear()
+        self.ema.clear()
         self.rsi.clear()
 
     async def read_close(self, action=None):
@@ -1171,17 +1171,17 @@ class SmartTrader:
 
         return [o, h, l, c]
 
-    async def read_ema_72(self, action=None):
-        element_id = 'ema_72'
+    async def read_ema(self, action=None):
+        element_id = 'ema'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
         if action == 'update':
-            self.ema_72[0] = value
+            self.ema[0] = value
         elif action == 'insert':
-            self.ema_72.insert(0, value)
+            self.ema.insert(0, value)
 
         return value
 
@@ -1673,7 +1673,7 @@ class SmartTrader:
 
         # Defining EMA 72 up
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
-        self.playbok_tv_configure_indicator_ema(length=72)
+        self.playbok_tv_configure_indicator_ema(length=144)
 
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
@@ -1942,7 +1942,7 @@ class SmartTrader:
             self.read_element(element_id='ohlc',
                               insert_fields=ohcl_to_insert,
                               update_fields=ohcl_to_update),
-            self.read_element(element_id='ema_72', action=action),
+            self.read_element(element_id='ema', action=action),
             self.read_element(element_id='rsi', action=action)
 
             if action == 'insert':
@@ -2015,7 +2015,7 @@ class SmartTrader:
             # Not enough data yet
             return None
 
-        headers = 'datetime,close,ema_72,rsi'
+        headers = 'datetime,close,ema,rsi'
 
         asset = re.sub("[^A-z]", "", self.asset)
         today = datetime.utcnow().date()
@@ -2030,7 +2030,7 @@ class SmartTrader:
                             f'{asset}_runtime.{today}.csv')
         data = f'{self.datetime[0]},' \
                f'{self.close[0]},' \
-               f'{self.ema_72[0]},' \
+               f'{self.ema[0]},' \
                f'{self.rsi[0]}'
 
         if not os.path.exists(file):
@@ -2048,7 +2048,7 @@ class SmartTrader:
                             f'{asset}_corrected.{today}.csv')
         data = f'{self.datetime[1]},' \
                f'{self.close[1]},' \
-               f'{self.ema_72[1]},' \
+               f'{self.ema[1]},' \
                f'{self.rsi[1]}'
 
         if not os.path.exists(file):
@@ -2429,8 +2429,8 @@ class SmartTrader:
                     tmsg.input(msg=msg, clear=True)
                     raise RuntimeError(f'Strategy [{strategy}] not found.')
 
-        # Reading [ema_72]
-        await self.read_element(element_id='ema_72', is_async=True, action='insert')
+        # Reading [ema]
+        await self.read_element(element_id='ema', is_async=True, action='insert')
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
@@ -2537,15 +2537,15 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if dst_price_ema_72 < 0.0005:
-                    # Price is close to [ema_72]
+                if dst_price_ema < 0.0005:
+                    # Price is close to [ema]
 
-                    if self.close[0] > self.ema_72[0]:
-                        # Price is above [ema_72]
+                    if self.close[0] > self.ema[0]:
+                        # Price is above [ema]
                         if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
@@ -2555,8 +2555,8 @@ class SmartTrader:
                                                                 side='up',
                                                                 trade_size=trade_size)
 
-                    elif self.close[0] < self.ema_72[0]:
-                        # Price is bellow [ema_72]
+                    elif self.close[0] < self.ema[0]:
+                        # Price is bellow [ema]
                         if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
@@ -2614,8 +2614,8 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[1] > self.ema_72[0] > self.close[0]:
-                        # [close] crossed [ema_72] up
+                    elif self.close[1] > self.ema[0] > self.close[0]:
+                        # [close] crossed [ema] up
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2629,8 +2629,8 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[1] < self.ema_72[0] < self.close[0]:
-                        # [close] crossed [ema_72] down
+                    elif self.close[1] < self.ema[0] < self.close[0]:
+                        # [close] crossed [ema] down
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2669,7 +2669,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             if len(self.datetime) >= 3:
-                dst_price_ema_72 = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema[0])
                 rsi_bullish_from = 39
                 rsi_bullish_min = 51
                 rsi_bullish_max = 80
@@ -2677,25 +2677,25 @@ class SmartTrader:
                 rsi_bearish_min = 49
                 rsi_bearish_max = 20
 
-                if dst_price_ema_72 > 0.0001618:
-                    # Price is not too close to [ema_72] (0.01618%)
+                if dst_price_ema > 0.0001618:
+                    # Price is not too close to [ema] (0.01618%)
 
                     trade_size = self.get_optimal_trade_size()
 
-                    if (self.close[2] > self.ema_72[0] and
-                            self.close[1] > self.ema_72[0] and
-                            self.close[0] > self.ema_72[0]):
-                        # Price is consolidated above [ema_72]
+                    if (self.close[2] > self.ema[0] and
+                            self.close[1] > self.ema[0] and
+                            self.close[0] > self.ema[0]):
+                        # Price is consolidated above [ema]
                         if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
                             # Trend Following
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
 
-                    elif (self.close[2] < self.ema_72[0] and
-                            self.close[1] < self.ema_72[0] and
-                            self.close[0] < self.ema_72[0]):
-                        # Price is consolidated bellow [ema_72]
+                    elif (self.close[2] < self.ema[0] and
+                          self.close[1] < self.ema[0] and
+                          self.close[0] < self.ema[0]):
+                        # Price is consolidated bellow [ema]
 
                         if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
                             # Trend Following
@@ -2798,23 +2798,10 @@ class SmartTrader:
                 if var_rsi_0_1 > 18:
                     # Variation between rsi[0] and rsi[1] is good enough
 
-                    if self.rsi[1] < 38:
-                        if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
-                            # Bullish Reversal
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
-                    elif self.rsi[1] > 62:
-                        if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
-                            # Bearish Reversal
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
-
-                    elif (self.close[2] > self.ema_72[0] and
-                            self.close[1] > self.ema_72[0] and
-                            self.close[0] > self.ema_72[0]):
-                        # Price is consolidated above [ema_72]
+                    if (self.close[2] > self.ema[0] and
+                        self.close[1] > self.ema[0] and
+                            self.close[0] > self.ema[0]):
+                        # Price is consolidated above [ema]
 
                         if self.rsi[1] > 62:
                             if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
@@ -2823,10 +2810,10 @@ class SmartTrader:
                                                                     side='up',
                                                                     trade_size=trade_size)
 
-                    elif (self.close[2] < self.ema_72[0] and
-                            self.close[1] < self.ema_72[0] and
-                            self.close[0] < self.ema_72[0]):
-                        # Price is consolidated bellow [ema_72]
+                    elif (self.close[2] < self.ema[0] and
+                          self.close[1] < self.ema[0] and
+                          self.close[0] < self.ema[0]):
+                        # Price is consolidated bellow [ema]
 
                         if self.rsi[1] < 38:
                             if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
