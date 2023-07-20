@@ -78,7 +78,7 @@ CORE_DATA = {
     'asset': 'string',
     'balance': 'currency',
     'clock': 'time',
-    'ema_72': 'float',
+    'ema': 'float',
     'expiry_time': 'time',
     'ohlc': 'string_ohlc',
     'payout': 'percentage',
@@ -123,7 +123,7 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.68,
                 'is_mandatory': True,
-                'elements': ['ohlc', 'ema_72', 'clock'],
+                'elements': ['ohlc', 'ema', 'clock'],
             },
             'chart_bottom': {
                 'id': 'chart_bottom',
