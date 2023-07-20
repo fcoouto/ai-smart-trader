@@ -56,9 +56,9 @@ class SmartTrader:
 
     asset = None
     datetime = []
-    open = []
-    high = []
-    low = []
+    open_1 = []
+    high_1 = []
+    low_1 = []
     close = []
     change = []
     change_pct = []
@@ -1101,9 +1101,9 @@ class SmartTrader:
 
     def reset_chart_data(self):
         self.datetime.clear()
-        self.open.clear()
-        self.high.clear()
-        self.low.clear()
+        self.open_1.clear()
+        self.high_1.clear()
+        self.low_1.clear()
         self.close.clear()
         self.change.clear()
         self.change_pct.clear()
@@ -1150,28 +1150,22 @@ class SmartTrader:
         if update_fields:
             for field in update_fields:
                 if field.lower() == 'open':
-                    self.open[0] = o
-                    self.open.insert(0, None)
+                    self.open_1[0] = o
                 elif field.lower() == 'high':
-                    self.high[0] = h
-                    self.high.insert(0, None)
+                    self.high_1[0] = h
                 elif field.lower() == 'low':
-                    self.low[0] = l
-                    self.low.insert(0, None)
+                    self.low_1[0] = l
                 elif field.lower() == 'close':
                     self.close[0] = c
 
         if insert_fields:
             for field in insert_fields:
                 if field.lower() == 'open':
-                    self.open.insert(0, o)
-                    self.open.insert(0, None)
+                    self.open_1.insert(0, o)
                 elif field.lower() == 'high':
-                    self.high.insert(0, h)
-                    self.high.insert(0, None)
+                    self.high_1.insert(0, h)
                 elif field.lower() == 'low':
-                    self.low.insert(0, l)
-                    self.low.insert(0, None)
+                    self.low_1.insert(0, l)
                 elif field.lower() == 'close':
                     self.close.insert(0, c)
 
@@ -2419,9 +2413,9 @@ class SmartTrader:
         result['reading_chart_duration'] = delta.total_seconds()
 
         print(f'close: {self.close[:6]}')
-        print(f'open: {self.open[:6]}')
-        print(f'high: {self.high[:6]}')
-        print(f'low: {self.low[:6]}')
+        print(f'open: {self.open_1[:6]}')
+        print(f'high: {self.high_1[:6]}')
+        print(f'low: {self.low_1[:6]}')
 
         # Executing tasks
         tasks = []
@@ -2502,7 +2496,7 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[0] < self.low[1]:
+                    elif self.close[0] < self.low_1[0]:
                         # Price broke last [low]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2512,7 +2506,7 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[0] > self.high[1]:
+                    elif self.close[0] > self.high_1[0]:
                         # Price broke last [high]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2624,7 +2618,7 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[0] < self.low[1]:
+                    elif self.close[0] < self.low_1[0]:
                         # Price broke last [low]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2634,7 +2628,7 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[0] > self.high[1]:
+                    elif self.close[0] > self.high_1[0]:
                         # Price broke last [high]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2743,7 +2737,7 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[0] < self.low[1]:
+                    elif self.close[0] < self.low_1[0]:
                         # Price broke last [low]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2758,7 +2752,7 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[0] > self.high[1]:
+                    elif self.close[0] > self.high_1[0]:
                         # Price broke last [high]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
