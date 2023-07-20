@@ -2412,11 +2412,6 @@ class SmartTrader:
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
 
-        print(f'close: {self.close[:5]}')
-        print(f'open_1: {self.open_1[:5]}')
-        print(f'high_1: {self.high_1[:5]}')
-        print(f'low_1: {self.low_1[:5]}')
-
         # Executing tasks
         tasks = []
         async with asyncio.TaskGroup() as tg:
@@ -2822,8 +2817,8 @@ class SmartTrader:
                                                                 trade_size=trade_size)
         return position
 
-    async def strategy_rsi_high_low(self):
-        strategy_id = 'rsi_high_low'
+    async def strategy_rsi_pivots(self):
+        strategy_id = 'rsi_pivots'
 
         if strategy_id in self.ongoing_positions:
             position = self.ongoing_positions[strategy_id]
