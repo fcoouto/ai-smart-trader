@@ -269,7 +269,7 @@ class SmartTrader:
         delta = now - app_now
         tries = 0
 
-        while abs(delta.total_seconds()) > 1.250:
+        while abs(delta.total_seconds()) > 1.5:
             # Out of sync confirmed
 
             wait_secs = 3
