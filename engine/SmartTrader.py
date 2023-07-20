@@ -2614,7 +2614,7 @@ class SmartTrader:
                                                          result=result)
 
                 elif position['side'] == 'up':
-                    if self.rsi[0] < 30:
+                    if self.rsi[0] < 20:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2624,7 +2624,7 @@ class SmartTrader:
                                                              result=result)
 
                 elif position['side'] == 'down':
-                    if self.rsi[0] > 70:
+                    if self.rsi[0] > 80:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
