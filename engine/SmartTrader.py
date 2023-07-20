@@ -2756,43 +2756,48 @@ class SmartTrader:
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.rsi[1] < 38:
-                    if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
-                        # Bullish Reversal
-                        print(self.rsi[:3])
-                        position = await self.open_position(strategy_id=strategy_id,
-                                                            side='up',
-                                                            trade_size=trade_size)
-                elif self.rsi[1] > 62:
-                    if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
-                        # Bearish Reversal
-                        print(self.rsi[:3])
-                        position = await self.open_position(strategy_id=strategy_id,
-                                                            side='down',
-                                                            trade_size=trade_size)
+                var_rsi_0_1 = abs(self.rsi[0] - self.rsi[1])
 
-                elif (self.close[2] > self.ema_72[0] and
-                        self.close[1] > self.ema_72[0] and
-                        self.close[0] > self.ema_72[0]):
-                    # Price is consolidated above [ema_72]
+                if var_rsi_0_1 > 15:
+                    # Variation between rsi[0] and rsi[1] is good enough
 
-                    if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
-                        # Bullish Trend
-                        print(self.rsi[:3])
-                        position = await self.open_position(strategy_id=strategy_id,
-                                                            side='up',
-                                                            trade_size=trade_size)
+                    if self.rsi[1] < 38:
+                        if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
+                            # Bullish Reversal
+                            print(self.rsi[:3])
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='up',
+                                                                trade_size=trade_size)
+                    elif self.rsi[1] > 62:
+                        if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
+                            # Bearish Reversal
+                            print(self.rsi[:3])
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=trade_size)
 
-                elif (self.close[2] < self.ema_72[0] and
-                        self.close[1] < self.ema_72[0] and
-                        self.close[0] < self.ema_72[0]):
-                    # Price is consolidated bellow [ema_72]
+                    elif (self.close[2] > self.ema_72[0] and
+                            self.close[1] > self.ema_72[0] and
+                            self.close[0] > self.ema_72[0]):
+                        # Price is consolidated above [ema_72]
 
-                    if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
-                        # Bearish Trend
-                        print(self.rsi[:3])
-                        position = await self.open_position(strategy_id=strategy_id,
-                                                            side='down',
-                                                            trade_size=trade_size)
+                        if self.rsi[2] > self.rsi[1] and self.rsi[1] < self.rsi[0]:
+                            # Bullish Trend
+                            print(self.rsi[:3])
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='up',
+                                                                trade_size=trade_size)
+
+                    elif (self.close[2] < self.ema_72[0] and
+                            self.close[1] < self.ema_72[0] and
+                            self.close[0] < self.ema_72[0]):
+                        # Price is consolidated bellow [ema_72]
+
+                        if self.rsi[2] < self.rsi[1] and self.rsi[1] > self.rsi[0]:
+                            # Bearish Trend
+                            print(self.rsi[:3])
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=trade_size)
 
         return position
