@@ -593,6 +593,14 @@ class SmartTrader:
                             # Use this block to specify workarounds when
                             # a specific zone can't be found on the first attempt
                             if zone_id == 'chart_top':
+                                # Waiting PB
+                                msg = "Refreshing page (CTRL + C to cancel)"
+
+                                wait_secs = settings.PROGRESS_BAR_WAITING_TIME
+                                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
                                 # Executing playbook
                                 self.execute_playbook(playbook_id='refresh_page')
 
