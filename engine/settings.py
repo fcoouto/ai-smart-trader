@@ -4,7 +4,7 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = False
+DEBUG_OCR = True
 DEBUG_HISTORY = True
 DEBUG_PERFORMANCE = True
 
@@ -121,7 +121,7 @@ BROKERS = {
             'chart_top': {
                 'id': 'chart_top',
                 'region': None,
-                'locate_confidence': 0.68,
+                'locate_confidence': 0.75,
                 'is_mandatory': True,
                 'elements': ['ohlc', 'ema', 'clock'],
             },

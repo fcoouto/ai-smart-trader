@@ -150,12 +150,14 @@ class SmartTrader:
                 clock = self.read_element(element_id='clock')
                 payout = self.read_element(element_id='payout')
                 chart_data = asyncio.run(self.read_chart_data(element_ids=None))
+                ohlc = self.read_element(element_id='ohlc')
                 trade_size = self.read_element(element_id='trade_size')
                 expiry_time = self.read_element(element_id='expiry_time')
 
                 print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
                       f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-                      f"\nchart_data: {str(chart_data)}\n")
+                      f"\nchart_data: {str(chart_data)}"
+                      f"\nohlc: {str(ohlc)}\n")
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -688,25 +690,22 @@ class SmartTrader:
             elif zone_id == 'chart_top':
                 if element_id == 'ohlc':
                     left = width * 0.11
-                    top = height * 0.69
+                    top = height * 0.38
                     right = width
-                    bottom = height * 0.83
+                    bottom = height * 0.47
                 elif element_id == 'ema':
                     if platform.system().lower() == 'linux':
                         left = width * 0.51
                     else:
                         left = width * 0.45
-                    top = height * 0.85
+                    top = height * 0.46
                     right = width * 0.75
-                    bottom = height
+                    bottom = height * 0.55
                 elif element_id == 'clock':
-                    if platform.system().lower() == 'linux':
-                        left = width * 0.26
-                    else:
-                        left = width * 0.26
-                    top = height * 0.18
+                    left = width * 0.26
+                    top = height * 0.095
                     right = width * 0.425
-                    bottom = height * 0.35
+                    bottom = height * 0.195
             elif zone_id == 'chart_bottom':
                 if element_id == 'rsi':
                     left = width * 0.67
@@ -1333,13 +1332,13 @@ class SmartTrader:
                 element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + zone_region.height
             elif element_id == 'input_chart_settings_body_green':
-                element['x'] = zone_region.left + 212
+                element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + 180
             elif element_id == 'input_chart_settings_body_red':
                 element['x'] = zone_region.left + 255
                 element['y'] = zone_region.top + 180
             elif element_id == 'input_chart_settings_wick_green':
-                element['x'] = zone_region.left + 212
+                element['x'] = zone_region.left + 215
                 element['y'] = zone_region.top + 280
             elif element_id == 'input_chart_settings_wick_red':
                 element['x'] = zone_region.left + 255
@@ -1348,13 +1347,13 @@ class SmartTrader:
                 element['x'] = zone_region.left + 235
                 element['y'] = zone_region.top + 95
             elif element_id == 'input_chart_settings_grid_lines_v':
-                element['x'] = zone_region.left + 225
+                element['x'] = zone_region.left + 230
                 element['y'] = zone_region.top + 180
             elif element_id == 'input_chart_settings_grid_lines_h':
-                element['x'] = zone_region.left + 225
+                element['x'] = zone_region.left + 230
                 element['y'] = zone_region.top + 230
             elif element_id == 'input_chart_settings_scale_lines':
-                element['x'] = zone_region.left + 225
+                element['x'] = zone_region.left + 230
                 element['y'] = zone_region.top + 170
             elif element_id == 'input_ema_settings_color':
                 element['x'] = zone_region.left + 190
@@ -1756,7 +1755,7 @@ class SmartTrader:
         if platform.system().lower() == 'linux':
             scroll_clicks = -3
         else:
-            scroll_clicks = -490
+            scroll_clicks = -430
         pyautogui.scroll(scroll_clicks)
         sleep(0.300)
 
