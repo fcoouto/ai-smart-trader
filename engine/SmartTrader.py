@@ -1608,7 +1608,7 @@ class SmartTrader:
         pyautogui.press('enter')
 
         # Waiting for page to load
-        sleep(5)
+        sleep(7)
 
     def playbook_go_to_trading_page(self):
         # Going to trading page
