@@ -16,7 +16,7 @@ import art
 import pandas as pd
 from tabulate import tabulate
 
-from PIL import Image
+from PIL import Image, ImageOps
 import mss
 import pyautogui
 import pytesseract
@@ -652,6 +652,9 @@ class SmartTrader:
 
         # Converting to grayscale
         img = img.convert('L')
+
+        # Inverting colors
+        img = ImageOps.invert(img)
 
         # Expanding image in 300%
         width, height = img.size
