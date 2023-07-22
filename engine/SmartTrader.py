@@ -589,24 +589,31 @@ class SmartTrader:
                         sleep(1)
 
                     else:
-                        if tries == 1 and zone_id == 'navbar_url':
-                            msg = (f"{utils.tmsg.danger}[WARNING]{utils.tmsg.endc} "
-                                   f"- Seems like you don't even have a browser running. "
-                                   f"\n\t  - At least I couldn't find it on the "
-                                   f"expected [monitor] and [region]."
-                                   f"\n\t  - In any case, let me try to fix it...{utils.tmsg.endc}")
-                            tmsg.print(context=context, msg=msg, clear=True)
+                        if tries == 1:
+                            # Use this block to specify workarounds when
+                            # a specific zone can't be found on the first attempt
+                            if zone_id == 'chart_top':
+                                # Executing playbook
+                                self.execute_playbook(playbook_id='refresh_page')
 
-                            # Waiting PB
-                            msg = "Looking for Google Chrome icon... I'll find it... (CTRL + C to cancel)"
+                            elif zone_id == 'navbar_url':
+                                msg = (f"{utils.tmsg.danger}[WARNING]{utils.tmsg.endc} "
+                                       f"- Seems like you don't even have a browser running. "
+                                       f"\n\t  - At least I couldn't find it on the "
+                                       f"expected [monitor] and [region]."
+                                       f"\n\t  - In any case, let me try to fix it...{utils.tmsg.endc}")
+                                tmsg.print(context=context, msg=msg, clear=True)
 
-                            wait_secs = settings.PROGRESS_BAR_WAITING_TIME
-                            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                            for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+                                # Waiting PB
+                                msg = "Looking for Google Chrome icon... I'll find it... (CTRL + C to cancel)"
 
-                            # Executing playbook
-                            self.execute_playbook(playbook_id='open_browser')
+                                wait_secs = settings.PROGRESS_BAR_WAITING_TIME
+                                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                                # Executing playbook
+                                self.execute_playbook(playbook_id='open_browser')
 
                             # Go try to find it again
                             continue
