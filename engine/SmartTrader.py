@@ -692,7 +692,7 @@ class SmartTrader:
         img = img.convert('L')
 
         # Inverting colors
-        img = ImageOps.invert(img)
+        # img = ImageOps.invert(img)
 
         # Expanding image in 300%
         width, height = img.size
