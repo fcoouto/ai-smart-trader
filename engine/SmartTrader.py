@@ -200,6 +200,27 @@ class SmartTrader:
 
         return url
 
+    def validate_trading_session(self, context='Validation'):
+        now = datetime.utcnow()
+
+        trading_start = 8
+        trading_end = 20
+
+        while now.hour < trading_start or now.hour > trading_end:
+            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                   f"{utils.tmsg.italic}- We are currently out of the trading time range, "
+                   f"which should be between {trading_start} and {trading_end}. {utils.tmsg.endc}")
+            tmsg.print(context=context, msg=msg, clear=True)
+
+            # Waiting PB
+            msg = "Waiting for it (CTRL + C to cancel)"
+            wait_secs = 300
+            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            now = datetime.utcnow()
+
     def validate_credentials(self, context='Validation'):
         key_file = 'key'
 
