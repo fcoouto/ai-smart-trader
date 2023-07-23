@@ -691,7 +691,7 @@ class SmartTrader:
 
         # Expanding image in 300%
         width, height = img.size
-        img = img.resize([int(width * 3), int(height * 3)])
+        img = img.resize([int(width * 4), int(height * 4)])
 
         if save_to:
             img.save(save_to)
@@ -1222,7 +1222,12 @@ class SmartTrader:
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
+        missing_decimal_separator = True if '.' not in value else False
         value = utils.str_to_float(value)
+
+        if missing_decimal_separator:
+            # It's expected that [trade_size] field will always have 2 decimals
+            value = value / 100
 
         if action == 'update':
             self.rsi[0] = value
