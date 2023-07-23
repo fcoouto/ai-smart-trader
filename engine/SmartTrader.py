@@ -145,6 +145,8 @@ class SmartTrader:
         # DEBUG
         if settings.DEBUG_OCR:
             while True:
+                self.execute_playbook('refresh_page')
+
                 asset = self.read_element(element_id='asset')
                 balance = self.read_element(element_id='balance')
                 clock = self.read_element(element_id='clock')
@@ -168,6 +170,9 @@ class SmartTrader:
         #   . payout?
 
         context = 'Validation'
+
+        # Validating trading session
+        self.validate_trading_session()
 
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
@@ -613,19 +618,7 @@ class SmartTrader:
                         if tries == 1:
                             # Use this block to specify workarounds when
                             # a specific zone can't be found on the first attempt
-                            if zone_id == 'chart_top':
-                                # Waiting PB
-                                msg = "Refreshing page (CTRL + C to cancel)"
-
-                                wait_secs = settings.PROGRESS_BAR_WAITING_TIME
-                                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                                for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
-                                # Executing playbook
-                                self.execute_playbook(playbook_id='refresh_page')
-
-                            elif zone_id == 'navbar_url':
+                            if zone_id == 'navbar_url':
                                 msg = (f"{utils.tmsg.danger}[WARNING]{utils.tmsg.endc} "
                                        f"- Seems like you don't even have a browser running. "
                                        f"\n\t  - At least I couldn't find it on the "
@@ -657,7 +650,10 @@ class SmartTrader:
                             tmsg.print(context=context, msg=msg, clear=True)
 
                             msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
-                            tmsg.input(msg=msg)
+                            wait_secs = 60
+                            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
         return zone_region
 
@@ -1621,9 +1617,6 @@ class SmartTrader:
     def playbook_refresh_page(self):
         pyautogui.click(x=self.region['center_x'], y=self.region['center_y'])
         pyautogui.hotkey('shift', 'f5')
-
-        # Resetting some awareness attributes
-        self.set_awareness('payout_low', False)
 
         # Waiting for page to load
         sleep(7)
