@@ -2563,14 +2563,14 @@ class SmartTrader:
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema[0] or dst_price_ema < -0.0010:
+                if self.close[0] > self.ema[0] or dst_price_ema < -0.00072:
                     # Price is above [ema] or far bellow it (0.10%)
                     if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                         position = await self.open_position(strategy_id=strategy_id,
                                                             side='up',
                                                             trade_size=trade_size)
 
-                elif self.close[0] < self.ema[0] or dst_price_ema > 0.0010:
+                elif self.close[0] < self.ema[0] or dst_price_ema > 0.00072:
                     # Price is bellow [ema] or far above it (0.10%)
                     if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                         position = await self.open_position(strategy_id=strategy_id,
