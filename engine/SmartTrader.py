@@ -207,10 +207,10 @@ class SmartTrader:
     def validate_trading_session(self, context='Validation'):
         now = datetime.utcnow()
 
-        trading_start = 8
-        trading_end = 20
+        trading_start = 6
+        trading_end = 22
 
-        while now.hour < trading_start or now.hour > trading_end:
+        while now.hour <= trading_start or now.hour >= trading_end:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- We are currently out of the trading time range, "
                    f"which should be between {trading_start} and {trading_end}. {utils.tmsg.endc}")
