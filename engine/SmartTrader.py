@@ -86,7 +86,6 @@ class SmartTrader:
     awareness = {
         'balance_equal_to_zero': None,
         'balance_less_than_min_balance': None,
-        'payout_low': None,
     }
 
     def __init__(self, agent_id, region, broker, asset, initial_trade_size):
@@ -419,20 +418,20 @@ class SmartTrader:
 
     def validate_payout(self, context='Validation'):
         while self.payout < 75:
-            if not self.awareness['payout_low']:
-                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                       f"{utils.tmsg.italic}- Payout is currently [{self.payout}%]. "
-                       f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
-                tmsg.print(context=context, msg=msg, clear=True)
+            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                   f"{utils.tmsg.italic}- Payout is currently [{self.payout}%]. "
+                   f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
+            tmsg.print(context=context, msg=msg, clear=True)
 
-                # Waiting PB
-                msg = "Waiting for payout get higher again (CTRL + C to cancel)"
-                wait_secs = 60
-                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+            # Waiting PB
+            msg = "Waiting for payout get higher again (CTRL + C to cancel)"
+            wait_secs = 60
+            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-                self.read_element(element_id='payout')
+            self.playbook_go_to_trading_page()
+            self.read_element(element_id='payout')
 
     def validate_super_strike(self, context='Validation'):
         if not self.is_super_strike_activated():
@@ -1040,7 +1039,6 @@ class SmartTrader:
             self.execute_playbook(playbook_id='go_to_trading_page')
 
             self.reset_chart_data()
-            self.set_awareness(k='payout_low', v=True)
 
         # Renaming PowerShell window name
         title = f'STrader: {self.asset}'
