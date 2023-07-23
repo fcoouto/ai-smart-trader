@@ -1615,7 +1615,7 @@ class SmartTrader:
             sleep(7)
 
     def playbook_refresh_page(self):
-        pyautogui.click(x=self.region['center_x'], y=self.region['center_y'])
+        self.mouse_event_on_neutral_area(event='click', area_id='within_app')
         pyautogui.hotkey('shift', 'f5')
 
         # Waiting for page to load
