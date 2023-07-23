@@ -2522,18 +2522,9 @@ class SmartTrader:
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
-                    elif self.close[0] < self.low_1[0]:
-                        # Price broke last [low]
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
                 elif position['side'] == 'down':
                     if self.rsi[0] > 80:
                         # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                    elif self.close[0] > self.high_1[0]:
-                        # Price broke last [high]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
 
