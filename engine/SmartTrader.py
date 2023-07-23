@@ -2310,13 +2310,13 @@ class SmartTrader:
                 print(f"{tb_positions}\n\n")
 
             if str(self.agent_id).endswith('1'):
-                validation_trigger = 15
+                validation_trigger = 12.5
             elif str(self.agent_id).endswith('2'):
                 validation_trigger = 22.5
             elif str(self.agent_id).endswith('3'):
-                validation_trigger = 30
+                validation_trigger = 32.5
             else:
-                validation_trigger = 37.5
+                validation_trigger = 42.5
 
             # Waiting PB
             msg = "Watching Price Action"
