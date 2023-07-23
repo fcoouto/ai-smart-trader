@@ -1612,14 +1612,14 @@ class SmartTrader:
             self.click_element(element_id='btn_login_confirm', wait_when_done=10)
 
             # Waiting for page to load
-            sleep(7)
+            sleep(10)
 
     def playbook_refresh_page(self):
         self.mouse_event_on_neutral_area(event='click', area_id='within_app')
         pyautogui.hotkey('shift', 'f5')
 
         # Waiting for page to load
-        sleep(7)
+        sleep(10)
 
     def playbook_go_to_url(self, url=None):
         # Cleaning field
@@ -1637,7 +1637,7 @@ class SmartTrader:
         pyautogui.press('enter')
 
         # Waiting for page to load
-        sleep(7)
+        sleep(10)
 
     def playbook_go_to_trading_page(self):
         # Going to trading page
