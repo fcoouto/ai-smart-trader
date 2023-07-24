@@ -144,7 +144,7 @@ class SmartTrader:
         # DEBUG
         if settings.DEBUG_OCR:
             while True:
-                self.execute_playbook('refresh_page')
+                # self.execute_playbook('refresh_page')
 
                 asset = self.read_element(element_id='asset')
                 balance = self.read_element(element_id='balance')
