@@ -1934,7 +1934,7 @@ class SmartTrader:
         zone_id = 'area_bottom_right_conner'
         chart_conner = self.get_zone_region(context_id='tv',
                                             zone_id=zone_id,
-                                            confidence=0.98)
+                                            confidence=0.95)
 
         x_candle_0_center = chart_conner.left - 63
 
