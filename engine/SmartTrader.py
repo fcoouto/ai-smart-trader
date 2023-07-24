@@ -2124,9 +2124,8 @@ class SmartTrader:
             self.cumulative_loss += trade_size
 
             # Calculating [payout_offset_compensation] in order to make sure recovery is made with expected amounts
-            payout_offset_compensation = 2.00 - (self.payout / 100) + 0.02
-            recovery_trade_size = (self.cumulative_loss * payout_offset_compensation /
-                                   settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
+            payout_compensation_size = self.cumulative_loss / (self.payout / 100) * 1.01
+            recovery_trade_size = payout_compensation_size / settings.AMOUNT_TRADES_TO_RECOVER_LOSSES
             self.recovery_trade_size = round(recovery_trade_size, 2)
 
             if self.recovery_trade_size < self.initial_trade_size:
@@ -2157,9 +2156,18 @@ class SmartTrader:
 
             else:
                 # [recovery_mode] is not activated yet
-                min_position_loss = (self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[0] +
-                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[1] +
-                                     self.initial_trade_size * settings.MARTINGALE_MULTIPLIER[2])
+                # Calculating [min_position_loss]
+                min_position_loss = self.initial_trade_size
+
+                # [min_position_loss]: 2nd martingale trade
+                last_trade_size = self.get_martingale_trade_size(i_trade=1,
+                                                                 last_trade_size=self.initial_trade_size)
+                min_position_loss += last_trade_size
+
+                # [min_position_loss]: 3rd martingale trade
+                last_trade_size = self.get_martingale_trade_size(i_trade=1,
+                                                                 last_trade_size=last_trade_size)
+                min_position_loss += last_trade_size
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
@@ -2187,7 +2195,7 @@ class SmartTrader:
         data = {'agent_id': self.agent_id,
                 'last_asset': self.asset,
                 'highest_balance': self.highest_balance,
-                'cumulative_loss': self.cumulative_loss,
+                'cumulative_loss': round(self.cumulative_loss, 2),
                 'recovery_mode': self.recovery_mode}
 
         file_path = self.get_loss_management_file_path()
@@ -2202,6 +2210,14 @@ class SmartTrader:
             optimal_trade_size = self.recovery_trade_size
 
         return round(optimal_trade_size, 2)
+
+    def get_martingale_trade_size(self, i_trade=1, last_trade_size=0.00):
+        # Retrieving the [multiplier] based on [settings.MARTINGALE_STRATEGY]
+        martingale_multiplier = settings.MARTINGALE_STRATEGY[i_trade]
+
+        # Calculating [trade_size] based on current [payout]
+        trade_size = last_trade_size / (self.payout / 100) * martingale_multiplier
+        return trade_size
 
     async def open_position(self, strategy_id, side, trade_size):
         position = {'result': None,
@@ -2539,7 +2555,8 @@ class SmartTrader:
                     if self.recovery_mode:
                         trade_size = self.get_optimal_trade_size()
                     else:
-                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
+                        trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                    last_trade_size=last_trade['trade_size'])
 
                     await self.open_trade(strategy_id=strategy_id,
                                           side=position['side'],
@@ -2661,7 +2678,8 @@ class SmartTrader:
                     if self.recovery_mode:
                         trade_size = self.get_optimal_trade_size()
                     else:
-                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
+                        trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                    last_trade_size=last_trade['trade_size'])
 
                     await self.open_trade(strategy_id=strategy_id,
                                           side=position['side'],
@@ -2769,7 +2787,8 @@ class SmartTrader:
                     if self.recovery_mode:
                         trade_size = self.get_optimal_trade_size()
                     else:
-                        trade_size = last_trade['trade_size'] * settings.MARTINGALE_MULTIPLIER[amount_trades]
+                        trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                    last_trade_size=last_trade['trade_size'])
 
                     await self.open_trade(strategy_id=strategy_id,
                                           side=position['side'],
