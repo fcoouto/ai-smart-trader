@@ -2124,7 +2124,7 @@ class SmartTrader:
             self.cumulative_loss += trade_size
 
             # Calculating [payout_offset_compensation] in order to make sure recovery is made with expected amounts
-            payout_offset_compensation = 2.00 - (self.payout / 100) + 0.01
+            payout_offset_compensation = 2.00 - (self.payout / 100) + 0.02
             recovery_trade_size = (self.cumulative_loss * payout_offset_compensation /
                                    settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
             self.recovery_trade_size = round(recovery_trade_size, 2)
