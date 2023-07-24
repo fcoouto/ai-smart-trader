@@ -2134,7 +2134,7 @@ class SmartTrader:
 
             if self.recovery_mode:
                 # [recovery_mode] is activated
-                stop_loss = self.initial_trade_size * settings.INITIAL_TRADE_AMOUNT_MULTIPLIER_FOR_STOP_LOSS
+                stop_loss = self.highest_balance * settings.STOP_LOSS_PERCENT
 
                 if self.cumulative_loss > stop_loss:
                     # [cumulative_loss] is greater than [stop_loss].
@@ -2204,10 +2204,20 @@ class SmartTrader:
 
     ''' TA & Trading '''
     def get_optimal_trade_size(self):
-        optimal_trade_size = self.initial_trade_size
+        balance_trade_size = self.highest_balance * settings.BALANCE_TRADE_SIZE_PERCENT
 
         if self.recovery_mode:
+            # [recovery_mode] is activated
             optimal_trade_size = self.recovery_trade_size
+
+        elif self.initial_trade_size > balance_trade_size:
+            # [initial_trade_size] is greater than [balance_trade_size]
+            # Which means [highest_balance] is lesser than 400 USD
+            optimal_trade_size = self.initial_trade_size
+
+        else:
+            # [balance_trade_size] is the optimal choice
+            optimal_trade_size = balance_trade_size
 
         return round(optimal_trade_size, 2)
 
