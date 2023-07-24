@@ -417,7 +417,7 @@ class SmartTrader:
                 sleep(1)
 
     def validate_payout(self, context='Validation'):
-        while self.payout < 75:
+        while self.payout < settings.MIN_PAYOUT:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Payout is currently [{self.payout}%]. "
                    f"Maybe it's time to look for another asset? {utils.tmsg.endc}")

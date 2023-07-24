@@ -10,6 +10,7 @@ DEBUG_PERFORMANCE = True
 
 # VALIDATION
 MIN_BALANCE = 100
+MIN_PAYOUT = 70
 #   CHART_DATA_SECONDS is about [ohlc, ema, rsi] values that should be stored in a list.
 #   They must represent the closing of a candle.
 CHART_DATA_MIN_SECONDS = 58
