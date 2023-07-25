@@ -1115,13 +1115,11 @@ class SmartTrader:
             element_ids = ['close', 'ema', 'rsi']
 
         action = None
-        now_seconds = utils.now_seconds()
-        if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
+        now = datetime.utcnow()
+        if now.second >= settings.CHART_DATA_MIN_SECONDS or now.second <= settings.CHART_DATA_MAX_SECONDS:
             action = 'insert'
 
             # Calculating candle's [datetime]
-            now = datetime.utcnow()
-
             if now.second > settings.CHART_DATA_MIN_SECONDS:
                 candle_datetime = now - timedelta(seconds=now.second)
             else:
@@ -1979,7 +1977,12 @@ class SmartTrader:
             # Reverse iteration from candle X to latest candle
             self.playbook_move_to_candle(i_candle=i_candle)
 
-            datetime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+            # Calculating candle's [datetime]
+            now = datetime.utcnow()
+            if now.second > settings.CHART_DATA_MIN_SECONDS:
+                candle_datetime = now - timedelta(seconds=now.second)
+            else:
+                candle_datetime = now - timedelta(minutes=1, seconds=now.second)
 
             self.read_element(element_id='ohlc',
                               insert_fields=ohcl_to_insert,
@@ -1988,7 +1991,7 @@ class SmartTrader:
             self.read_element(element_id='rsi', action=action)
 
             if action == 'insert':
-                self.datetime.insert(0, datetime)
+                self.datetime.insert(0, candle_datetime.strftime("%Y-%m-%d %H:%M:%S"))
             else:
                 # Not updating datetime for now...
                 pass
