@@ -1118,14 +1118,22 @@ class SmartTrader:
         now_seconds = utils.now_seconds()
         if now_seconds >= settings.CHART_DATA_MIN_SECONDS or now_seconds <= settings.CHART_DATA_MAX_SECONDS:
             action = 'insert'
-            self.datetime.insert(0, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+
+            # Calculating candle's [datetime]
+            now = datetime.utcnow()
+
+            if now.second >= 0:
+                candle_start = now - timedelta(minutes=1, seconds=now.second, microseconds=0)
+            else:
+                candle_start = now - timedelta(seconds=now.second, microseconds=0)
+
+            self.datetime.insert(0, candle_start.strftime("%Y-%m-%d %H:%M:%S"))
 
         async with asyncio.TaskGroup() as tg:
             for element_id in element_ids:
                 tasks.append(tg.create_task(self.read_element(element_id=element_id,
                                                               is_async=True,
                                                               action=action)))
-
         for task in tasks:
             result.append(task.result())
 
@@ -2171,24 +2179,6 @@ class SmartTrader:
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
-
-                    # Closing all positions
-                    for strategy_id in self.ongoing_positions:
-                        self.close_position(strategy_id=strategy_id, result='loss')
-
-                    # Taking a break
-                    msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                           f"{utils.tmsg.italic}- Recovery mode is being activated..."
-                           f"\n"
-                           f"\t  - Because of that, I'll take a 15-minute break before continuing.{utils.tmsg.endc}")
-                    tmsg.print(msg=msg, clear=True)
-
-                    # Waiting PB
-                    msg = "Taking a break! (CTRL + C to cancel)"
-                    wait_secs = 900
-                    items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                    for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                        sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
     def loss_management_read_from_file(self):
         data = {}
