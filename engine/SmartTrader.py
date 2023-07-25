@@ -1121,14 +1121,11 @@ class SmartTrader:
 
             # Calculating candle's [datetime]
             now = datetime.utcnow()
-            print(f'now: {now}')
 
-            if now.second > 0:
+            if now.second > settings.CHART_DATA_MIN_SECONDS:
                 candle_datetime = now - timedelta(minutes=1, seconds=now.second)
             else:
                 candle_datetime = now - timedelta(seconds=now.second)
-
-            print(f'candle_datetime: {candle_datetime}')
 
             self.datetime.insert(0, candle_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -1725,7 +1722,7 @@ class SmartTrader:
 
         # Defining RSI
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
-        self.playbok_tv_configure_indicator_rsi(length=3)
+        self.playbok_tv_configure_indicator_rsi(length=2)
 
     def playbook_tv_set_chart_settings(self, candle_opacity=0, scale_lines_color='white'):
         # Opening Chart Settings
@@ -2604,31 +2601,31 @@ class SmartTrader:
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema[0]:
-                    # Price is above [ema]
+                if self.close[0] > self.ema[0] and self.close[1] > self.ema[0]:
+                    # Price has been above [ema]
                     if dst_price_ema < 0.0001618:
-                        # Price is very close to [ema]: Trend continuation
+                        # Price is close to [ema]: Trend continuation
                         if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
                     elif dst_price_ema > 0.00072:
-                        # Price is too far from [ema]: Exaustion
+                        # Price is too far from [ema]: Exhaustion
                         if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
 
-                else:
-                    # Price is bellow [ema]
+                elif self.close[0] < self.ema[0] and self.close[1] < self.ema[0]:
+                    # Price has been bellow [ema]
                     if dst_price_ema < 0.0001618:
-                        # Price is very close to [ema]: Trend continuation
+                        # Price is close to [ema]: Trend continuation
                         if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
                     elif dst_price_ema > 0.00072:
-                        # Price is far from [ema]: Exaustion
+                        # Price is far from [ema]: Exhaustion
                         if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
