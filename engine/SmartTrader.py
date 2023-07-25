@@ -2597,23 +2597,39 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent(v1=self.close[1], v2=self.ema[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema[0] or dst_price_ema < -0.00072:
-                    # Price is above [ema] or far bellow it (0.10%)
-                    if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
-                        position = await self.open_position(strategy_id=strategy_id,
-                                                            side='up',
-                                                            trade_size=trade_size)
+                if self.close[0] > self.ema[0]:
+                    # Price is above [ema]
+                    if dst_price_ema < 0.0001618:
+                        # Price is very close to [ema]: Trend continuation
+                        if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='up',
+                                                                trade_size=trade_size)
+                    elif dst_price_ema > 0.00072:
+                        # Price is too far from [ema]: Exaustion
+                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=trade_size)
 
-                elif self.close[0] < self.ema[0] or dst_price_ema > 0.00072:
-                    # Price is bellow [ema] or far above it (0.10%)
-                    if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
-                        position = await self.open_position(strategy_id=strategy_id,
-                                                            side='down',
-                                                            trade_size=trade_size)
+                else:
+                    # Price is bellow [ema]
+                    if dst_price_ema < 0.0001618:
+                        # Price is very close to [ema]: Trend continuation
+                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=trade_size)
+                    elif dst_price_ema > 0.00072:
+                        # Price is far from [ema]: Exaustion
+                        if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='up',
+                                                                trade_size=trade_size)
         return position
 
     async def strategy_ema_rsi_50(self):
