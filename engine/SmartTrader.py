@@ -1121,13 +1121,16 @@ class SmartTrader:
 
             # Calculating candle's [datetime]
             now = datetime.utcnow()
+            print(f'now: {now}')
 
-            if now.second >= 0:
-                candle_start = now - timedelta(minutes=1, seconds=now.second, microseconds=0)
+            if now.second > 0:
+                candle_datetime = now - timedelta(minutes=1, seconds=now.second)
             else:
-                candle_start = now - timedelta(seconds=now.second, microseconds=0)
+                candle_datetime = now - timedelta(seconds=now.second)
 
-            self.datetime.insert(0, candle_start.strftime("%Y-%m-%d %H:%M:%S"))
+            print(f'candle_datetime: {candle_datetime}')
+
+            self.datetime.insert(0, candle_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
         async with asyncio.TaskGroup() as tg:
             for element_id in element_ids:
