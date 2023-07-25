@@ -2172,6 +2172,24 @@ class SmartTrader:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
 
+                    # Closing all positions
+                    for strategy_id in self.ongoing_positions:
+                        self.close_position(strategy_id=strategy_id, result='loss')
+
+                    # Taking a break
+                    msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                           f"{utils.tmsg.italic}- Recovery mode is being activated..."
+                           f"\n"
+                           f"\t  - Because of that, I'll take a 15-minute break before continuing.{utils.tmsg.endc}")
+                    tmsg.print(msg=msg, clear=True)
+
+                    # Waiting PB
+                    msg = "Taking a break! (CTRL + C to cancel)"
+                    wait_secs = 900
+                    items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                    for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                        sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
     def loss_management_read_from_file(self):
         data = {}
 
