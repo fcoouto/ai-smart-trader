@@ -1123,9 +1123,9 @@ class SmartTrader:
             now = datetime.utcnow()
 
             if now.second > settings.CHART_DATA_MIN_SECONDS:
-                candle_datetime = now - timedelta(minutes=1, seconds=now.second)
-            else:
                 candle_datetime = now - timedelta(seconds=now.second)
+            else:
+                candle_datetime = now - timedelta(minutes=1, seconds=now.second)
 
             self.datetime.insert(0, candle_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
