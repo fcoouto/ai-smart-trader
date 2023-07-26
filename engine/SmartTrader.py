@@ -648,7 +648,7 @@ class SmartTrader:
                                    f"\n\t- For this one, I'll need some human support. :){utils.tmsg.endc}")
                             tmsg.print(context=context, msg=msg, clear=True)
 
-                            msg = f"{utils.tmsg.italic}\n\t- Should I try again? (enter){utils.tmsg.endc}"
+                            msg = f"{utils.tmsg.italic}- Should I try again? (enter){utils.tmsg.endc}"
                             wait_secs = 60
                             items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                             for item in utils.progress_bar(items, prefix=msg, reverse=True):
@@ -2511,6 +2511,14 @@ class SmartTrader:
                     tmsg.print(context=context, clear=True)
                     art.tprint(text=position['result'], font='block')
                     await asyncio.sleep(2)
+
+                    if position['result'] == 'loss' and len(position['trades']) == 3:
+                        # Waiting PB
+                        msg = "Cooling down after big loss (CTRL + C to cancel)"
+                        wait_secs = 1200
+                        items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                        for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                            await asyncio.sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
         return result
 
