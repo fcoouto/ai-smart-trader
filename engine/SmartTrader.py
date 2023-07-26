@@ -2532,7 +2532,7 @@ class SmartTrader:
                         if delta.total_seconds() < 30:
                             # Waiting PB
                             msg = "Cooling down before Recovery Mode (CTRL + C to cancel)"
-                            wait_secs = 2400
+                            wait_secs = 1200
                             items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                                 await asyncio.sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
