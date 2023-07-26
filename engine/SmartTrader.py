@@ -654,6 +654,9 @@ class SmartTrader:
                             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
+                            # Execute playbook
+                            self.execute_playbook(playbook_id='go_to_trading_page')
+
         return zone_region
 
     def get_ss_path(self, zone_id, context_id=None, element_id=None, template=True):
