@@ -546,9 +546,14 @@ class SmartTrader:
 
         if zone_id not in self.broker['zones']:
             # Zone is NOT expected on broker's object
-            zone_region = pyautogui.locateOnScreen(ss_template,
-                                                   region=self.region,
-                                                   confidence=confidence)
+            while zone_region is None:
+                zone_region = pyautogui.locateOnScreen(ss_template,
+                                                       region=self.region,
+                                                       confidence=confidence)
+                tries += 1
+
+                if tries >= settings.MAX_TRIES_LOCATING_ELEMENT:
+                    return zone_region
 
         else:
             # Zone is expected on broker's object
