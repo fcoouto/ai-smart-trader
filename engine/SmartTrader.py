@@ -47,6 +47,7 @@ class SmartTrader:
     trade_size = None
 
     recovery_mode = False
+    recovery_mode_activated_on = None
     cumulative_loss = 0.00
     recovery_trade_size = 0.00
 
@@ -2134,8 +2135,10 @@ class SmartTrader:
                 else:
                     # Resetting [recovery_mode]
                     self.recovery_mode = False
+                    self.recovery_mode_activated_on = None
                     self.cumulative_loss = 0
         elif result == 'draw':
+            # Nothing to do
             pass
         else:
             # System is initializing or it's a new loss
@@ -2165,6 +2168,7 @@ class SmartTrader:
 
                     # Resetting [recovery_mode]
                     self.recovery_mode = False
+                    self.recovery_mode_activated_on = None
                     self.cumulative_loss = 0
 
                     # [loss_management.json] Writing data in a file for future reference
@@ -2190,6 +2194,7 @@ class SmartTrader:
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
+                    self.recovery_mode_activated_on = datetime.utcnow()
 
     def loss_management_read_from_file(self):
         data = {}
@@ -2520,13 +2525,17 @@ class SmartTrader:
                     art.tprint(text=position['result'], font='block')
                     await asyncio.sleep(2)
 
-                    if position['result'] == 'loss' and len(position['trades']) == 3:
-                        # Waiting PB
-                        msg = "Cooling down after big loss (CTRL + C to cancel)"
-                        wait_secs = 1200
-                        items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                        for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                            await asyncio.sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+                    if self.recovery_mode:
+                        # Recovery mode is ativated
+                        delta = datetime.utcnow() - self.recovery_mode_activated_on
+
+                        if delta.total_seconds() < 30:
+                            # Waiting PB
+                            msg = "Cooling down before Recovery Mode (CTRL + C to cancel)"
+                            wait_secs = 2400
+                            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                                await asyncio.sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
         return result
 
@@ -2626,7 +2635,7 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
-                    elif dst_price_ema > 0.00100:
+                    elif dst_price_ema > 0.001200:
                         # Price is too far from [ema]: Exhaustion
                         if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
@@ -2641,7 +2650,7 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
-                    elif dst_price_ema > 0.00100:
+                    elif dst_price_ema > 0.001200:
                         # Price is far from [ema]: Exhaustion
                         if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
