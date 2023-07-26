@@ -552,7 +552,7 @@ class SmartTrader:
                                                        confidence=confidence)
                 tries += 1
 
-                if tries >= settings.MAX_TRIES_LOCATING_ELEMENT:
+                if tries >= 5:
                     return zone_region
 
         else:
