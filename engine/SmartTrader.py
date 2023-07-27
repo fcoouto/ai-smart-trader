@@ -1538,7 +1538,7 @@ class SmartTrader:
                     except FileExistsError:
                         playbook_id_running = None
                         # Give some time for flush by the other instance.
-                        waiting_time = random.randrange(500, 5000) / 1000
+                        waiting_time = random.randrange(1000, 5000) / 1000
                         total_waiting_time += waiting_time
                         sleep(waiting_time)
 
@@ -1608,10 +1608,9 @@ class SmartTrader:
                                  stdin=None,
                                  stdout=None,
                                  stderr=None).pid
-        sleep(10)
 
-        # Changing focus
-        self.mouse_event_on_neutral_area(event='click', area_id='within_app')
+        # Waiting for browser launching
+        sleep(10)
 
     def playbook_log_in(self):
         # Going to [trading_page]
@@ -1819,7 +1818,6 @@ class SmartTrader:
 
         # Exiting Chart Settings
         pyautogui.press('escape')
-        self.mouse_event_on_neutral_area(event='move_to', area_id='bellow_app')
 
     def playbook_tv_add_indicator(self, hint):
         # Opening [btn_chart_indicators] element
@@ -1943,11 +1941,8 @@ class SmartTrader:
         pyautogui.press('space')
 
         # Leaving [super_strike] menu
-        self.mouse_event_on_neutral_area(area_id='screen_center_25')
+        self.mouse_event_on_neutral_area(event='click', area_id='screen_center_25')
         sleep(0.500)
-
-        # Moving focus to [neutral_are]
-        self.mouse_event_on_neutral_area(area_id='within_app')
 
     def playbook_move_to_candle(self, i_candle):
         # Defining [x_last_candle] and [candle_width] based on system (or font used)
@@ -2009,8 +2004,6 @@ class SmartTrader:
             else:
                 # Not updating datetime for now...
                 pass
-
-        self.mouse_event_on_neutral_area(event='click', area_id='within_app')
 
     async def playbook_open_trade(self, side, trade_size):
         self.playbook_set_trade_size(trade_size=trade_size)
@@ -2197,7 +2190,9 @@ class SmartTrader:
                 #                                                  last_trade_size=last_trade_size)
                 # min_position_loss += last_trade_size
 
-                min_position_loss = self.highest_balance * settings.BALANCE_TRADE_SIZE_PERCENT
+                min_position_loss = (self.highest_balance *
+                                    settings.BALANCE_TRADE_SIZE_PERCENT *
+                                    settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
