@@ -553,24 +553,8 @@ class SmartTrader:
                                                        confidence=confidence)
                 tries += 1
 
-                if tries >= settings.MAX_TRIES_LOCATING_ELEMENT:
-                    msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
-                           f"- I couldn't find zone_region for [{zone_id}]. "
-                           f"\n\t- I see you are logged in just fine but things are not quite in place yet."
-                           f"\n"
-                           f"\n\t- This was my {tries}th attempt, but no success. :/"
-                           f"\n\t- For this one, I'll need some human support. :){utils.tmsg.endc}")
-                    tmsg.print(context=context, msg=msg, clear=True)
-
-                    msg = f"{utils.tmsg.italic}- Should I try again? (enter){utils.tmsg.endc}"
-                    wait_secs = 60
-                    items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                    for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                        sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
-                    # Execute playbook
-                    self.reset_chart_data()
-                    self.execute_playbook(playbook_id='go_to_trading_page')
+                if tries >= 2:
+                    return zone_region
 
         else:
             # Zone is expected on broker's object
