@@ -2366,9 +2366,9 @@ class SmartTrader:
                 print(f"{tb_positions}\n\n")
 
             if str(self.agent_id).endswith('1'):
-                validation_trigger = 15
+                validation_trigger = 10
             elif str(self.agent_id).endswith('2'):
-                validation_trigger = 32.5
+                validation_trigger = 30
             else:
                 validation_trigger = 42.5
 
