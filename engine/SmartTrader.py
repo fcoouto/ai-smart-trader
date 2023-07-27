@@ -1723,7 +1723,7 @@ class SmartTrader:
 
         # Defining EMA 72 up
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
-        self.playbok_tv_configure_indicator_ema(length=144)
+        self.playbok_tv_configure_indicator_ema(length=50)
 
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
