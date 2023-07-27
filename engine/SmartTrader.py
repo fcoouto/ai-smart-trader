@@ -2631,7 +2631,7 @@ class SmartTrader:
                     # Price has been above [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
-                        if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
+                        if self.rsi[1] <= 20 and 40 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
@@ -2646,7 +2646,7 @@ class SmartTrader:
                     # Price has been bellow [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
-                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
+                        if self.rsi[1] >= 80 and 60 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
