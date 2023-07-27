@@ -75,7 +75,7 @@ class SmartTrader:
     #                      'strategy_id': 'ema_rsi_8020',
     #                      'side': 'down',
     #                      'result': None,
-    #                      'trades': [{'open_time': 'XXX',
+    #                      'trades': [{'open_time': datetime.utcnow(),
     #                                  'open_price': 0.674804,
     #                                  'trade_size': 1,
     #                                  'result': None}]
@@ -371,6 +371,8 @@ class SmartTrader:
             sleep(1)
 
     def validate_expiry_time(self, context='Validation'):
+        expected_expiry_time = '00:05'
+
         while not self.is_expiry_time_fixed():
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Expiry Time is not set to [fixed] as I would expect."
@@ -393,10 +395,10 @@ class SmartTrader:
             print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
             sleep(1)
 
-        while self.expiry_time != '01:00':
+        while self.expiry_time != expected_expiry_time:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Expiry Time is currently set to [{self.expiry_time}], "
-                   f"but I'm more expirienced with [01:00]."
+                   f"but I'm more expirienced with [{expected_expiry_time}]."
                    f"\n"
                    f"\n\t  - Let me try to update it.{utils.tmsg.endc}")
 
@@ -410,10 +412,10 @@ class SmartTrader:
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Executing playbook
-            self.execute_playbook(playbook_id='set_expiry_time', expiry_time='01:00')
+            self.execute_playbook(playbook_id='set_expiry_time', expiry_time=expected_expiry_time)
             self.read_element(element_id='expiry_time')
 
-            if self.expiry_time == '01:00':
+            if self.expiry_time == expected_expiry_time:
                 print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
                 sleep(1)
 
@@ -1904,11 +1906,13 @@ class SmartTrader:
             self.click_element(element_id='trade_size', clicks=2)
             pyautogui.typewrite("%.2f" % trade_size)
 
-    def playbook_set_expiry_time(self, expiry_time='01:00'):
+    def playbook_set_expiry_time(self, expiry_time='05:00'):
         self.click_element(element_id='btn_expiry_time', wait_when_done=0.500)
 
         if expiry_time == '01:00':
             self.click_element(element_id='dp_item_1min')
+        elif expiry_time == '05:00':
+            self.click_element(element_id='dp_item_5min')
         else:
             # Option is not supported. Closing dropdown menu
             pyautogui.press('escape')
@@ -2301,9 +2305,12 @@ class SmartTrader:
             self.read_element(element_id='close', is_async=True, action='update')
         )
 
-        now = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        now = datetime.utcnow()
+        expiration_time = now + timedelta(minutes=int(self.expiry_time[:2]),
+                                          seconds=int(self.expiry_time[-2:]))
         trade = {
             'open_time': now,
+            'expiration_time': expiration_time,
             'trade_size': trade_size,
             'open_price': self.close[0],
             'result': None
@@ -2368,7 +2375,7 @@ class SmartTrader:
             if str(self.agent_id).endswith('1'):
                 validation_trigger = 10
             elif str(self.agent_id).endswith('2'):
-                validation_trigger = 30
+                validation_trigger = 25
             else:
                 validation_trigger = 42.5
 
@@ -2528,17 +2535,17 @@ class SmartTrader:
                     art.tprint(text=position['result'], font='block')
                     await asyncio.sleep(2)
 
-                    if self.recovery_mode_activated_on:
-                        # Recovery mode is ativated
-                        delta = datetime.utcnow() - self.recovery_mode_activated_on
-
-                        if delta.total_seconds() < 30:
-                            # Waiting PB
-                            msg = "Cooling down before Recovery Mode (CTRL + C to cancel)"
-                            wait_secs = 1200
-                            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                            for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                                await asyncio.sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+                    # if self.recovery_mode_activated_on:
+                    #     # Recovery mode is ativated
+                    #     delta = datetime.utcnow() - self.recovery_mode_activated_on
+                    #
+                    #     if delta.total_seconds() < 30:
+                    #         # Waiting PB
+                    #         msg = "Cooling down before Recovery Mode (CTRL + C to cancel)"
+                    #         wait_secs = 1200
+                    #         items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                    #         for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    #             await asyncio.sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
         return result
 
@@ -2553,74 +2560,82 @@ class SmartTrader:
         if position:
             # Has position open
             result = None
+            first_trade = position['trades'][0]
             last_trade = position['trades'][-1]
             amount_trades = len(position['trades'])
 
-            if position['side'] == 'up':
-                # up
-                if self.close[0] > last_trade['open_price']:
-                    result = 'gain'
-                elif self.close[0] < last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
+            # Defining [expiration_countdown]
+            now = datetime.utcnow()
+            expiration_countdown = first_trade['expiration_time'] - now
 
-            else:
-                # down
-                if self.close[0] < last_trade['open_price']:
-                    result = 'gain'
-                elif self.close[0] > last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
+            if expiration_countdown < timedelta(seconds=10):
+                # Trade is about to expire
 
-            if result == 'gain':
-                position = await self.close_position(strategy_id=strategy_id,
-                                                     result=result)
-            elif result == 'loss':
-                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
-                    # No more tries
-                    position = await self.close_position(strategy_id=strategy_id,
-                                                         result=result)
-
-                elif position['side'] == 'up':
-                    if self.rsi[0] < 20:
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                elif position['side'] == 'down':
-                    if self.rsi[0] > 80:
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                if not position['result']:
-                    # Martingale
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-
-                    if self.recovery_mode:
-                        trade_size = self.get_optimal_trade_size()
+                if position['side'] == 'up':
+                    # up
+                    if self.close[0] > last_trade['open_price']:
+                        result = 'gain'
+                    elif self.close[0] < last_trade['open_price']:
+                        result = 'loss'
                     else:
-                        trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
-                                                                    last_trade_size=last_trade['trade_size'])
+                        result = 'draw'
 
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=trade_size)
-            else:
-                # Draw
-                if amount_trades == 1:
-                    # Draw on first trade
-                    # Abort it
+                else:
+                    # down
+                    if self.close[0] < last_trade['open_price']:
+                        result = 'gain'
+                    elif self.close[0] > last_trade['open_price']:
+                        result = 'loss'
+                    else:
+                        result = 'draw'
+
+                if result == 'gain':
                     position = await self.close_position(strategy_id=strategy_id,
                                                          result=result)
+                elif result == 'loss':
+                    if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                        # No more tries
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                    elif position['side'] == 'up':
+                        if self.rsi[0] < 20:
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+                    elif position['side'] == 'down':
+                        if self.rsi[0] > 80:
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+
+                    if not position['result']:
+                        # Martingale
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+
+                        if self.recovery_mode:
+                            trade_size = self.get_optimal_trade_size()
+                        else:
+                            trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                        last_trade_size=last_trade['trade_size'])
+
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=trade_size)
                 else:
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=last_trade['trade_size'])
+                    # Draw
+                    if amount_trades == 1:
+                        # Draw on first trade
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+                    else:
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=last_trade['trade_size'])
 
         else:
             # No open position
@@ -2638,7 +2653,7 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
-                    elif dst_price_ema > 0.001200:
+                    elif dst_price_ema > 0.0007200:
                         # Price is too far from [ema]: Exhaustion
                         if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
@@ -2653,7 +2668,7 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
-                    elif dst_price_ema > 0.001200:
+                    elif dst_price_ema > 0.0007200:
                         # Price is far from [ema]: Exhaustion
                         if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
