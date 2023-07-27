@@ -398,7 +398,7 @@ class SmartTrader:
         while self.expiry_time != expected_expiry_time:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Expiry Time is currently set to [{self.expiry_time}], "
-                   f"but I'm more expirienced with [{expected_expiry_time}]."
+                   f"but I'm more experienced with [{expected_expiry_time}]."
                    f"\n"
                    f"\n\t  - Let me try to update it.{utils.tmsg.endc}")
 
@@ -2184,18 +2184,20 @@ class SmartTrader:
 
             else:
                 # [recovery_mode] is not activated yet
-                # Calculating [min_position_loss]
-                min_position_loss = self.initial_trade_size
+                # # Calculating [min_position_loss]
+                # min_position_loss = self.initial_trade_size
+                #
+                # # [min_position_loss]: 2nd martingale trade
+                # last_trade_size = self.get_martingale_trade_size(i_trade=1,
+                #                                                  last_trade_size=self.initial_trade_size)
+                # min_position_loss += last_trade_size
+                #
+                # # [min_position_loss]: 3rd martingale trade
+                # last_trade_size = self.get_martingale_trade_size(i_trade=1,
+                #                                                  last_trade_size=last_trade_size)
+                # min_position_loss += last_trade_size
 
-                # [min_position_loss]: 2nd martingale trade
-                last_trade_size = self.get_martingale_trade_size(i_trade=1,
-                                                                 last_trade_size=self.initial_trade_size)
-                min_position_loss += last_trade_size
-
-                # [min_position_loss]: 3rd martingale trade
-                last_trade_size = self.get_martingale_trade_size(i_trade=1,
-                                                                 last_trade_size=last_trade_size)
-                min_position_loss += last_trade_size
+                min_position_loss = self.highest_balance * settings.BALANCE_TRADE_SIZE_PERCENT
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
