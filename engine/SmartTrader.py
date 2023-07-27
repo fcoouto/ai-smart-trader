@@ -209,7 +209,7 @@ class SmartTrader:
         now = datetime.utcnow()
 
         trading_start = 6
-        trading_end = 22
+        trading_end = 21
 
         while now.hour < trading_start or now.hour > trading_end:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
