@@ -2214,7 +2214,6 @@ class SmartTrader:
             # Updating Loss Management PB
             updatable_fields = ['highest_balance',
                                 'recovery_mode',
-                                'recovery_mode_activated_on',
                                 'cumulative_loss']
             msg = "Managing previous losses"
             for k, v in utils.progress_bar(data.items(), prefix=msg):
@@ -2228,8 +2227,7 @@ class SmartTrader:
                 'last_asset': self.asset,
                 'highest_balance': self.highest_balance,
                 'cumulative_loss': round(self.cumulative_loss, 2),
-                'recovery_mode': self.recovery_mode,
-                'recovery_mode_activated_on': self.recovery_mode_activated_on.strftime("%Y-%m-%d %H:%M:%S")}
+                'recovery_mode': self.recovery_mode}
 
         file_path = self.get_loss_management_file_path()
         with open(file=file_path, mode='w') as f:
