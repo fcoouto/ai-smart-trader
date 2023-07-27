@@ -2194,8 +2194,8 @@ class SmartTrader:
                 min_position_loss += last_trade_size
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
-                    self.recovery_mode_activated_on = datetime.utcnow()
                     self.recovery_mode = True
+                    self.recovery_mode_activated_on = datetime.utcnow()
 
     def loss_management_read_from_file(self):
         data = {}
@@ -2208,6 +2208,7 @@ class SmartTrader:
             # Updating Loss Management PB
             updatable_fields = ['highest_balance',
                                 'recovery_mode',
+                                'recovery_mode_activated_on',
                                 'cumulative_loss']
             msg = "Managing previous losses"
             for k, v in utils.progress_bar(data.items(), prefix=msg):
@@ -2221,7 +2222,8 @@ class SmartTrader:
                 'last_asset': self.asset,
                 'highest_balance': self.highest_balance,
                 'cumulative_loss': round(self.cumulative_loss, 2),
-                'recovery_mode': self.recovery_mode}
+                'recovery_mode': self.recovery_mode,
+                'recovery_mode_activated_on': self.recovery_mode_activated_on}
 
         file_path = self.get_loss_management_file_path()
         with open(file=file_path, mode='w') as f:
@@ -2526,7 +2528,7 @@ class SmartTrader:
                     art.tprint(text=position['result'], font='block')
                     await asyncio.sleep(2)
 
-                    if self.recovery_mode:
+                    if self.recovery_mode_activated_on:
                         # Recovery mode is ativated
                         delta = datetime.utcnow() - self.recovery_mode_activated_on
 
