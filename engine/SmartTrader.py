@@ -553,8 +553,24 @@ class SmartTrader:
                                                        confidence=confidence)
                 tries += 1
 
-                if tries >= 5:
-                    return zone_region
+                if tries >= settings.MAX_TRIES_LOCATING_ELEMENT:
+                    msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
+                           f"- I couldn't find zone_region for [{zone_id}]. "
+                           f"\n\t- I see you are logged in just fine but things are not quite in place yet."
+                           f"\n"
+                           f"\n\t- This was my {tries}th attempt, but no success. :/"
+                           f"\n\t- For this one, I'll need some human support. :){utils.tmsg.endc}")
+                    tmsg.print(context=context, msg=msg, clear=True)
+
+                    msg = f"{utils.tmsg.italic}- Should I try again? (enter){utils.tmsg.endc}"
+                    wait_secs = 60
+                    items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                    for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                        sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                    # Execute playbook
+                    self.reset_chart_data()
+                    self.execute_playbook(playbook_id='go_to_trading_page')
 
         else:
             # Zone is expected on broker's object
@@ -661,6 +677,7 @@ class SmartTrader:
                                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                             # Execute playbook
+                            self.reset_chart_data()
                             self.execute_playbook(playbook_id='go_to_trading_page')
 
         return zone_region
@@ -2193,8 +2210,8 @@ class SmartTrader:
                 min_position_loss += last_trade_size
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
-                    self.recovery_mode = True
                     self.recovery_mode_activated_on = datetime.utcnow()
+                    self.recovery_mode = True
 
     def loss_management_read_from_file(self):
         data = {}
