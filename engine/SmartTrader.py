@@ -2229,7 +2229,7 @@ class SmartTrader:
                 'highest_balance': self.highest_balance,
                 'cumulative_loss': round(self.cumulative_loss, 2),
                 'recovery_mode': self.recovery_mode,
-                'recovery_mode_activated_on': self.recovery_mode_activated_on}
+                'recovery_mode_activated_on': self.recovery_mode_activated_on.strftime("%Y-%m-%d %H:%M:%S")}
 
         file_path = self.get_loss_management_file_path()
         with open(file=file_path, mode='w') as f:
