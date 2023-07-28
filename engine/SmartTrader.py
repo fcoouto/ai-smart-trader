@@ -2757,8 +2757,8 @@ class SmartTrader:
 
                 if self.close[0] > self.ema[0] and self.close[1] > self.ema[0]:
                     # Price has been above [ema]
-                    if dst_price_ema > 0.0001000:
-                        # Price is too far from [ema]: Exhaustion
+                    if dst_price_ema > 0.001000:
+                        # Price is too far from [ema]: Contrarian
                         if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
@@ -2767,7 +2767,7 @@ class SmartTrader:
                 elif self.close[0] < self.ema[0] and self.close[1] < self.ema[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema > 0.001000:
-                        # Price is far from [ema]: Exhaustion
+                        # Price is far from [ema]: Contrarian
                         if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
