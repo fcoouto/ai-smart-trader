@@ -2649,7 +2649,7 @@ class SmartTrader:
                                                                 side='up',
                                                                 trade_size=trade_size)
 
-                elif min(self.close[:5]) < self.ema[0]:
+                elif max(self.close[:5]) < self.ema[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
@@ -2764,7 +2764,7 @@ class SmartTrader:
                                                                 side='down',
                                                                 trade_size=trade_size)
 
-                elif min(self.close[:5]) < self.ema[0]:
+                elif max(self.close[:5]) < self.ema[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema > 0.001000:
                         # Price is far from [ema]: Contrarian
