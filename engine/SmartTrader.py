@@ -2640,7 +2640,7 @@ class SmartTrader:
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema[0] and self.close[1] > self.ema[0]:
+                if min(self.close[:5]) > self.ema[0]:
                     # Price has been above [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
@@ -2649,7 +2649,7 @@ class SmartTrader:
                                                                 side='up',
                                                                 trade_size=trade_size)
 
-                elif self.close[0] < self.ema[0] and self.close[1] < self.ema[0]:
+                elif min(self.close[:5]) < self.ema[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
@@ -2755,7 +2755,7 @@ class SmartTrader:
 
                 trade_size = self.get_optimal_trade_size()
 
-                if self.close[0] > self.ema[0] and self.close[1] > self.ema[0]:
+                if min(self.close[:5]) > self.ema[0]:
                     # Price has been above [ema]
                     if dst_price_ema > 0.001000:
                         # Price is too far from [ema]: Contrarian
@@ -2764,7 +2764,7 @@ class SmartTrader:
                                                                 side='down',
                                                                 trade_size=trade_size)
 
-                elif self.close[0] < self.ema[0] and self.close[1] < self.ema[0]:
+                elif min(self.close[:5]) < self.ema[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema > 0.001000:
                         # Price is far from [ema]: Contrarian
