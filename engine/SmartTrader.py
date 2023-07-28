@@ -1639,7 +1639,7 @@ class SmartTrader:
         pyautogui.hotkey('shift', 'f5')
 
         # Waiting for page to load
-        sleep(10)
+        sleep(8)
 
     def playbook_go_to_url(self, url=None):
         # Cleaning field
@@ -1657,7 +1657,7 @@ class SmartTrader:
         pyautogui.press('enter')
 
         # Waiting for page to load
-        sleep(10)
+        sleep(8)
 
     def playbook_go_to_trading_page(self):
         # Going to trading page
