@@ -2370,7 +2370,7 @@ class SmartTrader:
             if str(self.agent_id).endswith('1'):
                 validation_trigger = 10
             elif str(self.agent_id).endswith('2'):
-                validation_trigger = 25
+                validation_trigger = 27.5
             else:
                 validation_trigger = 42.5
 
