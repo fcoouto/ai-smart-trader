@@ -62,6 +62,8 @@ def progress_bar(iterable, prefix='', suffix='', decimals=1, length=20, fill='â–
         fill        - Optional  : bar fill character (Str)
         printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
     """
+
+    # bugfix: "or 1" to make sure we don't get [error division by zero]
     total = len(iterable) or 1
 
     # Progress Bar Printing Function
