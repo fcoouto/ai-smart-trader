@@ -2648,12 +2648,6 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
-                    elif dst_price_ema > 0.0008400:
-                        # Price is too far from [ema]: Exhaustion
-                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
 
                 elif self.close[0] < self.ema[0] and self.close[1] < self.ema[0]:
                     # Price has been bellow [ema]
@@ -2663,7 +2657,116 @@ class SmartTrader:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
-                    elif dst_price_ema > 0.0008400:
+        return position
+
+    async def strategy_ema_rsi_8020_contrarian(self):
+        strategy_id = 'ema_rsi_8020_contrarian'
+
+        if strategy_id in self.ongoing_positions:
+            position = self.ongoing_positions[strategy_id]
+        else:
+            position = None
+
+        if position:
+            # Has position open
+            result = None
+            first_trade = position['trades'][0]
+            last_trade = position['trades'][-1]
+            amount_trades = len(position['trades'])
+
+            # Defining [expiration_countdown]
+            now = datetime.utcnow()
+            expiration_countdown = first_trade['expiration_time'] - now
+
+            if expiration_countdown < timedelta(seconds=10):
+                # Trade is about to expire
+
+                if position['side'] == 'up':
+                    # up
+                    if self.close[0] > last_trade['open_price']:
+                        result = 'gain'
+                    elif self.close[0] < last_trade['open_price']:
+                        result = 'loss'
+                    else:
+                        result = 'draw'
+
+                else:
+                    # down
+                    if self.close[0] < last_trade['open_price']:
+                        result = 'gain'
+                    elif self.close[0] > last_trade['open_price']:
+                        result = 'loss'
+                    else:
+                        result = 'draw'
+
+                if result == 'gain':
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+                elif result == 'loss':
+                    if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                        # No more tries
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                    elif position['side'] == 'up':
+                        if self.rsi[0] < 20:
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+                    elif position['side'] == 'down':
+                        if self.rsi[0] > 80:
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+
+                    if not position['result']:
+                        # Martingale
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+
+                        if self.recovery_mode:
+                            trade_size = self.get_optimal_trade_size()
+                        else:
+                            trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                        last_trade_size=last_trade['trade_size'])
+
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=trade_size)
+                else:
+                    # Draw
+                    if amount_trades == 1:
+                        # Draw on first trade
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+                    else:
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=last_trade['trade_size'])
+
+        else:
+            # No open position
+
+            if len(self.datetime) >= 3:
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema[0])
+
+                trade_size = self.get_optimal_trade_size()
+
+                if self.close[0] > self.ema[0] and self.close[1] > self.ema[0]:
+                    # Price has been above [ema]
+                    if dst_price_ema > 0.0008400:
+                        # Price is too far from [ema]: Exhaustion
+                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
+                            position = await self.open_position(strategy_id=strategy_id,
+                                                                side='down',
+                                                                trade_size=trade_size)
+
+                elif self.close[0] < self.ema[0] and self.close[1] < self.ema[0]:
+                    # Price has been bellow [ema]
+                    if dst_price_ema > 0.0008400:
                         # Price is far from [ema]: Exhaustion
                         if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
