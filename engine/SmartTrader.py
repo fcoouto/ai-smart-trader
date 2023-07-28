@@ -428,7 +428,7 @@ class SmartTrader:
 
             # Waiting PB
             msg = "Waiting for payout get higher again (CTRL + C to cancel)"
-            wait_secs = 60
+            wait_secs = 300
             items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
@@ -1905,7 +1905,7 @@ class SmartTrader:
             pyautogui.typewrite("%.2f" % trade_size)
 
     def playbook_set_expiry_time(self, expiry_time='05:00'):
-        self.click_element(element_id='btn_expiry_time', wait_when_done=0.500)
+        self.click_element(element_id='btn_expiry_time', wait_when_done=0.700)
 
         if expiry_time == '01:00':
             self.click_element(element_id='dp_item_1min')

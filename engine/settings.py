@@ -19,6 +19,26 @@ CHART_DATA_READING_LIMIT_SECONDS = 5
 REFRESH_PAGE_EVERY_MINUTES = 15
 
 # TRADING
+TRADING_STRATEGIES = {
+    'ema_rsi_8020': {
+        'expiry_time': '05:00',
+        'balance_trade_size_percent': 0.01,
+        'max_trades_per_position': 1,
+        'martingale_strategy': None,
+        'amount_trades_to_recover_losses': 2,
+        'stop_loss': 0.15
+
+    },
+    'ema_rsi_8020_contrarian': {
+        'expiry_time': '05:00',
+        'balance_trade_size_percent': 0.01,
+        'max_trades_per_position': 1,
+        'martingale_strategy': None,
+        'amount_trades_to_recover_losses': 2,
+        'stop_loss': 0.15
+
+    },
+}
 TRADING_STRATEGIES = ['ema_rsi_8020', 'ema_rsi_8020_contrarian']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
