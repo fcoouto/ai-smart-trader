@@ -62,7 +62,7 @@ def progress_bar(iterable, prefix='', suffix='', decimals=1, length=20, fill='â–
         fill        - Optional  : bar fill character (Str)
         printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
     """
-    total = len(iterable)
+    total = len(iterable) or 1
 
     # Progress Bar Printing Function
     def print_progress_bar(iteration):
