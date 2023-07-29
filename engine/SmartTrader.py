@@ -370,7 +370,7 @@ class SmartTrader:
             sleep(1)
 
     def validate_expiry_time(self, context='Validation'):
-        expected_expiry_time = '05:00'
+        expected_expiry_time = '01:00'
 
         while not self.is_expiry_time_fixed():
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
