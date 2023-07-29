@@ -1730,7 +1730,7 @@ class SmartTrader:
 
         # Defining RSI
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
-        self.playbok_tv_configure_indicator_rsi(length=3)
+        self.playbok_tv_configure_indicator_rsi(length=2)
 
     def playbook_tv_set_chart_settings(self, candle_opacity=0, scale_lines_color='white'):
         # Opening Chart Settings
@@ -2528,8 +2528,8 @@ class SmartTrader:
 
         return result
 
-    async def strategy_ema_rsi_7525(self):
-        strategy_id = 'ema_rsi_7525'
+    async def strategy_ema_rsi_8020(self):
+        strategy_id = 'ema_rsi_8020'
 
         if strategy_id in self.ongoing_positions:
             position = self.ongoing_positions[strategy_id]
@@ -2578,12 +2578,12 @@ class SmartTrader:
                                                              result=result)
 
                     elif position['side'] == 'up':
-                        if self.rsi[0] < 25:
+                        if self.rsi[0] < 20:
                             # Abort it
                             position = await self.close_position(strategy_id=strategy_id,
                                                                  result=result)
                     elif position['side'] == 'down':
-                        if self.rsi[0] > 75:
+                        if self.rsi[0] > 80:
                             # Abort it
                             position = await self.close_position(strategy_id=strategy_id,
                                                                  result=result)
@@ -2628,7 +2628,7 @@ class SmartTrader:
                     # Price has been above [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
-                        if self.rsi[1] <= 25 and 30 <= self.rsi[0] <= 75:
+                        if self.rsi[1] <= 20 and 40 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
@@ -2637,7 +2637,7 @@ class SmartTrader:
                     # Price has been bellow [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
-                        if self.rsi[1] >= 75 and 70 >= self.rsi[0] >= 25:
+                        if self.rsi[1] >= 80 and 60 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)

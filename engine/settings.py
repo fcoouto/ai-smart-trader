@@ -39,7 +39,7 @@ TRADING_STRATEGIES = {
 
     },
 }
-TRADING_STRATEGIES = ['ema_rsi_7525']
+TRADING_STRATEGIES = ['ema_rsi_8020_contrarian']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
