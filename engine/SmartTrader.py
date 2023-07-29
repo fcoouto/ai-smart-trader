@@ -47,7 +47,6 @@ class SmartTrader:
     trade_size = None
 
     recovery_mode = False
-    recovery_mode_activated_on = None
     cumulative_loss = 0.00
     recovery_trade_size = 0.00
 
@@ -1724,14 +1723,14 @@ class SmartTrader:
 
         # Defining EMA 72 up
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
-        self.playbok_tv_configure_indicator_ema(length=72)
+        self.playbok_tv_configure_indicator_ema(length=50)
 
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
 
         # Defining RSI
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
-        self.playbok_tv_configure_indicator_rsi(length=2)
+        self.playbok_tv_configure_indicator_rsi(length=3)
 
     def playbook_tv_set_chart_settings(self, candle_opacity=0, scale_lines_color='white'):
         # Opening Chart Settings
@@ -2133,7 +2132,6 @@ class SmartTrader:
                 else:
                     # Resetting [recovery_mode]
                     self.recovery_mode = False
-                    self.recovery_mode_activated_on = None
                     self.cumulative_loss = 0
         elif result == 'draw':
             # Nothing to do
@@ -2166,7 +2164,6 @@ class SmartTrader:
 
                     # Resetting [recovery_mode]
                     self.recovery_mode = False
-                    self.recovery_mode_activated_on = None
                     self.cumulative_loss = 0
 
                     # [loss_management.json] Writing data in a file for future reference
@@ -2196,7 +2193,6 @@ class SmartTrader:
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
-                    self.recovery_mode_activated_on = datetime.utcnow()
 
     def loss_management_read_from_file(self):
         data = {}
@@ -2530,18 +2526,6 @@ class SmartTrader:
                     art.tprint(text=position['result'], font='block')
                     await asyncio.sleep(2)
 
-                    # if self.recovery_mode_activated_on:
-                    #     # Recovery mode is ativated
-                    #     delta = datetime.utcnow() - self.recovery_mode_activated_on
-                    #
-                    #     if delta.total_seconds() < 30:
-                    #         # Waiting PB
-                    #         msg = "Cooling down before Recovery Mode (CTRL + C to cancel)"
-                    #         wait_secs = 1200
-                    #         items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                    #         for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                    #             await asyncio.sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
         return result
 
     async def strategy_ema_rsi_8020(self):
@@ -2644,7 +2628,7 @@ class SmartTrader:
                     # Price has been above [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
-                        if self.rsi[1] <= 20 and 40 <= self.rsi[0] <= 80:
+                        if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
@@ -2653,7 +2637,7 @@ class SmartTrader:
                     # Price has been bellow [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
-                        if self.rsi[1] >= 80 and 60 >= self.rsi[0] >= 20:
+                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
