@@ -611,7 +611,8 @@ class SmartTrader:
                             sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                         # Executing playbook
-                        if zone_id == 'chart_top':
+                        if zone_id == 'chart_top' and len(self.datetime) == 0:
+                            # Browser just got launched
                             self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
                         else:
                             self.execute_playbook(playbook_id='go_to_trading_page')
@@ -2188,8 +2189,8 @@ class SmartTrader:
                 # min_position_loss += last_trade_size
 
                 min_position_loss = (self.highest_balance *
-                                    settings.BALANCE_TRADE_SIZE_PERCENT *
-                                    settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
+                                     settings.BALANCE_TRADE_SIZE_PERCENT *
+                                     settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
