@@ -19,34 +19,14 @@ CHART_DATA_READING_LIMIT_SECONDS = 5
 REFRESH_PAGE_EVERY_MINUTES = 15
 
 # TRADING
-TRADING_STRATEGIES = {
-    'ema_rsi_8020': {
-        'expiry_time': '05:00',
-        'balance_trade_size_percent': 0.01,
-        'max_trades_per_position': 1,
-        'martingale_strategy': None,
-        'amount_trades_to_recover_losses': 2,
-        'stop_loss': 0.15
-
-    },
-    'ema_rsi_8020_contrarian': {
-        'expiry_time': '05:00',
-        'balance_trade_size_percent': 0.01,
-        'max_trades_per_position': 1,
-        'martingale_strategy': None,
-        'amount_trades_to_recover_losses': 2,
-        'stop_loss': 0.15
-
-    },
-}
 TRADING_STRATEGIES = ['ema_rsi_8020', 'ema_rsi_8020_contrarian']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
-BALANCE_TRADE_SIZE_PERCENT = 0.01
+BALANCE_TRADE_SIZE_PERCENT = 0.0025
 MAX_TRADES_PER_POSITION = 3
 MARTINGALE_STRATEGY = [1, 2, 1.10]
-AMOUNT_TRADES_TO_RECOVER_LOSSES = 5
+AMOUNT_TRADES_TO_RECOVER_LOSSES = 4
 STOP_LOSS_PERCENT = 0.15
 
 # EXTRAS
@@ -54,6 +34,8 @@ PROGRESS_BAR_WAITING_TIME = 3
 PROGRESS_BAR_INTERVAL_TIME = 0.250
 
 # CORE
+LOSS_MANAGEMENT_SERVER_ADDRESS = 'http://192.168.2.10:8080'
+LOSS_MANAGEMENT_SERVER_API_KEY = 'ycjOzOP5loHPPIbfMW6tA7AreqAlq0z4yqxStxk2B8Iwges581rK5V8kIgg4'
 LOCATE_CONFIDENCE = 0.85
 MAX_TRIES_READING_ELEMENT = 60
 MAX_TRIES_LOCATING_ELEMENT = 5

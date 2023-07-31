@@ -3,10 +3,11 @@ import platform
 
 from cryptography.fernet import Fernet
 
+import requests
 import json
 import random
 import re
-from time import gmtime, strftime, sleep
+from time import sleep
 from datetime import datetime, timedelta
 
 import asyncio
@@ -101,10 +102,6 @@ class SmartTrader:
         # Setting zones
         self.set_zones()
 
-        # Updating [loss_management] data
-        self.loss_management_read_from_file()
-        self.loss_management_update()
-
     def set_awareness(self, k, v):
         if k in self.awareness:
             self.awareness[k] = v
@@ -182,6 +179,9 @@ class SmartTrader:
         # Validating [balance]
         self.validate_balance(context=context)
 
+        # Updating [loss_management] data
+        self.loss_management_sync()
+
         # Validating [trade_size]
         self.validate_trade_size(context=context)
 
@@ -194,11 +194,18 @@ class SmartTrader:
         # Validating [super_strike]
         self.validate_super_strike(context=context)
 
-    def get_trading_url(self):
-        url = None
-
+    def get_asset_as_url(self):
+        asset = None
         if self.broker['id'] == 'iqcent':
             asset = str(self.asset).replace('/', '-').replace(' ', '_')
+
+        return asset
+
+    def get_trading_url(self):
+        url = None
+        asset = self.get_asset_as_url()
+
+        if self.broker['id'] == 'iqcent':
             url = self.broker['url']
             url += asset
 
@@ -2114,11 +2121,38 @@ class SmartTrader:
 
     ''' Loss Management '''
 
+    async def loss_management_sync(self):
+        asset = self.get_asset_as_url()
+
+        request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/sync/'
+        headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
+        data = {
+            'highest_balance': self.highest_balance,
+            'payout': self.payout
+        }
+
+        r = requests.post(url=request_url,
+                          headers=headers,
+                          data=data)
+        r = json.loads(r.text)
+
+        for k, v in r.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+
+        if r['is_stop_loss_triggered']:
+            msg = (f"{tmsg.danger}[ERROR]{tmsg.endc} "
+                   f"{tmsg.italic}- This asset has reached Stop Loss."
+                   f"\n\t  - The cumulative loss is [{self.cumulative_loss} USD]."
+                   f"\n\n"
+                   f"\t  - I think I'm done for today.{tmsg.endc}")
+            tmsg.input(msg=msg, clear=True)
+
     def get_loss_management_file_path(self):
         return os.path.join(settings.PATH_DATA,
                             f'loss_management_{self.agent_id}.json')
 
-    def loss_management_update(self, result=None, trade_size=0.00):
+    def _loss_management_update(self, result=None, trade_size=0.00):
         # On [initialization], both [result] and [trade_size] can be None/0.00,
         # so [recovery_mode] and [recovery_trade_size] can be calculated based on [settings] and [cumulative_loss]
 
@@ -2174,26 +2208,35 @@ class SmartTrader:
                     raise RuntimeError(f'Stop Loss has been activated.')
 
             else:
-                # [recovery_mode] is not activated yet
-                # # Calculating [min_position_loss]
-                # min_position_loss = self.initial_trade_size
-                #
-                # # [min_position_loss]: 2nd martingale trade
-                # last_trade_size = self.get_martingale_trade_size(i_trade=1,
-                #                                                  last_trade_size=self.initial_trade_size)
-                # min_position_loss += last_trade_size
-                #
-                # # [min_position_loss]: 3rd martingale trade
-                # last_trade_size = self.get_martingale_trade_size(i_trade=1,
-                #                                                  last_trade_size=last_trade_size)
-                # min_position_loss += last_trade_size
-
                 min_position_loss = (self.highest_balance *
                                      settings.BALANCE_TRADE_SIZE_PERCENT *
                                      settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
                 if self.cumulative_loss >= min_position_loss:
                     # It's time to activate [recovery_mode]
                     self.recovery_mode = True
+
+    def loss_management_report_trade(self, strategy_id, result=None, trade_size=0.00):
+        asset = self.get_asset_as_url()
+
+        request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/report_trade/'
+        headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
+        data = {
+            'strategy_id': strategy_id,
+            'initial_trade_size': self.initial_trade_size,
+            'trade_size': trade_size,
+            'trade_result': result,
+            'balance_trade_size_percent': settings.BALANCE_TRADE_SIZE_PERCENT
+        }
+
+        r = requests.post(url=request_url,
+                          headers=headers,
+                          data=data)
+        r = json.loads(r.text)
+
+        # Updating [loss_management] data
+        for k, v in r.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
 
     def loss_management_read_from_file(self):
         data = {}
@@ -2317,7 +2360,7 @@ class SmartTrader:
         trade['result'] = result
 
         # [Loss Management] Updating [cumulative_loss]
-        self.loss_management_update(result=result, trade_size=trade['trade_size'])
+        self.loss_management_report_trade(result=result, trade_size=trade['trade_size'])
 
         # [Loss Management] Write to file on [close_position]...
         # One less action to do in-between trades (when martingale is needed)
