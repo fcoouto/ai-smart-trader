@@ -2121,7 +2121,7 @@ class SmartTrader:
 
     ''' Loss Management '''
 
-    async def loss_management_sync(self):
+    def loss_management_sync(self):
         asset = self.get_asset_as_url()
 
         request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/sync/'
