@@ -2360,7 +2360,9 @@ class SmartTrader:
         trade['result'] = result
 
         # [Loss Management] Updating [cumulative_loss]
-        self.loss_management_report_trade(result=result, trade_size=trade['trade_size'])
+        self.loss_management_report_trade(strategy_id=strategy_id,
+                                          result=result, 
+                                          trade_size=trade['trade_size'])
 
         # [Loss Management] Write to file on [close_position]...
         # One less action to do in-between trades (when martingale is needed)
