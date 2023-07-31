@@ -2230,7 +2230,7 @@ class SmartTrader:
 
         r = requests.post(url=request_url,
                           headers=headers,
-                          data=data)
+                          json=data)
         r = json.loads(r.text)
 
         # Updating [loss_management] data
