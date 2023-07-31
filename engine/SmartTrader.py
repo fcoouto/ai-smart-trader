@@ -179,17 +179,17 @@ class SmartTrader:
         # Validating [balance]
         self.validate_balance(context=context)
 
-        # Updating [loss_management] data
-        self.loss_management_sync()
-
-        # Validating [trade_size]
-        self.validate_trade_size(context=context)
-
         # Validating [expiry_time]
         self.validate_expiry_time(context=context)
 
         # Validating [payout]
         self.validate_payout(context=context)
+
+        # Updating [loss_management] data
+        self.loss_management_sync()
+
+        # Validating [trade_size]
+        self.validate_trade_size(context=context)
 
         # Validating [super_strike]
         self.validate_super_strike(context=context)
