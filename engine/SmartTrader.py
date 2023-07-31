@@ -2134,6 +2134,7 @@ class SmartTrader:
         r = requests.post(url=request_url,
                           headers=headers,
                           data=data)
+        print(r.text)
         r = json.loads(r.text)
 
         for k, v in r.items():
