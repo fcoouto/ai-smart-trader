@@ -64,7 +64,11 @@ class SmartTrader:
     change = []
     change_pct = []
 
-    ema = []
+    strike_close_ema_9 = []
+
+    ema_50 = []
+    ema_21 = []
+    ema_9 = []
     rsi = []
 
     position_history = []
@@ -74,6 +78,7 @@ class SmartTrader:
     #     'ema_rsi_8020': {'asset': 'ABC',
     #                      'strategy_id': 'ema_rsi_8020',
     #                      'side': 'down',
+    #                      'stop_loss: None,
     #                      'result': None,
     #                      'trades': [{'open_time': datetime.utcnow(),
     #                                  'open_price': 0.674804,
@@ -743,7 +748,7 @@ class SmartTrader:
                     top = height * 0.38
                     right = width
                     bottom = height * 0.47
-                elif element_id == 'ema':
+                elif element_id == 'ema_50':
                     if platform.system().lower() == 'linux':
                         left = width * 0.51
                     else:
@@ -751,6 +756,22 @@ class SmartTrader:
                     top = height * 0.46
                     right = width * 0.75
                     bottom = height * 0.55
+                elif element_id == 'ema_21':
+                    if platform.system().lower() == 'linux':
+                        left = width * 0.51
+                    else:
+                        left = width * 0.45
+                    top = height * 0.55
+                    right = width * 0.75
+                    bottom = height * 0.64
+                elif element_id == 'ema_9':
+                    if platform.system().lower() == 'linux':
+                        left = width * 0.49
+                    else:
+                        left = width * 0.43
+                    top = height * 0.64
+                    right = width * 0.75
+                    bottom = height * 0.73
                 elif element_id == 'clock':
                     left = width * 0.26
                     top = height * 0.095
@@ -1131,7 +1152,7 @@ class SmartTrader:
 
         if element_ids is None:
             # Default chart elements
-            element_ids = ['close', 'ema', 'rsi']
+            element_ids = ['close', 'ema_50', 'ema_21', 'ema_9', 'rsi']
 
         action = None
         now = datetime.utcnow()
@@ -1165,7 +1186,7 @@ class SmartTrader:
         self.change.clear()
         self.change_pct.clear()
 
-        self.ema.clear()
+        self.ema_50.clear()
         self.rsi.clear()
 
     async def read_close(self, action=None):
@@ -1196,13 +1217,19 @@ class SmartTrader:
         if ohlc[:2] == '0.':
             # If first [O] wasn't recognized, add it
             ohlc = '0' + ohlc
+
+        # Defining [ohlc]
         ohlc = ohlc.split(' ')
         o = utils.str_to_float(ohlc[0][1:])
         h = utils.str_to_float(ohlc[1][1:])
         l = utils.str_to_float(ohlc[2][1:])
         c = utils.str_to_float(ohlc[3][1:])
-        # change = utils.str_to_float("%.6f" % (c - o))
-        # change_pct = utils.distance_percent(v1=c, v2=o)
+
+        # Defining [change]
+        if len(self.close) > 0:
+            change = utils.str_to_float("%.6f" % (c - self.close[0]))
+        else:
+            change = None
 
         if update_fields:
             for field in update_fields:
@@ -1214,6 +1241,8 @@ class SmartTrader:
                     self.low_1[0] = l
                 elif field.lower() == 'close':
                     self.close[0] = c
+                    if change:
+                        self.change[0] = change
 
         if insert_fields:
             for field in insert_fields:
@@ -1225,20 +1254,50 @@ class SmartTrader:
                     self.low_1.insert(0, l)
                 elif field.lower() == 'close':
                     self.close.insert(0, c)
+                    if change:
+                        self.change.insert(0, change)
 
         return [o, h, l, c]
 
-    async def read_ema(self, action=None):
-        element_id = 'ema'
+    async def read_ema_50(self, action=None):
+        element_id = 'ema_50'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
         if action == 'update':
-            self.ema[0] = value
+            self.ema_50[0] = value
         elif action == 'insert':
-            self.ema.insert(0, value)
+            self.ema_50.insert(0, value)
+
+        return value
+
+    async def read_ema_21(self, action=None):
+        element_id = 'ema_21'
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
+        value = utils.str_to_float(value)
+
+        if action == 'update':
+            self.ema_21[0] = value
+        elif action == 'insert':
+            self.ema_21.insert(0, value)
+
+        return value
+
+    async def read_ema_9(self, action=None):
+        element_id = 'ema_9'
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
+        value = utils.str_to_float(value)
+
+        if action == 'update':
+            self.ema_9[0] = value
+        elif action == 'insert':
+            self.ema_9.insert(0, value)
 
         return value
 
@@ -1334,12 +1393,24 @@ class SmartTrader:
             elif element_id == 'btn_chart_indicators':
                 element['x'] = zone_region.left + 420
                 element['y'] = zone_region.top + 90
-            elif element_id == 'btn_ema_settings':
+            elif element_id == 'btn_indicator_1_settings':
+                if platform.system().lower() == 'linux':
+                    element['x'] = zone_region.left + 220
+                else:
+                    element['x'] = zone_region.left + 205
+                element['y'] = zone_region.top + 132
+            elif element_id == 'btn_indicator_2_settings':
                 if platform.system().lower() == 'linux':
                     element['x'] = zone_region.left + 230
                 else:
                     element['x'] = zone_region.left + 215
-                element['y'] = zone_region.top + 135
+                element['y'] = zone_region.top + 157
+            elif element_id == 'btn_indicator_3_settings':
+                if platform.system().lower() == 'linux':
+                    element['x'] = zone_region.left + 230
+                else:
+                    element['x'] = zone_region.left + 215
+                element['y'] = zone_region.top + 182
             elif element_id == 'btn_rsi_settings':
                 if platform.system().lower() == 'linux':
                     element['x'] = zone_region.left + 190
@@ -1729,9 +1800,17 @@ class SmartTrader:
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
 
-        # Defining EMA 72 up
+        # Defining EMA 50
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
-        self.playbok_tv_configure_indicator_ema(length=50)
+        self.playbok_tv_configure_indicator_ema(i_indicator=1, length=50)
+
+        # Defining EMA 21
+        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
+        self.playbok_tv_configure_indicator_ema(i_indicator=2, length=21)
+
+        # Defining EMA 9
+        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
+        self.playbok_tv_configure_indicator_ema(i_indicator=3, length=9)
 
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
@@ -1837,9 +1916,9 @@ class SmartTrader:
         pyautogui.press('escape')
         pyautogui.press('escape')
 
-    def playbok_tv_configure_indicator_ema(self, length, color='white', opacity=0, precision=5):
+    def playbok_tv_configure_indicator_ema(self, i_indicator, length, color='white', opacity=0, precision=5):
         # Opening Settings
-        self.click_element(element_id='btn_ema_settings', wait_when_done=0.300)
+        self.click_element(element_id=f'btn_indicator_{i_indicator}_settings', wait_when_done=0.300)
 
         # [tab1]
         self.click_element(element_id='navitem_ema_settings_tab1', wait_when_done=0.300)
@@ -2003,7 +2082,9 @@ class SmartTrader:
             self.read_element(element_id='ohlc',
                               insert_fields=ohcl_to_insert,
                               update_fields=ohcl_to_update),
-            self.read_element(element_id='ema', action=action),
+            self.read_element(element_id='ema_50', action=action),
+            self.read_element(element_id='ema_21', action=action),
+            self.read_element(element_id='ema_9', action=action),
             self.read_element(element_id='rsi', action=action)
 
             if action == 'insert':
@@ -2089,7 +2170,9 @@ class SmartTrader:
                             f'{asset}_runtime.{today}.csv')
         data = f'{self.datetime[0]},' \
                f'{self.close[0]},' \
-               f'{self.ema[0]},' \
+               f'{self.ema_50[0]},' \
+               f'{self.ema_21[0]},'\
+               f'{self.ema_9[0]},' \
                f'{self.rsi[0]}'
 
         if not os.path.exists(file):
@@ -2107,7 +2190,9 @@ class SmartTrader:
                             f'{asset}_corrected.{today}.csv')
         data = f'{self.datetime[1]},' \
                f'{self.close[1]},' \
-               f'{self.ema[1]},' \
+               f'{self.ema_50[1]},' \
+               f'{self.ema_21[1]},'\
+               f'{self.ema_9[1]},' \
                f'{self.rsi[1]}'
 
         if not os.path.exists(file):
@@ -2131,9 +2216,14 @@ class SmartTrader:
             'payout': self.payout
         }
 
-        r = requests.post(url=request_url,
-                          headers=headers,
-                          json=data)
+        try:
+            r = requests.post(url=request_url,
+                              headers=headers,
+                              json=data)
+        except requests.exceptions.Timeout:
+            r = requests.post(url=request_url,
+                              headers=headers,
+                              json=data)
         r = json.loads(r.text)
 
         for k, v in r.items():
@@ -2228,9 +2318,14 @@ class SmartTrader:
             'balance_trade_size_percent': settings.BALANCE_TRADE_SIZE_PERCENT
         }
 
-        r = requests.post(url=request_url,
-                          headers=headers,
-                          json=data)
+        try:
+            r = requests.post(url=request_url,
+                              headers=headers,
+                              json=data)
+        except requests.exceptions.Timeout:
+            r = requests.post(url=request_url,
+                              headers=headers,
+                              json=data)
         r = json.loads(r.text)
 
         # Updating [loss_management] data
@@ -2295,11 +2390,12 @@ class SmartTrader:
         trade_size = last_trade_size / (self.payout / 100) * martingale_multiplier
         return trade_size
 
-    async def open_position(self, strategy_id, side, trade_size):
+    async def open_position(self, strategy_id, side, trade_size, stop_loss=None):
         position = {'result': None,
                     'asset': self.asset,
                     'strategy_id': strategy_id,
                     'side': side,
+                    'stop_loss': stop_loss,
                     'trades': []}
 
         self.ongoing_positions[strategy_id] = position
@@ -2541,6 +2637,9 @@ class SmartTrader:
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
 
+        # Retrieving optimal [trade_size]
+        trade_size = self.get_optimal_trade_size()
+
         # Executing tasks
         tasks = []
         async with asyncio.TaskGroup() as tg:
@@ -2548,7 +2647,7 @@ class SmartTrader:
                 f_strategy = f"strategy_{strategy}"
 
                 if hasattr(self, f_strategy) and callable(strategy := getattr(self, f_strategy)):
-                    tasks.append(tg.create_task(strategy()))
+                    tasks.append(tg.create_task(strategy(trade_size=trade_size)))
                 else:
                     # Strategy not found
                     msg = (f"{utils.tmsg.danger}[ERROR]{utils.tmsg.endc} "
@@ -2559,7 +2658,10 @@ class SmartTrader:
                     raise RuntimeError(f'Strategy [{strategy}] not found.')
 
         # Reading [ema]
-        await self.read_element(element_id='ema', is_async=True, action='insert')
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(self.read_element(element_id='ema_50', is_async=True, action='insert'))
+            tg.create_task(self.read_element(element_id='ema_21', is_async=True, action='insert'))
+            tg.create_task(self.read_element(element_id='ema_9', is_async=True, action='insert'))
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
@@ -2666,11 +2768,11 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_50[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if min(self.close[:5]) > self.ema[0]:
+                if min(self.close[:5]) > self.ema_50[0]:
                     # Price has been above [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
@@ -2679,7 +2781,7 @@ class SmartTrader:
                                                                 side='up',
                                                                 trade_size=trade_size)
 
-                elif max(self.close[:5]) < self.ema[0]:
+                elif max(self.close[:5]) < self.ema_50[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
@@ -2781,22 +2883,22 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_50[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if min(self.close[:5]) > self.ema[0]:
+                if min(self.close[:5]) > self.ema_50[0]:
                     # Price has been above [ema]
-                    if dst_price_ema > 0.001000:
+                    if dst_price_ema > 0.001200:
                         # Price is too far from [ema]: Contrarian
                         if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='down',
                                                                 trade_size=trade_size)
 
-                elif max(self.close[:5]) < self.ema[0]:
+                elif max(self.close[:5]) < self.ema_50[0]:
                     # Price has been bellow [ema]
-                    if dst_price_ema > 0.001000:
+                    if dst_price_ema > 0.001200:
                         # Price is far from [ema]: Contrarian
                         if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
@@ -2804,8 +2906,148 @@ class SmartTrader:
                                                                 trade_size=trade_size)
         return position
 
-    async def strategy_ema_rsi_50(self):
-        strategy_id = 'ema_rsi_50'
+    async def strategy_ema_9_1(self, trade_size):
+        strategy_id = 'ema_9_1'
+
+        if strategy_id in self.ongoing_positions:
+            position = self.ongoing_positions[strategy_id]
+        else:
+            position = None
+
+        if position:
+            # Has position open
+            result = None
+            last_trade = position['trades'][-1]
+            amount_trades = len(position['trades'])
+
+            if position['side'] == 'up':
+                # up
+                if self.close[0] > last_trade['open_price']:
+                    result = 'gain'
+                elif self.close[0] < last_trade['open_price']:
+                    result = 'loss'
+                else:
+                    result = 'draw'
+
+                # Defining [stop_loss]
+                if amount_trades == 1:
+                    position['stop_loss'] = self.low_1[0]
+
+            else:
+                # down
+                if self.close[0] < last_trade['open_price']:
+                    result = 'gain'
+                elif self.close[0] > last_trade['open_price']:
+                    result = 'loss'
+                else:
+                    result = 'draw'
+
+                # Defining [stop_loss]
+                if amount_trades == 1:
+                    position['stop_loss'] = self.high_1[0]
+
+            # Checking [result]
+            if result == 'gain':
+                position = await self.close_position(strategy_id=strategy_id,
+                                                     result=result)
+            elif result == 'loss':
+                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                    # No more tries
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+
+                elif position['side'] == 'up':
+                    if self.close[0] < position['stop_loss']:
+                        # [close] reached [stop_loss]
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                elif position['side'] == 'down':
+                    if self.close[0] > position['stop_loss']:
+                        # [close] reached [stop_loss]
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                if not position['result']:
+                    # Martingale
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+
+                    if self.recovery_mode:
+                        trade_size = self.get_optimal_trade_size()
+                    else:
+                        trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                    last_trade_size=last_trade['trade_size'])
+
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=trade_size)
+            else:
+                # Draw
+                if amount_trades == 1:
+                    # Draw on first trade
+                    # Abort it
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+                else:
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=last_trade['trade_size'])
+
+        if position is None or position['result']:
+            # No open position
+            i_candle = 1
+            min_candles = 7
+            crossing_up = crossing_down = is_setup_confirmed = None
+
+            if len(self.datetime) >= min_candles + i_candle:
+                # We got enough candles
+                if self.close[1] < self.ema_9[0] < self.close[0]:
+                    crossing_up = True
+                elif self.close[1] > self.ema_9[0] > self.close[0]:
+                    crossing_down = True
+
+                if crossing_up:
+                    # Price is crossing [ema_9] up
+                    for i in range(i_candle, min_candles):
+                        if self.close[i] < self.ema_9[i - 1]:
+                            if i == min_candles - 1:
+                                # [close] has been bellow [ema_9] for a while
+                                is_setup_confirmed = True
+                        else:
+                            # Aborting
+                            break
+
+                elif crossing_down:
+                    # Price is crossing [ema_9] down
+                    for i in range(i_candle, min_candles):
+                        if self.close[i] > self.ema_9[i - 1]:
+                            if i == min_candles - 1:
+                                # [close] has been above [ema_9] for a while
+                                is_setup_confirmed = True
+                        else:
+                            # Aborting
+                            break
+
+                if is_setup_confirmed:
+                    # Setup has been confirmed
+                    if crossing_up:
+                        side = 'up'
+                    else:
+                        side = 'down'
+
+                    # Opening position
+                    position = await self.open_position(strategy_id=strategy_id,
+                                                        side=side,
+                                                        trade_size=trade_size)
+        return position
+
+    async def strategy_ema_9_2_3(self, trade_size):
+        strategy_id = 'ema_9_2_3'
 
         if strategy_id in self.ongoing_positions:
             position = self.ongoing_positions[strategy_id]
@@ -2847,32 +3089,16 @@ class SmartTrader:
                                                          result=result)
 
                 elif position['side'] == 'up':
-                    if self.rsi[0] < 28:
+                    if self.close[0] < position['stop_loss']:
+                        # [close] reached [stop_loss]
                         # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                    elif self.close[1] > self.ema[0] > self.close[0]:
-                        # [close] crossed [ema] up
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                    elif self.close[0] < self.low_1[0]:
-                        # Price broke last [low]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
 
                 elif position['side'] == 'down':
-                    if self.rsi[0] > 72:
+                    if self.close[0] > position['stop_loss']:
+                        # [close] reached [stop_loss]
                         # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                    elif self.close[1] < self.ema[0] < self.close[0]:
-                        # [close] crossed [ema] down
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                    elif self.close[0] > self.high_1[0]:
-                        # Price broke last [high]
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
 
@@ -2906,50 +3132,73 @@ class SmartTrader:
 
         if position is None or position['result']:
             # No open position
-            if len(self.datetime) >= 3:
-                rsi_bullish_from = 39
-                rsi_bullish_min = 51
-                rsi_bullish_max = 80
-                rsi_bearish_from = 61
-                rsi_bearish_min = 49
-                rsi_bearish_max = 20
+            i_candle = 1
+            min_candles = 3
+            side = stop_loss = is_setup_confirmed = None
 
-                trade_size = self.get_optimal_trade_size()
+            # Add [ema_50] as ref?
 
-                if (self.close[2] > self.ema[0] and
-                        self.close[1] > self.ema[0] and
-                        self.close[0] > self.ema[0]):
-                    # Price is consolidated above [ema]
-                    if self.rsi[1] <= rsi_bullish_from and rsi_bullish_min <= self.rsi[0] <= rsi_bullish_max:
-                        # Trend Following
-                        position = await self.open_position(strategy_id=strategy_id,
-                                                            side='up',
-                                                            trade_size=trade_size)
+            if len(self.datetime) >= min_candles + i_candle:
+                # We got enough candles
 
-                elif (self.close[2] < self.ema[0] and
-                      self.close[1] < self.ema[0] and
-                      self.close[0] < self.ema[0]):
-                    # Price is consolidated bellow [ema]
+                if self.close[0] > self.ema_9[0]:
+                    # Price is above [ema_9]
+                    side = 'up'
 
-                    if self.rsi[1] >= rsi_bearish_from and rsi_bearish_min >= self.rsi[0] >= rsi_bearish_max:
-                        # Trend Following
-                        position = await self.open_position(strategy_id=strategy_id,
-                                                            side='down',
-                                                            trade_size=trade_size)
+                    if self.close[0] > self.high_1[0]:
+                        # Price closed higher than last candle's high
+
+                        if min(self.change[:3]) < 0 :
+                            # At least 1 red candle found
+                            # measure distance from the lowest candle here?
+
+                            for i in range(i_candle, min_candles + 1):
+                                if self.close[i] > self.ema_9[i - 1]:
+                                    if i == min_candles - 1:
+                                        # [close] has been above [ema_9] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = self.low_1[0]
+                                else:
+                                    # Aborting
+                                    break
+
+                elif self.close[0] < self.ema_9[0]:
+                    # Price is bellow [ema_9]
+                    side = 'down'
+
+                    if self.close[0] < self.low_1[0]:
+                        # Price closed lower than last candle's low
+
+                        if max(self.change[:3]) > 0 :
+                            # At least 1 green candle found
+                            # measure distance from the highest candle here?
+
+                            for i in range(i_candle, min_candles + 1):
+                                if self.close[i] < self.ema_9[i - 1]:
+                                    if i == min_candles - 1:
+                                        # [close] has been bellow [ema_9] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = self.high_1[0]
+                                else:
+                                    # Aborting
+                                    break
+
+                if is_setup_confirmed:
+                    # Setup has been confirmed
+                    position = await self.open_position(strategy_id=strategy_id,
+                                                        side=side,
+                                                        trade_size=trade_size,
+                                                        stop_loss=stop_loss)
+
         return position
 
-    async def strategy_contrarian(self):
-        strategy_id = 'contrarian'
+    async def strategy_ema_9_4(self, trade_size):
+        strategy_id = 'ema_9_4'
 
         if strategy_id in self.ongoing_positions:
             position = self.ongoing_positions[strategy_id]
         else:
             position = None
-
-        print(f'close: {self.close[:3]}')
-        print(f'high_1: {self.high_1[:3]}')
-        print(f'low_1: {self.low_1[:3]}')
-        print(f'rsi: {self.rsi[:3]}')
 
         if position:
             # Has position open
@@ -2985,6 +3234,20 @@ class SmartTrader:
                     position = await self.close_position(strategy_id=strategy_id,
                                                          result=result)
 
+                elif position['side'] == 'up':
+                    if self.close[0] < position['stop_loss']:
+                        # [close] reached [stop_loss]
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                elif position['side'] == 'down':
+                    if self.close[0] > position['stop_loss']:
+                        # [close] reached [stop_loss]
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
                 if not position['result']:
                     # Martingale
                     await self.close_trade(strategy_id=strategy_id,
@@ -2999,28 +3262,66 @@ class SmartTrader:
                     await self.open_trade(strategy_id=strategy_id,
                                           side=position['side'],
                                           trade_size=trade_size)
-
             else:
                 # Draw
-                # No more tries
-                position = await self.close_position(strategy_id=strategy_id,
-                                                     result=result)
+                if amount_trades == 1:
+                    # Draw on first trade
+                    # Abort it
+                    position = await self.close_position(strategy_id=strategy_id,
+                                                         result=result)
+                else:
+                    await self.close_trade(strategy_id=strategy_id,
+                                           result=result)
+                    await self.open_trade(strategy_id=strategy_id,
+                                          side=position['side'],
+                                          trade_size=last_trade['trade_size'])
 
         if position is None or position['result']:
             # No open position
-            if len(self.datetime) >= 3:
-                trade_size = self.get_optimal_trade_size()
+            i_candle = 2
+            min_candles = 4
+            side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
-                if ((self.rsi[2] > 18 and self.rsi[1] > 18 > self.rsi[0]) or
-                        (self.rsi[2] > 5 and self.rsi[1] > 5 > self.rsi[0])):
-                    # Price crossing down 18 or 6
+            # Add [ema_50] as ref?
+
+            if len(self.datetime) >= min_candles + i_candle:
+                # We got enough candles
+
+                if self.close[1] < self.ema_9[0] < self.close[0]:
+                    crossing_up = True
+                elif self.close[1] > self.ema_9[0] > self.close[0]:
+                    crossing_down = True
+
+                if crossing_up:
+                    side = 'up'
+
+                    for i in range(i_candle, min_candles + 1):
+                        if self.close[i] > self.ema_9[i - 1]:
+                            if i == min_candles - 1:
+                                # [close] has been above [ema_9] for a while
+                                is_setup_confirmed = True
+                                stop_loss = self.low_1[0]
+                        else:
+                            # Aborting
+                            break
+
+                elif crossing_down:
+                    side = 'down'
+
+                    for i in range(1, min_candles + 1):
+                        if self.close[i] < self.ema_9[i - 1]:
+                            if i == min_candles - 1:
+                                # [close] has been bellow [ema_9] for a while
+                                is_setup_confirmed = True
+                                stop_loss = self.high_1[0]
+                        else:
+                            # Aborting
+                            break
+
+                if is_setup_confirmed:
+                    # Setup has been confirmed
                     position = await self.open_position(strategy_id=strategy_id,
-                                                        side='up',
-                                                        trade_size=trade_size)
-                elif ((self.rsi[2] < 82 and self.rsi[1] < 82 < self.rsi[0]) or
-                        (self.rsi[2] < 95 and self.rsi[1] < 95 < self.rsi[0])):
-                    # Price crossing up 82 or 94
-                    position = await self.open_position(strategy_id=strategy_id,
-                                                        side='down',
-                                                        trade_size=trade_size)
+                                                        side=side,
+                                                        trade_size=trade_size,
+                                                        stop_loss=stop_loss)
         return position

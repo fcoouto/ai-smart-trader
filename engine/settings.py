@@ -19,7 +19,7 @@ CHART_DATA_READING_LIMIT_SECONDS = 5
 REFRESH_PAGE_EVERY_MINUTES = 15
 
 # TRADING
-TRADING_STRATEGIES = ['ema_rsi_8020', 'ema_rsi_8020_contrarian']
+TRADING_STRATEGIES = ['ema_9_1', 'ema_9_2_3', 'ema_9_4']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
@@ -81,7 +81,9 @@ CORE_DATA = {
     'asset': 'string',
     'balance': 'currency',
     'clock': 'time',
-    'ema': 'float',
+    'ema_50': 'float',
+    'ema_21': 'float',
+    'ema_9': 'float',
     'expiry_time': 'time',
     'ohlc': 'string_ohlc',
     'payout': 'percentage',
@@ -126,7 +128,7 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.70,
                 'is_mandatory': True,
-                'elements': ['ohlc', 'ema', 'clock'],
+                'elements': ['ohlc', 'ema_50', 'ema_21', 'ema_9', 'clock'],
             },
             'chart_bottom': {
                 'id': 'chart_bottom',
@@ -280,7 +282,17 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
-            'btn_ema_settings': {
+            'btn_indicator_1_settings': {
+                'zone': 'chart_top',
+                'x': None,
+                'y': None
+            },
+            'btn_indicator_2_settings': {
+                'zone': 'chart_top',
+                'x': None,
+                'y': None
+            },
+            'btn_indicator_3_settings': {
                 'zone': 'chart_top',
                 'x': None,
                 'y': None
