@@ -1812,9 +1812,6 @@ class SmartTrader:
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
         self.playbok_tv_configure_indicator_ema(i_indicator=3, length=9)
 
-        # Clicking on Neutral Area
-        self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
-
         # Defining RSI
         self.playbook_tv_add_indicator(hint='Relative Strength Index')
         self.playbok_tv_configure_indicator_rsi(length=2)
@@ -1944,6 +1941,9 @@ class SmartTrader:
 
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
+
+        # Clicking on Neutral Area
+        self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
 
     def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=0):
         # Opening Settings
