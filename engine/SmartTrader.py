@@ -1800,16 +1800,14 @@ class SmartTrader:
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
 
-        # Defining EMA 50
+        # Adding EMAs
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
+        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
+        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
+
+        # Defining EMAs
         self.playbok_tv_configure_indicator_ema(i_indicator=1, length=50)
-
-        # Defining EMA 21
-        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
         self.playbok_tv_configure_indicator_ema(i_indicator=2, length=21)
-
-        # Defining EMA 9
-        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
         self.playbok_tv_configure_indicator_ema(i_indicator=3, length=9)
 
         # Defining RSI
@@ -1913,6 +1911,9 @@ class SmartTrader:
         pyautogui.press('escape')
         pyautogui.press('escape')
 
+        # Clicking on Neutral Area
+        self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
+
     def playbok_tv_configure_indicator_ema(self, i_indicator, length, color='white', opacity=0, precision=5):
         # Opening Settings
         self.click_element(element_id=f'btn_indicator_{i_indicator}_settings', wait_when_done=0.300)
@@ -1941,9 +1942,6 @@ class SmartTrader:
 
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
-
-        # Clicking on Neutral Area
-        self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
 
     def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=0):
         # Opening Settings
