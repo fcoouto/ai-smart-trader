@@ -220,7 +220,7 @@ class SmartTrader:
         now = datetime.utcnow()
 
         trading_start = 6
-        trading_end = 21
+        trading_end = 20
 
         while now.hour < trading_start or now.hour > trading_end:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
@@ -448,12 +448,13 @@ class SmartTrader:
             self.read_element(element_id='payout')
 
     def validate_super_strike(self, context='Validation'):
-        if not self.is_super_strike_activated():
-            # [super_strike] hasn't been activated yet
+        if 'OTC' in self.asset:
+            if not self.is_super_strike_activated():
+                # [super_strike] hasn't been activated yet
 
-            if self.is_super_strike_available():
-                # It's available to be activated
-                self.execute_playbook(playbook_id='activate_super_strike')
+                if self.is_super_strike_available():
+                    # It's available to be activated
+                    self.execute_playbook(playbook_id='activate_super_strike')
 
     def is_reading_taking_too_long(self, element_id, duration):
         context = 'Validation'
