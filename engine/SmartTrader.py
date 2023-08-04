@@ -3016,40 +3016,48 @@ class SmartTrader:
             # No open position
             i_candle = 1
             min_candles = 7
-            crossing_up = crossing_down = is_setup_confirmed = None
+            crossed_up = crossed_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
-                if self.close[1] < self.ema_9[0] < self.close[0]:
-                    crossing_up = True
-                elif self.close[1] > self.ema_9[0] > self.close[0]:
-                    crossing_down = True
+                if self.close[2] < self.ema_9[1] < self.close[1]:
+                    crossed_up = True
+                elif self.close[2] > self.ema_9[1] > self.close[1]:
+                    crossed_down = True
 
-                if crossing_up:
-                    # Price is crossing [ema_9] up
-                    for i in range(i_candle, min_candles):
-                        if self.close[i] < self.ema_9[i - 1]:
-                            if i == min_candles - 1:
-                                # [close] has been bellow [ema_9] for a while
-                                is_setup_confirmed = True
-                        else:
-                            # Aborting
-                            break
+                if crossed_up:
+                    # Price  crosssed [ema_9] up
 
-                elif crossing_down:
-                    # Price is crossing [ema_9] down
-                    for i in range(i_candle, min_candles):
-                        if self.close[i] > self.ema_9[i - 1]:
-                            if i == min_candles - 1:
-                                # [close] has been above [ema_9] for a while
-                                is_setup_confirmed = True
-                        else:
-                            # Aborting
-                            break
+                    if self.close[0] > self.high_1[0]:
+                        # Price broke last candle's high
+
+                        for i in range(i_candle, min_candles):
+                            if self.close[i] < self.ema_9[i - 1]:
+                                if i == min_candles - 1:
+                                    # [close] has been bellow [ema_9] for a while
+                                    is_setup_confirmed = True
+                            else:
+                                # Aborting
+                                break
+
+                elif crossed_down:
+                    # Price crosssed [ema_9] down
+
+                    if self.close[0] < self.low_1[0]:
+                        # Price broke last candle's low
+
+                        for i in range(i_candle, min_candles):
+                            if self.close[i] > self.ema_9[i - 1]:
+                                if i == min_candles - 1:
+                                    # [close] has been above [ema_9] for a while
+                                    is_setup_confirmed = True
+                            else:
+                                # Aborting
+                                break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
-                    if crossing_up:
+                    if crossed_up:
                         side = 'up'
                     else:
                         side = 'down'
