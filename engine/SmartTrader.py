@@ -1197,10 +1197,20 @@ class SmartTrader:
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
+        # Defining [change]
+        if len(self.close) > 0:
+            change = utils.str_to_float("%.6f" % (value - self.close[0]))
+        else:
+            change = None
+
         if action == 'update':
             self.close[0] = value
+            if change:
+                self.change[0] = change
         elif action == 'insert':
             self.close.insert(0, value)
+            if change:
+                self.change.insert(0, change)
 
         return value
 
@@ -3148,7 +3158,7 @@ class SmartTrader:
                     if self.close[0] > self.high_1[0]:
                         # Price closed higher than last candle's high
 
-                        if min(self.change[:3]) < 0 :
+                        if min(self.change[:3]) < 0:
                             # At least 1 red candle found
                             # measure distance from the lowest candle here?
 
