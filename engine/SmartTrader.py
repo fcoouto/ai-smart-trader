@@ -2165,7 +2165,7 @@ class SmartTrader:
             # Not enough data yet
             return None
 
-        headers = 'datetime,close,ema,rsi'
+        headers = 'datetime,close,ema_50,ema_21,ema_9,rsi'
 
         asset = re.sub("[^A-z]", "", self.asset)
         today = datetime.utcnow().date()
