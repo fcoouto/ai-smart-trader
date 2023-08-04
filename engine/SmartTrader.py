@@ -199,7 +199,7 @@ class SmartTrader:
         # Validating [super_strike]
         self.validate_super_strike(context=context)
 
-    def get_asset_as_url(self):
+    def get_asset_for_url_path(self):
         asset = None
         if self.broker['id'] == 'iqcent':
             asset = str(self.asset).replace('/', '-').replace(' ', '_')
@@ -208,7 +208,7 @@ class SmartTrader:
 
     def get_trading_url(self):
         url = None
-        asset = self.get_asset_as_url()
+        asset = self.get_asset_for_url_path()
 
         if self.broker['id'] == 'iqcent':
             url = self.broker['url']
@@ -220,7 +220,8 @@ class SmartTrader:
         now = datetime.utcnow()
 
         trading_start = 6
-        trading_end = 20
+        trading_end = 19
+        trading_end = 22
 
         while now.hour < trading_start or now.hour > trading_end:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
@@ -2158,73 +2159,39 @@ class SmartTrader:
 
         return df
 
-    def write_chart_data(self):
-        # Writing [chart_data] into a CSV file
+    def send_chart_data(self):
         if len(self.datetime) < 2:
             # Not enough data yet
             return None
 
-        headers = 'datetime,open,high,low,close,change,ema_50,ema_21,ema_9,rsi'
+        asset = self.get_asset_for_url_path()
+        request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/chart_data/{asset}/'
+        headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
 
-        asset = re.sub("[^A-z]", "", self.asset)
-        today = datetime.utcnow().date()
+        data = {'datetime': self.datetime[1].strftime("%Y-%m-%d %H:%M:%S"),
+                'open': self.open_1[0],
+                'high': self.high_1[0],
+                'low': self.low_1[0],
+                'close': self.close[1],
+                'change': self.change_1[0] or None,
+                'ema_50': self.ema_50[1],
+                'ema_21': self.ema_21[1],
+                'ema_9': self.ema_9[1],
+                'rsi': self.rsi[1]}
 
-        # Creating folder [settings.PATH_DATA_CHART], if doesn't exist yet
-        if not os.path.exists(settings.PATH_DATA_CHART):
-            os.mkdir(settings.PATH_DATA_CHART)
-
-        # [runtime_data] Preparing
-        include_headers = False
-        file = os.path.join(settings.PATH_DATA_CHART,
-                            f'{asset}_runtime.{today}.csv')
-        data = f'{self.datetime[0]},' \
-               f'{self.open_1[0]},' \
-               f'{self.high_1[0]},'\
-               f'{self.low_1[0]},' \
-               f'{self.close[0]},' \
-               f'{self.change_1[0] or None},' \
-               f'{self.ema_50[0]},' \
-               f'{self.ema_21[0]},'\
-               f'{self.ema_9[0]},' \
-               f'{self.rsi[0]}'
-
-        if not os.path.exists(file):
-            include_headers = True
-
-        # [runtime_data] Writing
-        with open(file=file, mode='a') as f:
-            if include_headers:
-                f.write(f'{headers}\n')
-            f.write(f'{data}\n')
-
-        # [corrected_data] Preparing
-        include_headers = False
-        file = os.path.join(settings.PATH_DATA_CHART,
-                            f'{asset}_corrected.{today}.csv')
-        data = f'{self.datetime[1]},' \
-               f'{self.open_1[0]},' \
-               f'{self.high_1[0]},'\
-               f'{self.low_1[0]},' \
-               f'{self.close[1]},' \
-               f'{self.change_1[0] or None},' \
-               f'{self.ema_50[1]},' \
-               f'{self.ema_21[1]},'\
-               f'{self.ema_9[1]},' \
-               f'{self.rsi[1]}'
-
-        if not os.path.exists(file):
-            include_headers = True
-
-        # [corrected_data] Writing
-        with open(file=file, mode='a') as f:
-            if include_headers:
-                f.write(f'{headers}\n')
-            f.write(f'{data}\n')
+        try:
+            r = requests.post(url=request_url,
+                              headers=headers,
+                              json=data)
+        except requests.exceptions.Timeout:
+            r = requests.post(url=request_url,
+                              headers=headers,
+                              json=data)
 
     ''' Loss Management '''
 
     def loss_management_sync(self):
-        asset = self.get_asset_as_url()
+        asset = self.get_asset_for_url_path()
 
         request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/sync/'
         headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
@@ -2255,77 +2222,10 @@ class SmartTrader:
                    f"\t  - I think I'm done for today.{tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
 
-    def get_loss_management_file_path(self):
-        return os.path.join(settings.PATH_DATA,
-                            f'loss_management_{self.agent_id}.json')
+    def loss_management_close_trade(self, strategy_id, result=None, trade_size=0.00):
+        asset = self.get_asset_for_url_path()
 
-    def _loss_management_update(self, result=None, trade_size=0.00):
-        # On [initialization], both [result] and [trade_size] can be None/0.00,
-        # so [recovery_mode] and [recovery_trade_size] can be calculated based on [settings] and [cumulative_loss]
-
-        if result == 'gain':
-            if self.cumulative_loss > 0:
-                profit = trade_size * (self.payout / 100)
-
-                # Reducing [cumulative_loss]
-                if self.cumulative_loss >= profit:
-                    # [cumulative_loss] is greater than [profit]
-                    self.cumulative_loss -= profit
-                else:
-                    # Resetting [recovery_mode]
-                    self.recovery_mode = False
-                    self.cumulative_loss = 0
-        elif result == 'draw':
-            # Nothing to do
-            pass
-        else:
-            # System is initializing or it's a new loss
-
-            self.cumulative_loss += trade_size
-
-            # Calculating [payout_offset_compensation] in order to make sure recovery is made with expected amounts
-            payout_compensation_size = self.cumulative_loss / (self.payout / 100) * 1.01
-            recovery_trade_size = payout_compensation_size / settings.AMOUNT_TRADES_TO_RECOVER_LOSSES
-            self.recovery_trade_size = round(recovery_trade_size, 2)
-
-            if self.recovery_trade_size < self.initial_trade_size:
-                # [recovery_size] would be lesser than [initial_trade_size]
-                self.recovery_trade_size = self.initial_trade_size
-
-            if self.recovery_mode:
-                # [recovery_mode] is activated
-                stop_loss = self.highest_balance * settings.STOP_LOSS_PERCENT
-
-                if self.cumulative_loss > stop_loss:
-                    # [cumulative_loss] is greater than [stop_loss].
-                    msg = (f"{tmsg.warning}[WARNING]{tmsg.endc} "
-                           f"{tmsg.italic}- This asset has reached [stop_loss] set of [{stop_loss} USD]."
-                           f"\n\t- The cumulative loss is [{self.cumulative_loss} USD]."
-                           f"\n\n"
-                           f"\t- I strongly recommend exchanging this asset for another one with better chart patterns. {tmsg.endc}")
-
-                    # Resetting [recovery_mode]
-                    self.recovery_mode = False
-                    self.cumulative_loss = 0
-
-                    # [loss_management.json] Writing data in a file for future reference
-                    self.loss_management_write_to_file()
-
-                    tmsg.print(msg=msg, clear=True)
-                    raise RuntimeError(f'Stop Loss has been activated.')
-
-            else:
-                min_position_loss = (self.highest_balance *
-                                     settings.BALANCE_TRADE_SIZE_PERCENT *
-                                     settings.AMOUNT_TRADES_TO_RECOVER_LOSSES)
-                if self.cumulative_loss >= min_position_loss:
-                    # It's time to activate [recovery_mode]
-                    self.recovery_mode = True
-
-    def loss_management_report_trade(self, strategy_id, result=None, trade_size=0.00):
-        asset = self.get_asset_as_url()
-
-        request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/report_trade/'
+        request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/close_trade/'
         headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
         data = {
             'strategy_id': strategy_id,
@@ -2349,36 +2249,6 @@ class SmartTrader:
         for k, v in r.items():
             if hasattr(self, k):
                 setattr(self, k, v)
-
-    def loss_management_read_from_file(self):
-        data = {}
-
-        file_path = self.get_loss_management_file_path()
-        if os.path.exists(file_path):
-            with open(file=file_path, mode='r') as f:
-                data = json.loads(f.read())
-
-            # Updating Loss Management PB
-            updatable_fields = ['highest_balance',
-                                'recovery_mode',
-                                'cumulative_loss']
-            msg = "Managing previous losses"
-            for k, v in utils.progress_bar(data.items(), prefix=msg):
-                if k in updatable_fields:
-                    setattr(self, k, v)
-
-        return data
-
-    def loss_management_write_to_file(self):
-        data = {'agent_id': self.agent_id,
-                'last_asset': self.asset,
-                'highest_balance': self.highest_balance,
-                'cumulative_loss': round(self.cumulative_loss, 2),
-                'recovery_mode': self.recovery_mode}
-
-        file_path = self.get_loss_management_file_path()
-        with open(file=file_path, mode='w') as f:
-            f.write(json.dumps(data))
 
     ''' TA & Trading '''
     def get_optimal_trade_size(self):
@@ -2438,12 +2308,6 @@ class SmartTrader:
         self.position_history.append(self.ongoing_positions[strategy_id].copy())
         self.ongoing_positions.pop(strategy_id)
 
-        # Checking if we can set [trade_size] to an [optimal_trade_size]
-        lock_file = os.path.join(settings.PATH_LOCK,
-                                 f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
-        if not os.path.exists(lock_file) or not self.ongoing_positions:
-            self.execute_playbook(playbook_id='set_trade_size', trade_size=self.get_optimal_trade_size())
-
         return closed_position
 
     async def open_trade(self, strategy_id, side, trade_size):
@@ -2473,9 +2337,9 @@ class SmartTrader:
         trade['result'] = result
 
         # [Loss Management] Updating [cumulative_loss]
-        self.loss_management_report_trade(strategy_id=strategy_id,
-                                          result=result,
-                                          trade_size=trade['trade_size'])
+        self.loss_management_close_trade(strategy_id=strategy_id,
+                                         result=result,
+                                         trade_size=trade['trade_size'])
 
         # [Loss Management] Write to file on [close_position]...
         # One less action to do in-between trades (when martingale is needed)
@@ -2620,7 +2484,7 @@ class SmartTrader:
                         # Refreshing page
                         self.execute_playbook(playbook_id='go_to_trading_page')
 
-                self.write_chart_data()
+                self.send_chart_data()
 
             else:
                 # Missed candle data (too late)
@@ -3182,46 +3046,41 @@ class SmartTrader:
                     # Price is above [ema_9]
                     side = 'up'
 
-                    if self.close[0] > self.high_1[0]:
-                        # Price closed higher than last candle's high
+                    if self.close[0] > self.high_1[0] and self.high_1[0] < self.high_1[2]:
+                        # Price confirmed a pivot up
 
                         if dst_ema_9_close_1 < 0.0001618:
-                            # Price bounced on [ema_9]
+                            # It's close to [ema_9]
 
-                            if self.high_1[1] < self.high_1[2]:
-                                #
-
-                                for i in range(i_candle, min_candles + i_candle):
-                                    if self.close[i] > self.ema_9[i - 1]:
-                                        if i == min_candles + i_candle - 1:
-                                            # [close] has been above [ema_9] for a while
-                                            is_setup_confirmed = True
-                                            stop_loss = self.low_1[0]
-                                    else:
-                                        # Aborting
-                                        break
+                            for i in range(i_candle, min_candles + i_candle):
+                                if self.close[i] > self.ema_9[i - 1]:
+                                    if i == min_candles + i_candle - 1:
+                                        # [close] has been above [ema_9] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = self.low_1[0]
+                                else:
+                                    # Aborting
+                                    break
 
                 elif self.close[0] < self.ema_9[0]:
                     # Price is bellow [ema_9]
                     side = 'down'
 
-                    if self.close[0] < self.low_1[0]:
-                        # Price closed lower than last candle's low
+                    if self.close[0] < self.low_1[0] and self.low_1[1] > self.low_1[2]:
+                        # Price confirmed a pivot down
 
                         if dst_ema_9_close_1 < 0.0001618:
                             # Price bounced on [ema_9]
 
-                            if self.low_1[1] > self.low_1[2]:
-                            #
-                                for i in range(i_candle, min_candles + i_candle):
-                                    if self.close[i] < self.ema_9[i - 1]:
-                                        if i == min_candles + i_candle - 1:
-                                            # [close] has been bellow [ema_9] for a while
-                                            is_setup_confirmed = True
-                                            stop_loss = self.high_1[0]
-                                    else:
-                                        # Aborting
-                                        break
+                            for i in range(i_candle, min_candles + i_candle):
+                                if self.close[i] < self.ema_9[i - 1]:
+                                    if i == min_candles + i_candle - 1:
+                                        # [close] has been bellow [ema_9] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = self.high_1[0]
+                                else:
+                                    # Aborting
+                                    break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
