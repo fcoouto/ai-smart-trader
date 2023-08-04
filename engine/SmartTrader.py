@@ -2206,7 +2206,7 @@ class SmartTrader:
                f'{self.high_1[0]},'\
                f'{self.low_1[0]},' \
                f'{self.close[1]},' \
-               f'{self.change[1]},' \
+               f'{self.change[0]},' \
                f'{self.ema_50[1]},' \
                f'{self.ema_21[1]},'\
                f'{self.ema_9[1]},' \
