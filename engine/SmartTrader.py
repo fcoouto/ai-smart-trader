@@ -61,7 +61,7 @@ class SmartTrader:
     high_1 = []
     low_1 = []
     close = []
-    change_1 = []
+    change = []
     change_pct = []
 
     strike_close_ema_9 = []
@@ -1184,7 +1184,7 @@ class SmartTrader:
         self.high_1.clear()
         self.low_1.clear()
         self.close.clear()
-        self.change_1.clear()
+        self.change.clear()
         self.change_pct.clear()
 
         self.ema_50.clear()
@@ -1207,11 +1207,11 @@ class SmartTrader:
         if action == 'update':
             self.close[0] = value
             if change:
-                self.change_1[0] = change
+                self.change[0] = change
         elif action == 'insert':
             self.close.insert(0, value)
             if change:
-                self.change_1.insert(0, change)
+                self.change.insert(0, change)
 
         return value
 
@@ -1253,7 +1253,7 @@ class SmartTrader:
                 elif field.lower() == 'close':
                     self.close[0] = c
                     if change:
-                        self.change_1[0] = change
+                        self.change[0] = change
 
         if insert_fields:
             for field in insert_fields:
@@ -1266,7 +1266,7 @@ class SmartTrader:
                 elif field.lower() == 'close':
                     self.close.insert(0, c)
                     if change:
-                        self.change_1.insert(0, change)
+                        self.change.insert(0, change)
 
         return [o, h, l, c]
 
@@ -2182,7 +2182,7 @@ class SmartTrader:
                f'{self.high_1[0]},'\
                f'{self.low_1[0]},' \
                f'{self.close[0]},' \
-               f'{self.change_1[0]},' \
+               f'{self.change[0]},' \
                f'{self.ema_50[0]},' \
                f'{self.ema_21[0]},'\
                f'{self.ema_9[0]},' \
@@ -2206,7 +2206,7 @@ class SmartTrader:
                f'{self.high_1[0]},'\
                f'{self.low_1[0]},' \
                f'{self.close[1]},' \
-               f'{self.change_1[0]},' \
+               f'{self.change[0]},' \
                f'{self.ema_50[1]},' \
                f'{self.ema_21[1]},'\
                f'{self.ema_9[1]},' \
@@ -3178,7 +3178,7 @@ class SmartTrader:
                     if self.close[0] > self.high_1[0]:
                         # Price closed higher than last candle's high
 
-                        if min(self.change_1[1:4]) < 0:
+                        if min(self.change[1:4]) < 0:
                             # At least 1 red candle found
 
                             for i in range(i_candle, min_candles + i_candle + 1):
@@ -3198,7 +3198,7 @@ class SmartTrader:
                     if self.close[0] < self.low_1[0]:
                         # Price closed lower than last candle's low
 
-                        if max(self.change_1[1:4]) > 0:
+                        if max(self.change[1:4]) > 0:
                             # At least 1 green candle found
 
                             for i in range(i_candle, min_candles + i_candle + 1):
