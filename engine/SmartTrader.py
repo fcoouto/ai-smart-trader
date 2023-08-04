@@ -3041,7 +3041,7 @@ class SmartTrader:
 
                         for i in range(i_candle, min_candles + i_candle + 1):
                             if self.close[i] < self.ema_9[i - 1]:
-                                if i == min_candles - 1:
+                                if i == min_candles + i_candle:
                                     # [close] has been bellow [ema_9] for a while
                                     is_setup_confirmed = True
                             else:
@@ -3056,7 +3056,7 @@ class SmartTrader:
 
                         for i in range(i_candle, min_candles + i_candle + 1):
                             if self.close[i] > self.ema_9[i - 1]:
-                                if i == min_candles - 1:
+                                if i == min_candles + i_candle:
                                     # [close] has been above [ema_9] for a while
                                     is_setup_confirmed = True
                             else:
@@ -3183,7 +3183,7 @@ class SmartTrader:
 
                             for i in range(i_candle, min_candles + i_candle + 1):
                                 if self.close[i] > self.ema_9[i - 1]:
-                                    if i == min_candles - 1:
+                                    if i == min_candles + i_candle:
                                         # [close] has been above [ema_9] for a while
                                         is_setup_confirmed = True
                                         stop_loss = self.low_1[0]
@@ -3203,7 +3203,7 @@ class SmartTrader:
 
                             for i in range(i_candle, min_candles + i_candle + 1):
                                 if self.close[i] < self.ema_9[i - 1]:
-                                    if i == min_candles - 1:
+                                    if i == min_candles + i_candle:
                                         # [close] has been bellow [ema_9] for a while
                                         is_setup_confirmed = True
                                         stop_loss = self.high_1[0]
@@ -3325,7 +3325,7 @@ class SmartTrader:
 
                     for i in range(i_candle, min_candles + i_candle + 1):
                         if self.close[i] > self.ema_9[i - 1]:
-                            if i == min_candles - 1:
+                            if i == min_candles + i_candle:
                                 # [close] has been above [ema_9] for a while
                                 is_setup_confirmed = True
                                 stop_loss = self.low_1[0]
@@ -3338,7 +3338,7 @@ class SmartTrader:
 
                     for i in range(1, min_candles + i_candle + 1):
                         if self.close[i] < self.ema_9[i - 1]:
-                            if i == min_candles - 1:
+                            if i == i == min_candles + i_candle:
                                 # [close] has been bellow [ema_9] for a while
                                 is_setup_confirmed = True
                                 stop_loss = self.high_1[0]
