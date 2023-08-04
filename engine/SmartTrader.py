@@ -2168,7 +2168,7 @@ class SmartTrader:
         request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/chart_data/{asset}/'
         headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
 
-        data = {'datetime': self.datetime[1].strftime("%Y-%m-%d %H:%M:%S"),
+        data = {'datetime': self.datetime[1],
                 'open': self.open_1[0],
                 'high': self.high_1[0],
                 'low': self.low_1[0],
