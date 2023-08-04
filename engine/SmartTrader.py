@@ -2205,8 +2205,8 @@ class SmartTrader:
                f'{self.open_1[0]},' \
                f'{self.high_1[0]},'\
                f'{self.low_1[0]},' \
-               f'{self.close[0] or None},' \
-               f'{self.change_1[0]},' \
+               f'{self.close[1]},' \
+               f'{self.change_1[0] or None},' \
                f'{self.ema_50[1]},' \
                f'{self.ema_21[1]},'\
                f'{self.ema_9[1]},' \
@@ -3169,7 +3169,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 7
+            min_candles = 4
             side = stop_loss = is_setup_confirmed = None
 
             # Add [ema_50] as ref?
@@ -3184,7 +3184,8 @@ class SmartTrader:
                     if self.close[0] > self.high_1[0]:
                         # Price closed higher than last candle's high
 
-                        if self.close[1] < self.low_1[0] or self.close[2] < self.low_1[1]:
+                        # if self.close[1] < self.low_1[0] or self.close[2] < self.low_1[1]:
+                        if self.close[1] < self.close[2] or self.close[2] < self.close[3]:
                             # Price bounced
 
                             for i in range(i_candle, min_candles + i_candle):
@@ -3204,7 +3205,8 @@ class SmartTrader:
                     if self.close[0] < self.low_1[0]:
                         # Price closed lower than last candle's low
 
-                        if self.close[1] > self.high_1[0] or self.close[2] > self.high_1[1]:
+                        # if self.close[1] > self.high_1[0] or self.close[2] > self.high_1[1]:
+                        if self.close[1] > self.close[2] or self.close[2] > self.close[3]:
                             # Price bounced
 
                             for i in range(i_candle, min_candles + i_candle):
@@ -3323,6 +3325,7 @@ class SmartTrader:
 
                 if self.close[1] < self.ema_9[0] < self.close[0]:
                     crossing_up = True
+
                 elif self.close[1] > self.ema_9[0] > self.close[0]:
                     crossing_down = True
 
