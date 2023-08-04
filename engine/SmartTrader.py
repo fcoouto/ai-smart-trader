@@ -1811,16 +1811,14 @@ class SmartTrader:
         # Clicking on Neutral Area
         self.mouse_event_on_neutral_area(event='click', area_id='bellow_app')
 
-        # Defining EMA 50
+        # Adding EMAs
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
+        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
+        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
+
+        # Configuring EMAs
         self.playbok_tv_configure_indicator_ema(i_indicator=1, length=50)
-
-        # Defining EMA 21
-        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
         self.playbok_tv_configure_indicator_ema(i_indicator=2, length=21)
-
-        # Defining EMA 9
-        self.playbook_tv_add_indicator(hint='Moving Average Exponential')
         self.playbok_tv_configure_indicator_ema(i_indicator=3, length=9)
 
         # Defining RSI
