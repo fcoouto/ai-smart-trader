@@ -1200,7 +1200,7 @@ class SmartTrader:
 
         # Defining [change]
         if len(self.close) > 0:
-            change = value - self.close[0]
+            change = round(value - self.close[0], 6)
         else:
             change = None
 
@@ -1238,7 +1238,7 @@ class SmartTrader:
 
         # Defining [change]
         if len(self.close) > 0:
-            change = utils.str_to_float("%.6f" % (c - self.close[0]))
+            change = round(c - self.close[0], 6)
         else:
             change = None
 
@@ -2182,7 +2182,7 @@ class SmartTrader:
                f'{self.high_1[0]},'\
                f'{self.low_1[0]},' \
                f'{self.close[0]},' \
-               f'{self.change[0]},' \
+               f'{self.change[0] | None},' \
                f'{self.ema_50[0]},' \
                f'{self.ema_21[0]},'\
                f'{self.ema_9[0]},' \
@@ -2205,7 +2205,7 @@ class SmartTrader:
                f'{self.open_1[0]},' \
                f'{self.high_1[0]},'\
                f'{self.low_1[0]},' \
-               f'{self.close[1]},' \
+               f'{self.close[0] | None},' \
                f'{self.change[0]},' \
                f'{self.ema_50[1]},' \
                f'{self.ema_21[1]},'\
