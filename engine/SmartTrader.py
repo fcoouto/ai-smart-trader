@@ -2493,12 +2493,11 @@ class SmartTrader:
 
         self.run_validation()
 
-        # Reading last 10 candles
-        # Last candle data PB
-        msg = "Reading previous 10 candles"
+        # Reading last 10 candles PB
+        msg = "Reading previous 7 candles"
         if not os.path.exists(long_action_lock_file):
             for item in utils.progress_bar([0], prefix=msg):
-                self.execute_playbook(playbook_id='read_previous_candles', amount_candles=10)
+                self.execute_playbook(playbook_id='read_previous_candles', amount_candles=7)
 
         # First run using estimated time (1.5 seconds)
         reading_chart_duration = default_reading_duration = timedelta(seconds=0.750).total_seconds()
