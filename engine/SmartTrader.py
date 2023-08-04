@@ -451,7 +451,7 @@ class SmartTrader:
             self.read_element(element_id='payout')
 
     def validate_super_strike(self, context='Validation'):
-        if self.asset.endsWith('OTC'):
+        if self.asset.endswith('OTC'):
             if not self.is_super_strike_activated():
                 # [super_strike] hasn't been activated yet
 
