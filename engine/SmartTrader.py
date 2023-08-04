@@ -3039,7 +3039,7 @@ class SmartTrader:
                     if self.close[0] > self.high_1[0]:
                         # Price broke last candle's high
 
-                        for i in range(i_candle, min_candles):
+                        for i in range(i_candle, min_candles + i_candle + 1):
                             if self.close[i] < self.ema_9[i - 1]:
                                 if i == min_candles - 1:
                                     # [close] has been bellow [ema_9] for a while
@@ -3054,7 +3054,7 @@ class SmartTrader:
                     if self.close[0] < self.low_1[0]:
                         # Price broke last candle's low
 
-                        for i in range(i_candle, min_candles):
+                        for i in range(i_candle, min_candles + i_candle + 1):
                             if self.close[i] > self.ema_9[i - 1]:
                                 if i == min_candles - 1:
                                     # [close] has been above [ema_9] for a while
@@ -3181,7 +3181,7 @@ class SmartTrader:
                         if min(self.change[1:4]) < 0:
                             # At least 1 red candle found
 
-                            for i in range(i_candle, min_candles + 1):
+                            for i in range(i_candle, min_candles + i_candle + 1):
                                 if self.close[i] > self.ema_9[i - 1]:
                                     if i == min_candles - 1:
                                         # [close] has been above [ema_9] for a while
@@ -3201,7 +3201,7 @@ class SmartTrader:
                         if max(self.change[1:4]) > 0:
                             # At least 1 green candle found
 
-                            for i in range(i_candle, min_candles + 1):
+                            for i in range(i_candle, min_candles + i_candle + 1):
                                 if self.close[i] < self.ema_9[i - 1]:
                                     if i == min_candles - 1:
                                         # [close] has been bellow [ema_9] for a while
@@ -3323,7 +3323,7 @@ class SmartTrader:
                 if crossing_up:
                     side = 'up'
 
-                    for i in range(i_candle, min_candles + 1):
+                    for i in range(i_candle, min_candles + i_candle + 1):
                         if self.close[i] > self.ema_9[i - 1]:
                             if i == min_candles - 1:
                                 # [close] has been above [ema_9] for a while
@@ -3336,7 +3336,7 @@ class SmartTrader:
                 elif crossing_down:
                     side = 'down'
 
-                    for i in range(1, min_candles + 1):
+                    for i in range(1, min_candles + i_candle + 1):
                         if self.close[i] < self.ema_9[i - 1]:
                             if i == min_candles - 1:
                                 # [close] has been bellow [ema_9] for a while
