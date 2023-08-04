@@ -221,7 +221,6 @@ class SmartTrader:
 
         trading_start = 6
         trading_end = 19
-        trading_end = 22
 
         while now.hour < trading_start or now.hour > trading_end:
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
