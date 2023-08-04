@@ -3176,6 +3176,7 @@ class SmartTrader:
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
+                dst_ema_9_close_1 = utils.distance_percent_abs(v1=self.ema_9[0], v2=self.close[1])
 
                 if self.close[0] > self.ema_9[0]:
                     # Price is above [ema_9]
@@ -3184,9 +3185,8 @@ class SmartTrader:
                     if self.close[0] > self.high_1[0]:
                         # Price closed higher than last candle's high
 
-                        # if self.close[1] < self.low_1[0] or self.close[2] < self.low_1[1]:
-                        if self.close[1] < self.close[2] or self.close[2] < self.close[3]:
-                            # Price bounced
+                        if dst_ema_9_close_1 < 0.0001618:
+                            # Price bounced on [ema_9]
 
                             for i in range(i_candle, min_candles + i_candle):
                                 if self.close[i] > self.ema_9[i - 1]:
@@ -3205,9 +3205,8 @@ class SmartTrader:
                     if self.close[0] < self.low_1[0]:
                         # Price closed lower than last candle's low
 
-                        # if self.close[1] > self.high_1[0] or self.close[2] > self.high_1[1]:
-                        if self.close[1] > self.close[2] or self.close[2] > self.close[3]:
-                            # Price bounced
+                        if dst_ema_9_close_1 < 0.0001618:
+                            # Price bounced on [ema_9]
 
                             for i in range(i_candle, min_candles + i_candle):
                                 if self.close[i] < self.ema_9[i - 1]:
