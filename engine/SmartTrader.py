@@ -2296,9 +2296,6 @@ class SmartTrader:
         self.ongoing_positions[strategy_id]['result'] = result
         closed_position = self.ongoing_positions[strategy_id].copy()
 
-        # [loss_management.json] Writing data in a file for future reference
-        self.loss_management_write_to_file()
-
         # [positions.csv] Appending data to [positions.csv] file
         positions_file = os.path.join(settings.PATH_DATA, 'positions.csv')
         df = self.df_ongoing_positions()
