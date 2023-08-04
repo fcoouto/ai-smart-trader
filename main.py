@@ -6,7 +6,7 @@ from engine import settings, ScreenManager, SmartTrader, utils
 
 
 def execute(amount_regions_per_monitor,
-            i_monitor, i_region, broker, asset, trade_size):
+            i_monitor, i_region, broker, asset, trade_size, ignore_trading_window):
 
     sm = ScreenManager.ScreenManager(amount_regions_per_monitor=amount_regions_per_monitor)
     region = sm.get_region(i_monitor=i_monitor, i_region=i_region)
@@ -16,7 +16,8 @@ def execute(amount_regions_per_monitor,
                                       region=region,
                                       broker=broker,
                                       asset=asset,
-                                      initial_trade_size=trade_size)
+                                      initial_trade_size=trade_size,
+                                      ignore_trading_window=ignore_trading_window)
     strader.start()
 
 
@@ -27,6 +28,7 @@ def main(argsv):
     broker_id = 'iqcent'
     asset = None
     trade_size = 1.00
+    ignore_trading_window = None
 
     utils.set_terminal_title(title='STrader')
 
@@ -34,7 +36,7 @@ def main(argsv):
         opts, args = getopt.getopt(argsv,
                                    'hm:r:b:a:t:',
                                    ['help', 'amount_regions_per_monitor=', 'monitor=', 'region=',
-                                    'broker=', 'asset=', 'trade_size='])
+                                    'broker=', 'asset=', 'trade_size=', 'ignore_trading_window='])
     except getopt.GetoptError:
         print('\nException: One or more arguments were not expected.')
         print_help()
@@ -44,6 +46,8 @@ def main(argsv):
         if opt in ['-h', '--help']:
             print_help()
             sys.exit()
+        elif opt in ['--amount_regions_per_monitor']:
+            amount_regions_per_monitor = int(arg)
         elif opt in ['-m', '--monitor']:
             i_monitor = int(arg) - 1
         elif opt in ['-r', '--region']:
@@ -54,8 +58,8 @@ def main(argsv):
             asset = str(arg)
         elif opt in ['-t', '--trade_size']:
             trade_size = float(arg)
-        elif opt in ['--amount_regions_per_monitor']:
-            amount_regions_per_monitor = int(arg)
+        elif opt in ['-i', '--ignore_trading_window']:
+            ignore_trading_window = True
 
     if (i_monitor is not None and
             i_region is not None and
@@ -69,7 +73,8 @@ def main(argsv):
                     i_region=i_region,
                     broker=broker,
                     asset=asset,
-                    trade_size=trade_size)
+                    trade_size=trade_size,
+                    ignore_trading_window=ignore_trading_window)
 
         else:
             print('\nException: Broker [%s] is not supported yet. '

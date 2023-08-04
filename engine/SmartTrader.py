@@ -89,17 +89,19 @@ class SmartTrader:
 
     is_automation_running = None
     is_super_strike_active = None
+    ignore_trading_window = None
     awareness = {
         'balance_equal_to_zero': None,
         'balance_less_than_min_balance': None,
     }
 
-    def __init__(self, agent_id, region, broker, asset, initial_trade_size):
+    def __init__(self, agent_id, region, broker, asset, initial_trade_size, ignore_trading_window):
         self.agent_id = agent_id
         self.region = region
         self.broker = broker
         self.asset = asset
         self.initial_trade_size = initial_trade_size
+        self.ignore_trading_window = ignore_trading_window
 
         # Setting [credentials]
         self.validate_credentials()
@@ -217,25 +219,26 @@ class SmartTrader:
         return url
 
     def validate_trading_session(self, context='Validation'):
-        now = datetime.utcnow()
-
-        trading_start = 6
-        trading_end = 19
-
-        while now.hour < trading_start or now.hour > trading_end:
-            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                   f"{utils.tmsg.italic}- We are currently out of the trading time range, "
-                   f"which should be between {trading_start} and {trading_end}. {utils.tmsg.endc}")
-            tmsg.print(context=context, msg=msg, clear=True)
-
-            # Waiting PB
-            msg = "Waiting for it (CTRL + C to cancel)"
-            wait_secs = 300
-            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-            for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
+        if not self.ignore_trading_window:
             now = datetime.utcnow()
+
+            trading_start = 6
+            trading_end = 19
+
+            while now.hour < trading_start or now.hour > trading_end:
+                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                       f"{utils.tmsg.italic}- We are currently out of the trading time range, "
+                       f"which should be between {trading_start} and {trading_end}. {utils.tmsg.endc}")
+                tmsg.print(context=context, msg=msg, clear=True)
+
+                # Waiting PB
+                msg = "Waiting for it (CTRL + C to cancel)"
+                wait_secs = 300
+                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                now = datetime.utcnow()
 
     def validate_credentials(self, context='Validation'):
         key_file = 'key'
@@ -448,7 +451,7 @@ class SmartTrader:
             self.read_element(element_id='payout')
 
     def validate_super_strike(self, context='Validation'):
-        if 'OTC' in self.asset:
+        if self.asset.endsWith('OTC'):
             if not self.is_super_strike_activated():
                 # [super_strike] hasn't been activated yet
 
