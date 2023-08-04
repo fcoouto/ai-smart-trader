@@ -2652,6 +2652,7 @@ class SmartTrader:
 
         # Executing tasks
         tasks = []
+        start = datetime.now()
         async with asyncio.TaskGroup() as tg:
             for strategy in utils.progress_bar(strategies, prefix=msg):
                 f_strategy = f"strategy_{strategy}"
@@ -2666,6 +2667,10 @@ class SmartTrader:
                            f"\n\t- Can you call the human, please? I think he can fix it... {utils.tmsg.endc}")
                     tmsg.input(msg=msg, clear=True)
                     raise RuntimeError(f'Strategy [{strategy}] not found.')
+        delta = datetime.now() - start
+        result['lookup_duration'] = delta.total_seconds()
+
+        print(f'lookup_duration: {result["lookup_duration"]}')
 
         # Reading [ema]
         async with asyncio.TaskGroup() as tg:
