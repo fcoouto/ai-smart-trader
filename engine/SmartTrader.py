@@ -1200,7 +1200,7 @@ class SmartTrader:
 
         # Defining [change]
         if len(self.close) > 0:
-            change = utils.str_to_float("%.6f" % (value - self.close[0]))
+            change = value - self.close[0]
         else:
             change = None
 
@@ -2164,7 +2164,7 @@ class SmartTrader:
             # Not enough data yet
             return None
 
-        headers = 'datetime,close,ema_50,ema_21,ema_9,rsi'
+        headers = 'datetime,open,high,low,close,change,ema_50,ema_21,ema_9,rsi'
 
         asset = re.sub("[^A-z]", "", self.asset)
         today = datetime.utcnow().date()
@@ -2178,7 +2178,11 @@ class SmartTrader:
         file = os.path.join(settings.PATH_DATA_CHART,
                             f'{asset}_runtime.{today}.csv')
         data = f'{self.datetime[0]},' \
+               f'{self.open_1[0]},' \
+               f'{self.high_1[0]},'\
+               f'{self.low_1[0]},' \
                f'{self.close[0]},' \
+               f'{self.change[0]},' \
                f'{self.ema_50[0]},' \
                f'{self.ema_21[0]},'\
                f'{self.ema_9[0]},' \
@@ -2198,7 +2202,11 @@ class SmartTrader:
         file = os.path.join(settings.PATH_DATA_CHART,
                             f'{asset}_corrected.{today}.csv')
         data = f'{self.datetime[1]},' \
+               f'{self.open_1[0]},' \
+               f'{self.high_1[0]},'\
+               f'{self.low_1[0]},' \
                f'{self.close[1]},' \
+               f'{self.change[1]},' \
                f'{self.ema_50[1]},' \
                f'{self.ema_21[1]},'\
                f'{self.ema_9[1]},' \
@@ -3170,9 +3178,8 @@ class SmartTrader:
                     if self.close[0] > self.high_1[0]:
                         # Price closed higher than last candle's high
 
-                        if min(self.change[:3]) < 0:
+                        if min(self.change[1:4]) < 0:
                             # At least 1 red candle found
-                            # measure distance from the lowest candle here?
 
                             for i in range(i_candle, min_candles + 1):
                                 if self.close[i] > self.ema_9[i - 1]:
@@ -3191,9 +3198,8 @@ class SmartTrader:
                     if self.close[0] < self.low_1[0]:
                         # Price closed lower than last candle's low
 
-                        if max(self.change[:3]) > 0 :
+                        if max(self.change[1:4]) > 0:
                             # At least 1 green candle found
-                            # measure distance from the highest candle here?
 
                             for i in range(i_candle, min_candles + 1):
                                 if self.close[i] < self.ema_9[i - 1]:
