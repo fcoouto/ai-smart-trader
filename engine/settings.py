@@ -440,7 +440,7 @@ BROKERS = {
             },
             'navitem_ema_settings_tab1': {
                 'context': 'tv',
-                'zone': 'ema_settings_tab1',
+                'zone': 'ema_settings_tab2',
                 'x': None,
                 'y': None
             },
