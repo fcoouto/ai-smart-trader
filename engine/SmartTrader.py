@@ -1918,9 +1918,6 @@ class SmartTrader:
         # Opening Settings
         self.click_element(element_id=f'btn_indicator_{i_indicator}_settings', wait_when_done=0.300)
 
-        # [tab1]
-        self.click_element(element_id='navitem_ema_settings_tab1', wait_when_done=0.300)
-
         # [tab1] Setting [length]
         self.click_element(element_id='input_ema_settings_length', clicks=2)
         pyautogui.typewrite(str(length))
@@ -1940,15 +1937,15 @@ class SmartTrader:
         self.click_element(element_id='input_ema_settings_precision', wait_when_done=0.300)
         self.click_element(element_id=f'dp_item_{precision}')
 
+        # [tab1]
+        self.click_element(element_id='navitem_ema_settings_tab1', wait_when_done=0.300)
+
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
 
     def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=0):
         # Opening Settings
         self.click_element(element_id='btn_rsi_settings', wait_when_done=0.300)
-
-        # [tab1]
-        self.click_element(element_id='navitem_rsi_settings_tab1', wait_when_done=0.300)
 
         # [tab1] Setting [length]
         self.click_element(element_id='input_rsi_settings_length', clicks=2)
@@ -1979,6 +1976,9 @@ class SmartTrader:
         # [tab2] Toggle [hlines_bg]
         pyautogui.press('tab')
         pyautogui.press('space')
+
+        # [tab1]
+        self.click_element(element_id='navitem_rsi_settings_tab1', wait_when_done=0.300)
 
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
