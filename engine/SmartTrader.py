@@ -3188,15 +3188,18 @@ class SmartTrader:
                         if dst_ema_9_close_1 < 0.0001618:
                             # Price bounced on [ema_9]
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] > self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been above [ema_9] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = self.low_1[0]
-                                else:
-                                    # Aborting
-                                    break
+                            if self.high_1[1] < self.high_1[2]:
+                                #
+
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] > self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been above [ema_9] for a while
+                                            is_setup_confirmed = True
+                                            stop_loss = self.low_1[0]
+                                    else:
+                                        # Aborting
+                                        break
 
                 elif self.close[0] < self.ema_9[0]:
                     # Price is bellow [ema_9]
@@ -3208,15 +3211,17 @@ class SmartTrader:
                         if dst_ema_9_close_1 < 0.0001618:
                             # Price bounced on [ema_9]
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] < self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been bellow [ema_9] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = self.high_1[0]
-                                else:
-                                    # Aborting
-                                    break
+                            if self.low_1[1] > self.low_1[2]:
+                            #
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] < self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been bellow [ema_9] for a while
+                                            is_setup_confirmed = True
+                                            stop_loss = self.high_1[0]
+                                    else:
+                                        # Aborting
+                                        break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
