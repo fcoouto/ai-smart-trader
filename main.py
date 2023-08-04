@@ -34,7 +34,7 @@ def main(argsv):
 
     try:
         opts, args = getopt.getopt(argsv,
-                                   'hm:r:b:a:t:',
+                                   'hm:r:b:a:t:i:',
                                    ['help', 'amount_regions_per_monitor=', 'monitor=', 'region=',
                                     'broker=', 'asset=', 'trade_size=', 'ignore_trading_window='])
     except getopt.GetoptError:
