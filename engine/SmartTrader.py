@@ -3163,7 +3163,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 3
+            min_candles = 7
             side = stop_loss = is_setup_confirmed = None
 
             # Add [ema_50] as ref?
@@ -3307,7 +3307,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 2
-            min_candles = 4
+            min_candles = 6
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
             # Add [ema_50] as ref?
