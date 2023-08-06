@@ -3039,6 +3039,7 @@ class SmartTrader:
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
+
                 dst_ema_9_close_1 = utils.distance_percent_abs(v1=self.ema_9[0], v2=self.close[1])
 
                 if self.close[0] > self.ema_9[0] > self.ema_50[0]:
@@ -3049,18 +3050,21 @@ class SmartTrader:
                     if dst_ema_9_close_1 < 0.0001618:
                         # Price is close to [ema_9]
 
-                        if self.close[0] > self.high_1[0] and self.high_1[0] < self.high_1[1]:
-                            # Price confirmed a pivot up
+                        if min(self.change_1[:3]) < 0:
+                            # At least 1 red candle found
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] > self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been above [ema_9] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = self.low_1[0]
-                                else:
-                                    # Aborting
-                                    break
+                            if self.close[0] > self.high_1[0] and self.high_1[0] < self.high_1[1]:
+                                # Price confirmed a pivot up
+
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] > self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been above [ema_9] for a while
+                                            is_setup_confirmed = True
+                                            stop_loss = self.low_1[0]
+                                    else:
+                                        # Aborting
+                                        break
 
                 elif self.close[0] < self.ema_9[0] < self.ema_50[0]:
                     # Price is bellow [ema_9]
@@ -3070,18 +3074,21 @@ class SmartTrader:
                     if dst_ema_9_close_1 < 0.0001618:
                         # Price is closed to [ema_9]
 
-                        if self.close[0] < self.low_1[0] and self.low_1[0] > self.low_1[1]:
-                            # Price confirmed a pivot down
+                        if max(self.change_1[:3]) > 0:
+                            # At least 1 green candle found
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] < self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been bellow [ema_9] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = self.high_1[0]
-                                else:
-                                    # Aborting
-                                    break
+                            if self.close[0] < self.low_1[0] and self.low_1[0] > self.low_1[1]:
+                                # Price confirmed a pivot down
+
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] < self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been bellow [ema_9] for a while
+                                            is_setup_confirmed = True
+                                            stop_loss = self.high_1[0]
+                                    else:
+                                        # Aborting
+                                        break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
@@ -3179,18 +3186,16 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 2
-            min_candles = 6
+            min_candles = 4
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
-
-            # Add [ema_50] as ref?
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
-                if self.close[1] < self.ema_9[0] < self.close[0]:
+                if self.ema_9[0] > self.ema_50[0] and self.close[1] < self.ema_9[0] < self.close[0]:
                     crossing_up = True
 
-                elif self.close[1] > self.ema_9[0] > self.close[0]:
+                elif self.ema_9[0] < self.ema_50[0] and self.close[1] > self.ema_9[0] > self.close[0]:
                     crossing_down = True
 
                 if crossing_up:
