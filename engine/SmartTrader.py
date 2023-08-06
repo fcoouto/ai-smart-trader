@@ -3041,15 +3041,16 @@ class SmartTrader:
                 # We got enough candles
                 dst_ema_9_close_1 = utils.distance_percent_abs(v1=self.ema_9[0], v2=self.close[1])
 
-                if self.close[0] > self.ema_9[0]:
+                if self.ema_50[0] > self.ema_9[0] and self.close[0] > self.ema_9[0]:
                     # Price is above [ema_9]
+                    # [ema_50] giving support
                     side = 'up'
 
-                    if self.close[0] > self.high_1[0] and self.high_1[0] < self.high_1[2]:
-                        # Price confirmed a pivot up
+                    if dst_ema_9_close_1 < 0.0001618:
+                        # Price is close to [ema_9]
 
-                        if dst_ema_9_close_1 < 0.0001618:
-                            # It's close to [ema_9]
+                        if self.close[0] > self.high_1[0] and self.high_1[0] < self.high_1[1]:
+                            # Price confirmed a pivot up
 
                             for i in range(i_candle, min_candles + i_candle):
                                 if self.close[i] > self.ema_9[i - 1]:
@@ -3061,15 +3062,16 @@ class SmartTrader:
                                     # Aborting
                                     break
 
-                elif self.close[0] < self.ema_9[0]:
+                elif self.ema_50[0] < self.ema_9[0] and self.close[0] < self.ema_9[0]:
                     # Price is bellow [ema_9]
+                    # [ema_50] giving support
                     side = 'down'
 
-                    if self.close[0] < self.low_1[0] and self.low_1[1] > self.low_1[2]:
-                        # Price confirmed a pivot down
+                    if dst_ema_9_close_1 < 0.0001618:
+                        # Price is closed to [ema_9]
 
-                        if dst_ema_9_close_1 < 0.0001618:
-                            # Price bounced on [ema_9]
+                        if self.close[0] < self.low_1[0] and self.low_1[0] > self.low_1[1]:
+                            # Price confirmed a pivot down
 
                             for i in range(i_candle, min_candles + i_candle):
                                 if self.close[i] < self.ema_9[i - 1]:
