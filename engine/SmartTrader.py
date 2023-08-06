@@ -3041,7 +3041,7 @@ class SmartTrader:
                 # We got enough candles
                 dst_ema_9_close_1 = utils.distance_percent_abs(v1=self.ema_9[0], v2=self.close[1])
 
-                if self.ema_50[0] > self.ema_9[0] and self.close[0] > self.ema_9[0]:
+                if self.close[0] > self.ema_9[0] > self.ema_50[0]:
                     # Price is above [ema_9]
                     # [ema_50] giving support
                     side = 'up'
@@ -3062,7 +3062,7 @@ class SmartTrader:
                                     # Aborting
                                     break
 
-                elif self.ema_50[0] < self.ema_9[0] and self.close[0] < self.ema_9[0]:
+                elif self.close[0] < self.ema_9[0] < self.ema_50[0]:
                     # Price is bellow [ema_9]
                     # [ema_50] giving support
                     side = 'down'
