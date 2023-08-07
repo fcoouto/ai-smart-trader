@@ -2517,11 +2517,13 @@ class SmartTrader:
         # Reading [close] and [rsi]
         start = datetime.now()
 
-        element_ids = ['ohlc', 'price']
+        element_ids = ['price']
+        ohlc_insert_fields = ['open', 'high', 'low', 'close']
         async with asyncio.TaskGroup() as tg:
             tg.create_task(self.read_chart_data(element_ids=element_ids))
-            tg.create_task(self.read_element(element_id='price', action='insert'))
-        await self.read_chart_data(element_ids=element_ids)
+            tg.create_task(self.read_element(element_id='ohlc',
+                                             insert_fields=ohlc_insert_fields))
+        # await self.read_chart_data(element_ids=element_ids)
 
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
