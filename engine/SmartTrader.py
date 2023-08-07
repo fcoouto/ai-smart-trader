@@ -1156,7 +1156,7 @@ class SmartTrader:
 
         if element_ids is None:
             # Default chart elements
-            element_ids = ['price', 'ohlc', 'ema_50', 'ema_21', 'ema_9', 'rsi']
+            element_ids = ['price', 'ema_50', 'ema_21', 'ema_9', 'rsi']
 
         action = None
         now = datetime.utcnow()
@@ -2057,8 +2057,8 @@ class SmartTrader:
 
     def playbook_read_previous_candles(self, amount_candles=1):
         action = 'update'
-        ohcl_to_insert = ['open', 'high', 'low']
-        ohcl_to_update = ['close']
+        ohcl_to_insert = None
+        ohcl_to_update = ['open', 'high', 'low', 'close']
 
         # Reseting chart (zooms and deslocation)
         self.playbook_tv_reset_chart()
@@ -2166,6 +2166,7 @@ class SmartTrader:
                 'low': self.low[1],
                 'close': self.close[1],
                 'change': self.change[0] or None,
+                'price': self.price[1],
                 'ema_50': self.ema_50[1],
                 'ema_21': self.ema_21[1],
                 'ema_9': self.ema_9[1],
@@ -2517,6 +2518,9 @@ class SmartTrader:
         start = datetime.now()
 
         element_ids = ['ohlc', 'price']
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(self.read_chart_data(element_ids=element_ids))
+            tg.create_task(self.read_element(element_id='price', action='insert'))
         await self.read_chart_data(element_ids=element_ids)
 
         delta = datetime.now() - start
