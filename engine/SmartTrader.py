@@ -2166,7 +2166,7 @@ class SmartTrader:
                 'low': self.low[1],
                 'close': self.close[1],
                 'change': self.change[0] or None,
-                'price': self.price[1],
+                'price': self.price[0],
                 'ema_50': self.ema_50[1],
                 'ema_21': self.ema_21[1],
                 'ema_9': self.ema_9[1],
@@ -2528,6 +2528,8 @@ class SmartTrader:
 
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()
+
+        print(f'reading_chart_duration: {result["reading_chart_duration"]}')
 
         # Retrieving optimal [trade_size]
         trade_size = self.get_optimal_trade_size()
