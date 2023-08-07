@@ -156,13 +156,16 @@ class SmartTrader:
                 payout = self.read_element(element_id='payout')
                 chart_data = asyncio.run(self.read_chart_data(element_ids=None))
                 ohlc = self.read_element(element_id='ohlc')
+                price = self.read_element(element_id='price')
                 trade_size = self.read_element(element_id='trade_size')
                 expiry_time = self.read_element(element_id='expiry_time')
 
                 print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
                       f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
                       f"\nchart_data: {str(chart_data)}"
-                      f"\nohlc: {str(ohlc)}\n")
+                      f"\nohlc: {str(ohlc)}"
+                      f"\nprice: {str(price)}")
+                print()
 
     def run_validation(self):
         # Run here the logic to validate screen. It pauses if human is needed
@@ -1156,7 +1159,7 @@ class SmartTrader:
 
         if element_ids is None:
             # Default chart elements
-            element_ids = ['price', 'ema_50', 'ema_21', 'ema_9', 'rsi']
+            element_ids = ['ema_50', 'ema_21', 'ema_9', 'rsi']
 
         action = None
         now = datetime.utcnow()
