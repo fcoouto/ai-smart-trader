@@ -2372,7 +2372,7 @@ class SmartTrader:
 
             # Calculating [lookup_trigger]: average with last value
             lookup_trigger = (lookup_trigger + (60 - reading_chart_duration)) / 2
-            print(f'lookup_trigger: {lookup_trigger}')
+            lookup_time_threshold = datetime.now() + timedelta(seconds=lookup_trigger - utils.now_seconds())
 
             if self.ongoing_positions:
                 # Printing [ongoing_positions]
@@ -2440,7 +2440,7 @@ class SmartTrader:
                 for item in utils.progress_bar([0], prefix=msg):
                     self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
 
-            if validation_trigger <= utils.now_seconds() < lookup_trigger:
+            if utils.now_seconds() < lookup_time_threshold:
                 # Ready for Trading
 
                 # Waiting PB
@@ -3032,7 +3032,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 4
+            min_candles = 3
             side = stop_loss = is_setup_confirmed = None
 
             # Add [ema_50] as ref?
@@ -3214,7 +3214,7 @@ class SmartTrader:
                 elif crossing_down:
                     side = 'down'
 
-                    for i in range(1, min_candles + i_candle):
+                    for i in range(i_candle, min_candles + i_candle):
                         if self.close[i] < self.ema_9[i - 1]:
                             if i == min_candles + i_candle - 1:
                                 # [close] has been bellow [ema_9] for a while
