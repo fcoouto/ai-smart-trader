@@ -2440,7 +2440,7 @@ class SmartTrader:
                 for item in utils.progress_bar([0], prefix=msg):
                     self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
 
-            if utils.now_seconds() < lookup_time_threshold:
+            if datetime.now() < lookup_time_threshold:
                 # Ready for Trading
 
                 # Waiting PB
