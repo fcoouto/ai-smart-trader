@@ -57,14 +57,14 @@ class SmartTrader:
 
     asset = None
     datetime = []
-    open_1 = []
-    high_1 = []
-    low_1 = []
+    open = []
+    high = []
+    low = []
     close = []
-    change_1 = []
+    change = []
     change_pct = []
 
-    strike_close_ema_9 = []
+    price = []
 
     ema_50 = []
     ema_21 = []
@@ -797,7 +797,7 @@ class SmartTrader:
                         bottom = height * 0.61
                     left = width * 0.15
                     right = width * 0.34
-                if element_id == 'close':
+                if element_id == 'price':
                     if platform.system().lower() == 'linux':
                         top = height * 0.75
                     else:
@@ -1156,7 +1156,7 @@ class SmartTrader:
 
         if element_ids is None:
             # Default chart elements
-            element_ids = ['close', 'ema_50', 'ema_21', 'ema_9', 'rsi']
+            element_ids = ['price', 'ohlc', 'ema_50', 'ema_21', 'ema_9', 'rsi']
 
         action = None
         now = datetime.utcnow()
@@ -1183,38 +1183,28 @@ class SmartTrader:
 
     def reset_chart_data(self):
         self.datetime.clear()
-        self.open_1.clear()
-        self.high_1.clear()
-        self.low_1.clear()
+        self.open.clear()
+        self.high.clear()
+        self.low.clear()
         self.close.clear()
-        self.change_1.clear()
+        self.change.clear()
         self.change_pct.clear()
 
         self.ema_50.clear()
         self.rsi.clear()
 
-    async def read_close(self, action=None):
-        element_id = 'close'
+    async def read_price(self, action=None):
+        element_id = 'price'
 
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
-        # Defining [change]
-        if len(self.close) > 0:
-            change = round(value - self.close[0], 6)
-        else:
-            change = None
-
         if action == 'update':
-            self.close[0] = value
-            if change:
-                self.change_1[0] = change
+            self.price[0] = value
         elif action == 'insert':
-            self.close.insert(0, value)
-            if change:
-                self.change_1.insert(0, change)
+            self.price.insert(0, value)
 
         return value
 
@@ -1248,28 +1238,28 @@ class SmartTrader:
         if update_fields:
             for field in update_fields:
                 if field.lower() == 'open':
-                    self.open_1[0] = o
+                    self.open[0] = o
                 elif field.lower() == 'high':
-                    self.high_1[0] = h
+                    self.high[0] = h
                 elif field.lower() == 'low':
-                    self.low_1[0] = l
+                    self.low[0] = l
                 elif field.lower() == 'close':
                     self.close[0] = c
                     if change:
-                        self.change_1[0] = change
+                        self.change[0] = change
 
         if insert_fields:
             for field in insert_fields:
                 if field.lower() == 'open':
-                    self.open_1.insert(0, o)
+                    self.open.insert(0, o)
                 elif field.lower() == 'high':
-                    self.high_1.insert(0, h)
+                    self.high.insert(0, h)
                 elif field.lower() == 'low':
-                    self.low_1.insert(0, l)
+                    self.low.insert(0, l)
                 elif field.lower() == 'close':
                     self.close.insert(0, c)
                     if change:
-                        self.change_1.insert(0, change)
+                        self.change.insert(0, change)
 
         return [o, h, l, c]
 
@@ -2171,11 +2161,11 @@ class SmartTrader:
         headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
 
         data = {'datetime': self.datetime[1],
-                'open': self.open_1[0],
-                'high': self.high_1[0],
-                'low': self.low_1[0],
+                'open': self.open[1],
+                'high': self.high[1],
+                'low': self.low[1],
                 'close': self.close[1],
-                'change': self.change_1[0] or None,
+                'change': self.change[0] or None,
                 'ema_50': self.ema_50[1],
                 'ema_21': self.ema_21[1],
                 'ema_9': self.ema_9[1],
@@ -2220,6 +2210,13 @@ class SmartTrader:
             msg = (f"{tmsg.danger}[ERROR]{tmsg.endc} "
                    f"{tmsg.italic}- This asset has reached Stop Loss."
                    f"\n\t  - The cumulative loss is [{self.cumulative_loss} USD]."
+                   f"\n\n"
+                   f"\t  - I think I'm done for today.{tmsg.endc}")
+            tmsg.input(msg=msg, clear=True)
+        elif r['is_stop_gain_triggered']:
+            msg = (f"{tmsg.success}[GAIN]{tmsg.endc} "
+                   f"{tmsg.italic}- Time to celebrate."
+                   f"\n\t  - Today we got a gain of [{self.cumulative_loss} USD]. That means "
                    f"\n\n"
                    f"\t  - I think I'm done for today.{tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
@@ -2314,7 +2311,7 @@ class SmartTrader:
         # Running concurrently
         await asyncio.gather(
             self.execute_playbook(playbook_id='open_trade', side=side, trade_size=trade_size),
-            self.read_element(element_id='close', is_async=True, action='update')
+            self.read_element(element_id='price', is_async=True, action='update')
         )
 
         now = datetime.utcnow()
@@ -2324,7 +2321,7 @@ class SmartTrader:
             'open_time': now,
             'expiration_time': expiration_time,
             'trade_size': trade_size,
-            'open_price': self.close[0],
+            'open_price': self.price[0],
             'result': None
         }
 
@@ -2340,9 +2337,6 @@ class SmartTrader:
         self.loss_management_close_trade(strategy_id=strategy_id,
                                          result=result,
                                          trade_size=trade['trade_size'])
-
-        # [Loss Management] Write to file on [close_position]...
-        # One less action to do in-between trades (when martingale is needed)
 
         return position['trades'][-1]
 
@@ -2522,7 +2516,7 @@ class SmartTrader:
         # Reading [close] and [rsi]
         start = datetime.now()
 
-        element_ids = ['close', 'rsi']
+        element_ids = ['ohlc', 'price']
         await self.read_chart_data(element_ids=element_ids)
 
         delta = datetime.now() - start
@@ -2596,18 +2590,18 @@ class SmartTrader:
 
                 if position['side'] == 'up':
                     # up
-                    if self.close[0] > last_trade['open_price']:
+                    if self.price[0] > last_trade['open_price']:
                         result = 'gain'
-                    elif self.close[0] < last_trade['open_price']:
+                    elif self.price[0] < last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
 
                 else:
                     # down
-                    if self.close[0] < last_trade['open_price']:
+                    if self.price[0] < last_trade['open_price']:
                         result = 'gain'
-                    elif self.close[0] > last_trade['open_price']:
+                    elif self.price[0] > last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
@@ -2711,18 +2705,18 @@ class SmartTrader:
 
                 if position['side'] == 'up':
                     # up
-                    if self.close[0] > last_trade['open_price']:
+                    if self.price[0] > last_trade['open_price']:
                         result = 'gain'
-                    elif self.close[0] < last_trade['open_price']:
+                    elif self.price[0] < last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
 
                 else:
                     # down
-                    if self.close[0] < last_trade['open_price']:
+                    if self.price[0] < last_trade['open_price']:
                         result = 'gain'
-                    elif self.close[0] > last_trade['open_price']:
+                    elif self.price[0] > last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
@@ -2818,29 +2812,29 @@ class SmartTrader:
 
             if position['side'] == 'up':
                 # up
-                if self.close[0] > last_trade['open_price']:
+                if self.price[0] > last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] < last_trade['open_price']:
+                elif self.price[0] < last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
 
                 # Defining [stop_loss]
                 if amount_trades == 1:
-                    position['stop_loss'] = self.low_1[0]
+                    position['stop_loss'] = self.low[1]
 
             else:
                 # down
-                if self.close[0] < last_trade['open_price']:
+                if self.price[0] < last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] > last_trade['open_price']:
+                elif self.price[0] > last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
 
                 # Defining [stop_loss]
                 if amount_trades == 1:
-                    position['stop_loss'] = self.high_1[0]
+                    position['stop_loss'] = self.high[2]
 
             # Checking [result]
             if result == 'gain':
@@ -2910,7 +2904,7 @@ class SmartTrader:
                 if crossed_up:
                     # Price  crosssed [ema_9] up
 
-                    if self.close[0] > self.high_1[0]:
+                    if self.close[0] > self.high[1]:
                         # Price broke last candle's high
 
                         for i in range(i_candle, min_candles + i_candle):
@@ -2925,7 +2919,7 @@ class SmartTrader:
                 elif crossed_down:
                     # Price crosssed [ema_9] down
 
-                    if self.close[0] < self.low_1[0]:
+                    if self.close[0] < self.low[1]:
                         # Price broke last candle's low
 
                         for i in range(i_candle, min_candles + i_candle):
@@ -2966,18 +2960,18 @@ class SmartTrader:
 
             if position['side'] == 'up':
                 # up
-                if self.close[0] > last_trade['open_price']:
+                if self.price[0] > last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] < last_trade['open_price']:
+                elif self.price[0] < last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
 
             else:
                 # down
-                if self.close[0] < last_trade['open_price']:
+                if self.price[0] < last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] > last_trade['open_price']:
+                elif self.price[0] > last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
@@ -3055,10 +3049,10 @@ class SmartTrader:
                     if dst_ema_9_close_1 < 0.0001618:
                         # Price is close to [ema_9]
 
-                        if min(self.change_1[:3]) < 0:
+                        if min(self.change[:3]) < 0:
                             # At least 1 red candle found
 
-                            if self.close[0] > self.high_1[0] and self.high_1[0] < self.high_1[1]:
+                            if self.close[0] > self.high[1] and self.high[1] < self.high[2]:
                                 # Price confirmed a pivot up
 
                                 for i in range(i_candle, min_candles + i_candle):
@@ -3066,7 +3060,7 @@ class SmartTrader:
                                         if i == min_candles + i_candle - 1:
                                             # [close] has been above [ema_9] for a while
                                             is_setup_confirmed = True
-                                            stop_loss = self.low_1[0]
+                                            stop_loss = self.low[1]
                                     else:
                                         # Aborting
                                         break
@@ -3079,10 +3073,10 @@ class SmartTrader:
                     if dst_ema_9_close_1 < 0.0001618:
                         # Price is closed to [ema_9]
 
-                        if max(self.change_1[:3]) > 0:
+                        if max(self.change[:3]) > 0:
                             # At least 1 green candle found
 
-                            if self.close[0] < self.low_1[0] and self.low_1[0] > self.low_1[1]:
+                            if self.close[0] < self.low[1] and self.low[1] > self.low[2]:
                                 # Price confirmed a pivot down
 
                                 for i in range(i_candle, min_candles + i_candle):
@@ -3090,7 +3084,7 @@ class SmartTrader:
                                         if i == min_candles + i_candle - 1:
                                             # [close] has been bellow [ema_9] for a while
                                             is_setup_confirmed = True
-                                            stop_loss = self.high_1[0]
+                                            stop_loss = self.high[1]
                                     else:
                                         # Aborting
                                         break
@@ -3120,18 +3114,18 @@ class SmartTrader:
 
             if position['side'] == 'up':
                 # up
-                if self.close[0] > last_trade['open_price']:
+                if self.price[0] > last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] < last_trade['open_price']:
+                elif self.price[0] < last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
 
             else:
                 # down
-                if self.close[0] < last_trade['open_price']:
+                if self.price[0] < last_trade['open_price']:
                     result = 'gain'
-                elif self.close[0] > last_trade['open_price']:
+                elif self.price[0] > last_trade['open_price']:
                     result = 'loss'
                 else:
                     result = 'draw'
@@ -3206,7 +3200,7 @@ class SmartTrader:
                 if crossing_up:
                     side = 'up'
 
-                    if self.close[0] > self.high_1[0]:
+                    if self.close[0] > self.high[1]:
                         # Price broke last [high]
 
                         for i in range(i_candle, min_candles + i_candle):
@@ -3214,7 +3208,7 @@ class SmartTrader:
                                 if i == min_candles + i_candle - 1:
                                     # [close] has been above [ema_9] for a while
                                     is_setup_confirmed = True
-                                    stop_loss = self.low_1[1]
+                                    stop_loss = self.low[2]
                             else:
                                 # Aborting
                                 break
@@ -3222,7 +3216,7 @@ class SmartTrader:
                 elif crossing_down:
                     side = 'down'
 
-                    if self.close[0] < self.low_1[0]:
+                    if self.close[0] < self.low[1]:
                         # Price broke last [low]
 
                         for i in range(i_candle, min_candles + i_candle):
@@ -3230,7 +3224,7 @@ class SmartTrader:
                                 if i == min_candles + i_candle - 1:
                                     # [close] has been bellow [ema_9] for a while
                                     is_setup_confirmed = True
-                                    stop_loss = self.high_1[1]
+                                    stop_loss = self.high[2]
                             else:
                                 # Aborting
                                 break

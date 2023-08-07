@@ -84,6 +84,7 @@ CORE_DATA = {
     'ema_9': 'float',
     'expiry_time': 'time',
     'ohlc': 'string_ohlc',
+    'price': 'float',
     'payout': 'percentage',
     'rsi': 'float',
     'trade_size': 'float',
@@ -489,7 +490,7 @@ BROKERS = {
                 'x': None,
                 'y': None
             },
-            'close': {
+            'price': {
                 'zone': 'footer',
                 'type': 'float',
                 'x': None,
