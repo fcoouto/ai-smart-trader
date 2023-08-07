@@ -2253,6 +2253,7 @@ class SmartTrader:
                 setattr(self, k, v)
 
     ''' TA & Trading '''
+
     def get_optimal_trade_size(self):
         balance_trade_size = self.highest_balance * settings.BALANCE_TRADE_SIZE_PERCENT
 
@@ -2372,7 +2373,6 @@ class SmartTrader:
 
             # Calculating [lookup_trigger]: average with last value
             lookup_trigger = (lookup_trigger + (60 - reading_chart_duration)) / 2
-            lookup_time_threshold = datetime.now() + timedelta(seconds=lookup_trigger - utils.now_seconds())
 
             if self.ongoing_positions:
                 # Printing [ongoing_positions]
@@ -2402,8 +2402,13 @@ class SmartTrader:
             msg = "Watching Price Action"
             if validation_trigger > utils.now_seconds():
                 diff_sec = validation_trigger - utils.now_seconds()
+                lookup_time_threshold = datetime.now() + \
+                                        timedelta(seconds=lookup_trigger - utils.now_seconds())
             else:
                 diff_sec = validation_trigger - utils.now_seconds() + 60
+                lookup_time_threshold = datetime.now() + \
+                                        timedelta(seconds=lookup_trigger - utils.now_seconds()) + \
+                                        timedelta(seconds=60)
 
             items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
