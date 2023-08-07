@@ -2522,6 +2522,7 @@ class SmartTrader:
         async with asyncio.TaskGroup() as tg:
             tg.create_task(self.read_chart_data(element_ids=element_ids))
             tg.create_task(self.read_element(element_id='ohlc',
+                                             is_async=True,
                                              insert_fields=ohlc_insert_fields))
         # await self.read_chart_data(element_ids=element_ids)
 
