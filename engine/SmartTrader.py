@@ -570,7 +570,7 @@ class SmartTrader:
                                                        confidence=confidence)
                 tries += 1
 
-                if tries >= 2:
+                if tries >= 3:
                     return zone_region
 
         else:
