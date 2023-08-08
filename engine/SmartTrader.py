@@ -2126,7 +2126,7 @@ class SmartTrader:
         return df
 
     def send_chart_data(self):
-        if len(self.datetime) < 3:
+        if len(self.datetime) < 2:
             # Not enough data yet
             return None
 
