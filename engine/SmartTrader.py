@@ -1167,7 +1167,7 @@ class SmartTrader:
             action = 'insert'
 
             # Calculating candle's [datetime]
-            if now.second > settings.CHART_DATA_MIN_SECONDS:
+            if now.second >= settings.CHART_DATA_MIN_SECONDS:
                 candle_datetime = now - timedelta(seconds=now.second)
             else:
                 candle_datetime = now - timedelta(minutes=1, seconds=now.second)
