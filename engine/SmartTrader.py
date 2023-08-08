@@ -190,7 +190,7 @@ class SmartTrader:
         self.validate_balance(context=context)
 
         # Validating [expiry_time]
-        self.validate_expiry_time(context=context)
+        self.validate_expiry_time()
 
         # Validating [payout]
         self.validate_payout(context=context)
@@ -199,7 +199,7 @@ class SmartTrader:
         self.loss_management_sync()
 
         # Validating [trade_size]
-        self.validate_trade_size(context=context)
+        self.validate_trade_size()
 
         # Validating [super_strike]
         self.validate_super_strike(context=context)
