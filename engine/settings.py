@@ -14,7 +14,7 @@ MIN_PAYOUT = 70
 #   CHART_DATA_SECONDS is about [ohlc, ema, rsi] values that should be stored in a list.
 #   They must represent the closing of a candle.
 CHART_DATA_MIN_SECONDS = 58
-CHART_DATA_MAX_SECONDS = 7
+CHART_DATA_MAX_SECONDS = 5
 CHART_DATA_READING_LIMIT_SECONDS = 5
 REFRESH_PAGE_EVERY_MINUTES = 15
 

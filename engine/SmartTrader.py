@@ -361,83 +361,53 @@ class SmartTrader:
             app_now = datetime.fromisoformat(f'{now.date().isoformat()} {clock}')
             delta = now - app_now
 
-    def validate_trade_size(self, context='Validation'):
+    def validate_trade_size(self):
         optimal_trade_size = self.get_optimal_trade_size()
 
         if len(self.ongoing_positions) == 0 and self.trade_size != optimal_trade_size:
             # [trade_size] is different from [initial_trade_size]
 
-            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                   f"{utils.tmsg.italic}- Just noticed that Trade Size is [{self.trade_size} USD], "
-                   f"and the Optimal Trade Size right now would be [{optimal_trade_size} USD]. "
-                   f"\n"
-                   f"\t  - I'll take care of that...{utils.tmsg.endc}")
-            tmsg.print(context=context, msg=msg, clear=True)
-
             # Waiting PB
-            msg = "Setting Trade Size (CTRL + C to cancel)"
-            wait_secs = 1
-            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+            msg = f"Setting Trade Size to [{optimal_trade_size} USD]"
+            for item in utils.progress_bar([0], prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size, is_long_action=True)
             self.read_element(element_id='trade_size')
 
-            print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
-            sleep(1)
-
-    def validate_expiry_time(self, context='Validation'):
+    def validate_expiry_time(self):
         expected_expiry_time = '01:00'
 
         while not self.is_expiry_time_fixed():
-            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                   f"{utils.tmsg.italic}- Expiry Time is not set to [fixed] as I would expect."
-                   f"\n"
-                   f"\n\t  - I'll set it up for us.{utils.tmsg.endc}")
-
-            tmsg.print(context=context, msg=msg, clear=True)
-
             # Waiting PB
-            msg = "Toggling Expiry Time to Fixed (CTRL + C to cancel)"
-            wait_secs = 1
-            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+            msg = "Toggling Expiry Time to Fixed"
+            for item in utils.progress_bar([0], prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Executing playbook
             self.execute_playbook(playbook_id='toggle_expiry_time')
             self.read_element(element_id='expiry_time')
 
-            print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
-            sleep(1)
-
         while self.expiry_time != expected_expiry_time:
-            msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                   f"{utils.tmsg.italic}- Expiry Time is currently set to [{self.expiry_time}], "
-                   f"but I'm more experienced with [{expected_expiry_time}]."
-                   f"\n"
-                   f"\n\t  - Let me try to update it.{utils.tmsg.endc}")
-
-            tmsg.print(context=context, msg=msg, clear=True)
-
             # Waiting PB
-            msg = "Setting Expiry Time (CTRL + C to cancel)"
-            wait_secs = 1
-            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+            msg = f"Setting Expiry Time [{expected_expiry_time}] (CTRL + C to cancel)"
+            for item in utils.progress_bar([0], prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Executing playbook
             self.execute_playbook(playbook_id='set_expiry_time', expiry_time=expected_expiry_time)
             self.read_element(element_id='expiry_time')
 
-            if self.expiry_time == expected_expiry_time:
-                print(f"{utils.tmsg.italic}\n\t  - Done! {utils.tmsg.endc}")
-                sleep(1)
-
     def validate_payout(self, context='Validation'):
         while self.payout < settings.MIN_PAYOUT:
+            now = datetime.utcnow()
+            trigger = now - timedelta(seconds=now.second)
+            trigger += timedelta(seconds=305)
+
+            # Defining [wait_secs]
+            wait_secs = trigger - now
+            wait_secs = wait_secs.total_seconds()
+
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Payout is currently [{self.payout}%]. "
                    f"Maybe it's time to look for another asset? {utils.tmsg.endc}")
@@ -445,7 +415,6 @@ class SmartTrader:
 
             # Waiting PB
             msg = "Waiting for payout get higher again (CTRL + C to cancel)"
-            wait_secs = 300
             items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
@@ -2157,7 +2126,7 @@ class SmartTrader:
         return df
 
     def send_chart_data(self):
-        if len(self.datetime) < 2:
+        if len(self.datetime) < 3:
             # Not enough data yet
             return None
 
@@ -2566,6 +2535,7 @@ class SmartTrader:
             tg.create_task(self.read_element(element_id='ema_50', is_async=True, action='insert'))
             tg.create_task(self.read_element(element_id='ema_21', is_async=True, action='insert'))
             tg.create_task(self.read_element(element_id='ema_9', is_async=True, action='insert'))
+            tg.create_task(self.read_element(element_id='rsi', is_async=True, action='insert'))
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
