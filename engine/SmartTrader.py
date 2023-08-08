@@ -1159,7 +1159,7 @@ class SmartTrader:
 
         if element_ids is None:
             # Default chart elements
-            element_ids = ['ema_50', 'ema_21', 'ema_9', 'rsi']
+            element_ids = ['price', 'ema_50', 'ema_21', 'ema_9', 'rsi']
 
         action = None
         now = datetime.utcnow()
@@ -1194,6 +1194,8 @@ class SmartTrader:
         self.change_pct.clear()
 
         self.ema_50.clear()
+        self.ema_21.clear()
+        self.ema_9.clear()
         self.rsi.clear()
 
     async def read_price(self, action=None):
@@ -2168,8 +2170,8 @@ class SmartTrader:
                 'high': self.high[1],
                 'low': self.low[1],
                 'close': self.close[1],
-                'change': self.change[0] or None,
-                'price': self.price[0],
+                'change': self.change[0] if len(self.price) > 0 else None,
+                'price': self.price[1] if len(self.price) > 1 else None,
                 'ema_50': self.ema_50[1],
                 'ema_21': self.ema_21[1],
                 'ema_9': self.ema_9[1],
@@ -2362,7 +2364,7 @@ class SmartTrader:
                 self.execute_playbook(playbook_id='read_previous_candles', amount_candles=7)
 
         # First run using estimated time (1.5 seconds)
-        reading_chart_duration = default_reading_duration = timedelta(seconds=0.750).total_seconds()
+        reading_chart_duration = default_reading_duration = timedelta(seconds=1.250).total_seconds()
         lookup_trigger = 60 - default_reading_duration
 
         while True:
