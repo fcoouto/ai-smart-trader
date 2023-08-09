@@ -390,7 +390,7 @@ class SmartTrader:
 
         while self.expiry_time != expected_expiry_time:
             # Waiting PB
-            msg = f"Setting Expiry Time [{expected_expiry_time}] (CTRL + C to cancel)"
+            msg = f"Setting Expiry Time to [{expected_expiry_time}]"
             for item in utils.progress_bar([0], prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
