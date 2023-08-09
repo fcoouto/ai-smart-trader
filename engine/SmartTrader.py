@@ -3028,7 +3028,8 @@ class SmartTrader:
                     if min(self.low[:3]) < self.ema_9[1]:
                         # Price has tested [ema_9]
 
-                        if self.high[0] > self.high[1] and self.high[1] < self.high[2]:
+                        if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
+                                self.close[0] > self.close[1]):
                             # Price confirmed a pivot up
 
                             for i in range(i_candle, min_candles + i_candle):
@@ -3051,7 +3052,8 @@ class SmartTrader:
                         if max(self.change[:2]) > 0:
                             # At least 1 green candle found
 
-                            if self.low[0] < self.low[1] and self.low[1] > self.low[2]:
+                            if (self.low[0] < self.low[1] and self.low[1] > self.low[2] and
+                                    self.close[0] < self.close[1]):
                                 # Price confirmed a pivot down
 
                                 for i in range(i_candle, min_candles + i_candle):
