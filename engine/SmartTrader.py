@@ -3015,7 +3015,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 3
+            min_candles = 4
             side = stop_loss = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
@@ -3028,19 +3028,22 @@ class SmartTrader:
                     if min(self.low[:3]) < self.ema_9[1]:
                         # Price has tested [ema_9]
 
-                        if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
-                                self.close[0] > self.close[1]):
-                            # Price confirmed a pivot up
+                        if min(self.change[:2]) < 0:
+                            # At least 1 red candle
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] > self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been above [ema_9] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = self.low[1]
-                                else:
-                                    # Aborting
-                                    break
+                            if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
+                                    self.close[0] > self.close[1]):
+                                # Price confirmed a pivot up
+
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] > self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been above [ema_9] for a while
+                                            is_setup_confirmed = True
+                                            stop_loss = self.low[1]
+                                    else:
+                                        # Aborting
+                                        break
 
                 elif self.close[0] < self.ema_9[0] < self.ema_21[0] < self.ema_50[0]:
                     # Price is bellow [ema_9] and [ema_50]
@@ -3161,7 +3164,7 @@ class SmartTrader:
 
         if position is None or position['result']:
             # No open position
-            i_candle = 3
+            i_candle = 2
             min_candles = 4
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
@@ -3170,45 +3173,39 @@ class SmartTrader:
 
                 if self.ema_9[0] > self.ema_50[0] and self.ema_21[0] > self.ema_50[0]:
                     # Support of [ema_21] and [ema_50]
-                    if self.close[2] < self.ema_9[1] < self.close[1]:
+                    if self.close[1] < self.ema_9[1] < self.close[0]:
                         crossing_up = True
 
                 elif self.ema_9[0] < self.ema_50[0] and self.ema_21[0] < self.ema_50[0]:
                     # Support of [ema_21] and [ema_50]
-                    if self.close[2] > self.ema_9[1] > self.close[1]:
+                    if self.close[1] > self.ema_9[1] > self.close[0]:
                         crossing_down = True
 
                 if crossing_up:
                     side = 'up'
 
-                    if self.close[0] > self.high[1]:
-                        # Price broke last [high]
-
-                        for i in range(i_candle, min_candles + i_candle):
-                            if self.close[i] > self.ema_9[i - 1]:
-                                if i == min_candles + i_candle - 1:
-                                    # [close] has been above [ema_9] for a while
-                                    is_setup_confirmed = True
-                                    stop_loss = self.low[2]
-                            else:
-                                # Aborting
-                                break
+                    for i in range(i_candle, min_candles + i_candle):
+                        if self.close[i] > self.ema_9[i - 1]:
+                            if i == min_candles + i_candle - 1:
+                                # [close] has been above [ema_9] for a while
+                                is_setup_confirmed = True
+                                stop_loss = self.low[1]
+                        else:
+                            # Aborting
+                            break
 
                 elif crossing_down:
                     side = 'down'
 
-                    if self.close[0] < self.low[1]:
-                        # Price broke last [low]
-
-                        for i in range(i_candle, min_candles + i_candle):
-                            if self.close[i] < self.ema_9[i - 1]:
-                                if i == min_candles + i_candle - 1:
-                                    # [close] has been bellow [ema_9] for a while
-                                    is_setup_confirmed = True
-                                    stop_loss = self.high[2]
-                            else:
-                                # Aborting
-                                break
+                    for i in range(i_candle, min_candles + i_candle):
+                        if self.close[i] < self.ema_9[i - 1]:
+                            if i == min_candles + i_candle - 1:
+                                # [close] has been bellow [ema_9] for a while
+                                is_setup_confirmed = True
+                                stop_loss = self.high[1]
+                        else:
+                            # Aborting
+                            break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
