@@ -2030,6 +2030,7 @@ class SmartTrader:
         sleep(0.250)
 
     def playbook_read_previous_candles(self, amount_candles=1):
+        has_refreshed = None
         action = 'update'
         ohcl_to_insert = None
         ohcl_to_update = ['open', 'high', 'low', 'close']
@@ -2055,9 +2056,18 @@ class SmartTrader:
             else:
                 candle_datetime = now - timedelta(minutes=1, seconds=now.second)
 
-            self.read_element(element_id='ohlc',
-                              insert_fields=ohcl_to_insert,
-                              update_fields=ohcl_to_update),
+            o, h, l, c = self.read_element(element_id='ohlc',
+                                           insert_fields=ohcl_to_insert,
+                                           update_fields=ohcl_to_update)
+            if o == h == l == c and not has_refreshed:
+                msg = "Refreshing page"
+                for item in utils.progress_bar([0], prefix=msg):
+                    self.execute_playbook(playbook_id='refresh_page')
+                has_refreshed = True
+
+                # Now updating [ohlc] that were inserted above.
+                self.read_element(element_id='ohlc',
+                                  update_fields=ohcl_to_insert)
             self.read_element(element_id='ema_50', action=action),
             self.read_element(element_id='ema_21', action=action),
             self.read_element(element_id='ema_9', action=action),
