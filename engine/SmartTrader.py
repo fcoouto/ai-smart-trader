@@ -2570,13 +2570,12 @@ class SmartTrader:
         if position:
             # Has position open
             result = None
-            first_trade = position['trades'][0]
             last_trade = position['trades'][-1]
             amount_trades = len(position['trades'])
 
             # Defining [expiration_countdown]
             now = datetime.utcnow()
-            expiration_countdown = first_trade['expiration_time'] - now
+            expiration_countdown = last_trade['expiration_time'] - now
 
             if expiration_countdown < timedelta(seconds=10):
                 # Trade is about to expire
@@ -2685,13 +2684,12 @@ class SmartTrader:
         if position:
             # Has position open
             result = None
-            first_trade = position['trades'][0]
             last_trade = position['trades'][-1]
             amount_trades = len(position['trades'])
 
             # Defining [expiration_countdown]
             now = datetime.utcnow()
-            expiration_countdown = first_trade['expiration_time'] - now
+            expiration_countdown = last_trade['expiration_time'] - now
 
             if expiration_countdown < timedelta(seconds=10):
                 # Trade is about to expire
@@ -2803,83 +2801,90 @@ class SmartTrader:
             last_trade = position['trades'][-1]
             amount_trades = len(position['trades'])
 
-            if position['side'] == 'up':
-                # up
-                if self.price[0] > last_trade['open_price']:
-                    result = 'gain'
-                elif self.price[0] < last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
+            # Defining [expiration_countdown]
+            now = datetime.utcnow()
+            expiration_countdown = last_trade['expiration_time'] - now
 
-                # Defining [stop_loss]
-                if amount_trades == 1:
-                    position['stop_loss'] = self.low[1]
+            if expiration_countdown < timedelta(seconds=10):
+                # Trade is about to expire
 
-            else:
-                # down
-                if self.price[0] < last_trade['open_price']:
-                    result = 'gain'
-                elif self.price[0] > last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
-
-                # Defining [stop_loss]
-                if amount_trades == 1:
-                    position['stop_loss'] = self.high[2]
-
-            # Checking [result]
-            if result == 'gain':
-                position = await self.close_position(strategy_id=strategy_id,
-                                                     result=result)
-            elif result == 'loss':
-                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
-                    # No more tries
-                    position = await self.close_position(strategy_id=strategy_id,
-                                                         result=result)
-
-                elif position['side'] == 'up':
-                    if self.low[0] < position['stop_loss']:
-                        # [low] reached [stop_loss]
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                elif position['side'] == 'down':
-                    if self.high[0] > position['stop_loss']:
-                        # [high] reached [stop_loss]
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                if not position['result']:
-                    # Martingale
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-
-                    if self.recovery_mode:
-                        trade_size = self.get_optimal_trade_size()
+                if position['side'] == 'up':
+                    # up
+                    if self.price[0] > last_trade['open_price']:
+                        result = 'gain'
+                    elif self.price[0] < last_trade['open_price']:
+                        result = 'loss'
                     else:
-                        trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
-                                                                    last_trade_size=last_trade['trade_size'])
+                        result = 'draw'
 
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=trade_size)
-            else:
-                # Draw
-                if amount_trades == 1:
-                    # Draw on first trade
-                    # Abort it
+                    # Defining [stop_loss]
+                    if amount_trades == 1:
+                        position['stop_loss'] = self.low[1]
+
+                else:
+                    # down
+                    if self.price[0] < last_trade['open_price']:
+                        result = 'gain'
+                    elif self.price[0] > last_trade['open_price']:
+                        result = 'loss'
+                    else:
+                        result = 'draw'
+
+                    # Defining [stop_loss]
+                    if amount_trades == 1:
+                        position['stop_loss'] = self.high[2]
+
+                # Checking [result]
+                if result == 'gain':
                     position = await self.close_position(strategy_id=strategy_id,
                                                          result=result)
+                elif result == 'loss':
+                    if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                        # No more tries
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                    elif position['side'] == 'up':
+                        if self.low[0] < position['stop_loss']:
+                            # [low] reached [stop_loss]
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+
+                    elif position['side'] == 'down':
+                        if self.high[0] > position['stop_loss']:
+                            # [high] reached [stop_loss]
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+
+                    if not position['result']:
+                        # Martingale
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+
+                        if self.recovery_mode:
+                            trade_size = self.get_optimal_trade_size()
+                        else:
+                            trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                        last_trade_size=last_trade['trade_size'])
+
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=trade_size)
                 else:
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=last_trade['trade_size'])
+                    # Draw
+                    if amount_trades == 1:
+                        # Draw on first trade
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+                    else:
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=last_trade['trade_size'])
 
         if position is None or position['result']:
             # No open position
@@ -2951,75 +2956,82 @@ class SmartTrader:
             last_trade = position['trades'][-1]
             amount_trades = len(position['trades'])
 
-            if position['side'] == 'up':
-                # up
-                if self.price[0] > last_trade['open_price']:
-                    result = 'gain'
-                elif self.price[0] < last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
+            # Defining [expiration_countdown]
+            now = datetime.utcnow()
+            expiration_countdown = last_trade['expiration_time'] - now
 
-            else:
-                # down
-                if self.price[0] < last_trade['open_price']:
-                    result = 'gain'
-                elif self.price[0] > last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
+            if expiration_countdown < timedelta(seconds=10):
+                # Trade is about to expire
 
-            # Checking [result]
-            if result == 'gain':
-                position = await self.close_position(strategy_id=strategy_id,
-                                                     result=result)
-            elif result == 'loss':
-                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
-                    # No more tries
-                    position = await self.close_position(strategy_id=strategy_id,
-                                                         result=result)
-
-                elif position['side'] == 'up':
-                    if self.low[0] < position['stop_loss']:
-                        # [low] reached [stop_loss]
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                elif position['side'] == 'down':
-                    if self.high[0] > position['stop_loss']:
-                        # [high] reached [stop_loss]
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                if not position['result']:
-                    # Martingale
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-
-                    if self.recovery_mode:
-                        trade_size = self.get_optimal_trade_size()
+                if position['side'] == 'up':
+                    # up
+                    if self.price[0] > last_trade['open_price']:
+                        result = 'gain'
+                    elif self.price[0] < last_trade['open_price']:
+                        result = 'loss'
                     else:
-                        trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
-                                                                    last_trade_size=last_trade['trade_size'])
+                        result = 'draw'
 
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=trade_size)
-            else:
-                # Draw
-                if amount_trades == 1:
-                    # Draw on first trade
-                    # Abort it
+                else:
+                    # down
+                    if self.price[0] < last_trade['open_price']:
+                        result = 'gain'
+                    elif self.price[0] > last_trade['open_price']:
+                        result = 'loss'
+                    else:
+                        result = 'draw'
+
+                # Checking [result]
+                if result == 'gain':
                     position = await self.close_position(strategy_id=strategy_id,
                                                          result=result)
+                elif result == 'loss':
+                    if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                        # No more tries
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                    elif position['side'] == 'up':
+                        if self.low[0] < position['stop_loss']:
+                            # [low] reached [stop_loss]
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+
+                    elif position['side'] == 'down':
+                        if self.high[0] > position['stop_loss']:
+                            # [high] reached [stop_loss]
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+
+                    if not position['result']:
+                        # Martingale
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+
+                        if self.recovery_mode:
+                            trade_size = self.get_optimal_trade_size()
+                        else:
+                            trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                        last_trade_size=last_trade['trade_size'])
+
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=trade_size)
                 else:
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=last_trade['trade_size'])
+                    # Draw
+                    if amount_trades == 1:
+                        # Draw on first trade
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+                    else:
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=last_trade['trade_size'])
 
         if position is None or position['result']:
             # No open position
@@ -3101,75 +3113,82 @@ class SmartTrader:
             last_trade = position['trades'][-1]
             amount_trades = len(position['trades'])
 
-            if position['side'] == 'up':
-                # up
-                if self.price[0] > last_trade['open_price']:
-                    result = 'gain'
-                elif self.price[0] < last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
+            # Defining [expiration_countdown]
+            now = datetime.utcnow()
+            expiration_countdown = last_trade['expiration_time'] - now
 
-            else:
-                # down
-                if self.price[0] < last_trade['open_price']:
-                    result = 'gain'
-                elif self.price[0] > last_trade['open_price']:
-                    result = 'loss'
-                else:
-                    result = 'draw'
+            if expiration_countdown < timedelta(seconds=10):
+                # Trade is about to expire
 
-            # Checking [result]
-            if result == 'gain':
-                position = await self.close_position(strategy_id=strategy_id,
-                                                     result=result)
-            elif result == 'loss':
-                if amount_trades >= settings.MAX_TRADES_PER_POSITION:
-                    # No more tries
-                    position = await self.close_position(strategy_id=strategy_id,
-                                                         result=result)
-
-                elif position['side'] == 'up':
-                    if self.low[0] < position['stop_loss']:
-                        # [low] reached [stop_loss]
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                elif position['side'] == 'down':
-                    if self.high[0] > position['stop_loss']:
-                        # [high] reached [stop_loss]
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                if not position['result']:
-                    # Martingale
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-
-                    if self.recovery_mode:
-                        trade_size = self.get_optimal_trade_size()
+                if position['side'] == 'up':
+                    # up
+                    if self.price[0] > last_trade['open_price']:
+                        result = 'gain'
+                    elif self.price[0] < last_trade['open_price']:
+                        result = 'loss'
                     else:
-                        trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
-                                                                    last_trade_size=last_trade['trade_size'])
+                        result = 'draw'
 
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=trade_size)
-            else:
-                # Draw
-                if amount_trades == 1:
-                    # Draw on first trade
-                    # Abort it
+                else:
+                    # down
+                    if self.price[0] < last_trade['open_price']:
+                        result = 'gain'
+                    elif self.price[0] > last_trade['open_price']:
+                        result = 'loss'
+                    else:
+                        result = 'draw'
+
+                # Checking [result]
+                if result == 'gain':
                     position = await self.close_position(strategy_id=strategy_id,
                                                          result=result)
+                elif result == 'loss':
+                    if amount_trades >= settings.MAX_TRADES_PER_POSITION:
+                        # No more tries
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+
+                    elif position['side'] == 'up':
+                        if self.low[0] < position['stop_loss']:
+                            # [low] reached [stop_loss]
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+
+                    elif position['side'] == 'down':
+                        if self.high[0] > position['stop_loss']:
+                            # [high] reached [stop_loss]
+                            # Abort it
+                            position = await self.close_position(strategy_id=strategy_id,
+                                                                 result=result)
+
+                    if not position['result']:
+                        # Martingale
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+
+                        if self.recovery_mode:
+                            trade_size = self.get_optimal_trade_size()
+                        else:
+                            trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
+                                                                        last_trade_size=last_trade['trade_size'])
+
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=trade_size)
                 else:
-                    await self.close_trade(strategy_id=strategy_id,
-                                           result=result)
-                    await self.open_trade(strategy_id=strategy_id,
-                                          side=position['side'],
-                                          trade_size=last_trade['trade_size'])
+                    # Draw
+                    if amount_trades == 1:
+                        # Draw on first trade
+                        # Abort it
+                        position = await self.close_position(strategy_id=strategy_id,
+                                                             result=result)
+                    else:
+                        await self.close_trade(strategy_id=strategy_id,
+                                               result=result)
+                        await self.open_trade(strategy_id=strategy_id,
+                                              side=position['side'],
+                                              trade_size=last_trade['trade_size'])
 
         if position is None or position['result']:
             # No open position
