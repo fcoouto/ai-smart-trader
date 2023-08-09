@@ -23,8 +23,8 @@ TRADING_STRATEGIES = ['ema_9_1', 'ema_9_2_3', 'ema_9_4']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
-BALANCE_TRADE_SIZE_PERCENT = 0.0025
-MAX_TRADES_PER_POSITION = 2
+BALANCE_TRADE_SIZE_PERCENT = 0.01
+MAX_TRADES_PER_POSITION = 1
 MARTINGALE_STRATEGY = [1, 2, 1.10]
 
 # EXTRAS
@@ -510,6 +510,12 @@ BROKERS = {
             'dp_item_1min': {
                 'context': 'iqcent',
                 'zone': 'dp_item_1min',
+                'x': None,
+                'y': None
+            },
+            'dp_item_4min': {
+                'context': 'iqcent',
+                'zone': 'dp_item_4min',
                 'x': None,
                 'y': None
             },

@@ -376,7 +376,7 @@ class SmartTrader:
             self.read_element(element_id='trade_size')
 
     def validate_expiry_time(self):
-        expected_expiry_time = '01:00'
+        expected_expiry_time = '04:00'
 
         while not self.is_expiry_time_fixed():
             # Waiting PB
@@ -1204,10 +1204,7 @@ class SmartTrader:
         c = utils.str_to_float(ohlc[3][1:])
 
         # Defining [change]
-        if len(self.close) > 0:
-            change = round(c - self.close[0], 6)
-        else:
-            change = None
+        change = round(c - o, 6)
 
         if update_fields:
             for field in update_fields:
@@ -1966,13 +1963,15 @@ class SmartTrader:
             self.click_element(element_id='trade_size', clicks=2)
             pyautogui.typewrite("%.2f" % trade_size)
 
-    def playbook_set_expiry_time(self, expiry_time='05:00'):
+    def playbook_set_expiry_time(self, expiry_time='04:00'):
         self.click_element(element_id='btn_expiry_time', wait_when_done=0.700)
 
         if expiry_time == '01:00':
             self.click_element(element_id='dp_item_1min')
         elif expiry_time == '05:00':
             self.click_element(element_id='dp_item_5min')
+        elif expiry_time == '04:00':
+            self.click_element(element_id='dp_item_4min')
         else:
             # Option is not supported. Closing dropdown menu
             pyautogui.press('escape')
@@ -2149,7 +2148,7 @@ class SmartTrader:
                 'high': self.high[1],
                 'low': self.low[1],
                 'close': self.close[1],
-                'change': self.change[0] if len(self.price) > 0 else None,
+                'change': self.change[1],
                 'price': self.price[1] if len(self.price) > 1 else None,
                 'ema_50': self.ema_50[1],
                 'ema_21': self.ema_21[1],
