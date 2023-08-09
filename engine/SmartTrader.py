@@ -2831,15 +2831,15 @@ class SmartTrader:
                                                          result=result)
 
                 elif position['side'] == 'up':
-                    if self.close[0] < position['stop_loss']:
-                        # [close] reached [stop_loss]
+                    if self.low[0] < position['stop_loss']:
+                        # [low] reached [stop_loss]
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
 
                 elif position['side'] == 'down':
-                    if self.close[0] > position['stop_loss']:
-                        # [close] reached [stop_loss]
+                    if self.high[0] > position['stop_loss']:
+                        # [high] reached [stop_loss]
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -2971,15 +2971,15 @@ class SmartTrader:
                                                          result=result)
 
                 elif position['side'] == 'up':
-                    if self.close[0] < position['stop_loss']:
-                        # [close] reached [stop_loss]
+                    if self.low[0] < position['stop_loss']:
+                        # [low] reached [stop_loss]
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
 
                 elif position['side'] == 'down':
-                    if self.close[0] > position['stop_loss']:
-                        # [close] reached [stop_loss]
+                    if self.high[0] > position['stop_loss']:
+                        # [high] reached [stop_loss]
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -3018,25 +3018,22 @@ class SmartTrader:
             min_candles = 3
             side = stop_loss = is_setup_confirmed = None
 
-            # Add [ema_50] as ref?
-
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
                 dst_ema_9_close_1 = utils.distance_percent_abs(v1=self.ema_9[0], v2=self.close[1])
 
                 if self.close[0] > self.ema_9[0] > self.ema_50[0]:
-                    # Price is above [ema_9]
-                    # [ema_50] giving support
+                    # Price is above [ema_9] and [ema_50]
                     side = 'up'
 
                     if dst_ema_9_close_1 < 0.0001618:
                         # Price is close to [ema_9]
 
-                        if min(self.change[:3]) < 0:
+                        if min(self.change[:2]) < 0:
                             # At least 1 red candle found
 
-                            if self.close[0] > self.high[1] and self.high[1] < self.high[2]:
+                            if self.high[0] > self.high[1] and self.high[1] < self.high[2]:
                                 # Price confirmed a pivot up
 
                                 for i in range(i_candle, min_candles + i_candle):
@@ -3050,17 +3047,16 @@ class SmartTrader:
                                         break
 
                 elif self.close[0] < self.ema_9[0] < self.ema_50[0]:
-                    # Price is bellow [ema_9]
-                    # [ema_50] giving support
+                    # Price is bellow [ema_9] and [ema_50]
                     side = 'down'
 
                     if dst_ema_9_close_1 < 0.0001618:
                         # Price is closed to [ema_9]
 
-                        if max(self.change[:3]) > 0:
+                        if max(self.change[:2]) > 0:
                             # At least 1 green candle found
 
-                            if self.close[0] < self.low[1] and self.low[1] > self.low[2]:
+                            if self.low[0] < self.low[1] and self.low[1] > self.low[2]:
                                 # Price confirmed a pivot down
 
                                 for i in range(i_candle, min_candles + i_candle):
@@ -3125,15 +3121,15 @@ class SmartTrader:
                                                          result=result)
 
                 elif position['side'] == 'up':
-                    if self.close[0] < position['stop_loss']:
-                        # [close] reached [stop_loss]
+                    if self.low[0] < position['stop_loss']:
+                        # [low] reached [stop_loss]
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
 
                 elif position['side'] == 'down':
-                    if self.close[0] > position['stop_loss']:
-                        # [close] reached [stop_loss]
+                    if self.high[0] > position['stop_loss']:
+                        # [high] reached [stop_loss]
                         # Abort it
                         position = await self.close_position(strategy_id=strategy_id,
                                                              result=result)
@@ -3175,11 +3171,15 @@ class SmartTrader:
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
-                if self.ema_9[1] > self.ema_50[1] and self.close[2] < self.ema_9[1] < self.close[1]:
-                    crossing_up = True
+                if self.ema_9[0] > self.ema_50[0] and self.ema_21[0] > self.ema_50[0]:
+                    # Support of [ema_21] and [ema_50]
+                    if self.close[2] < self.ema_9[1] < self.close[1]:
+                        crossing_up = True
 
-                elif self.ema_9[1] < self.ema_50[1] and self.close[2] > self.ema_9[1] > self.close[1]:
-                    crossing_down = True
+                elif self.ema_9[0] < self.ema_50[0] and self.ema_21[0] < self.ema_50[0]:
+                    # Support of [ema_21] and [ema_50]
+                    if self.close[2] > self.ema_9[1] > self.close[1]:
+                        crossing_down = True
 
                 if crossing_up:
                     side = 'up'
