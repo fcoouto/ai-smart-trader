@@ -3025,30 +3025,27 @@ class SmartTrader:
                     # Price is above [ema_9] and [ema_50]
                     side = 'up'
 
-                    if max(self.high[:3]) > self.ema_9[1]:
+                    if min(self.low[:3]) < self.ema_9[1]:
                         # Price has tested [ema_9]
 
-                        if min(self.change[:2]) < 0:
-                            # At least 1 red candle found
+                        if self.high[0] > self.high[1] and self.high[1] < self.high[2]:
+                            # Price confirmed a pivot up
 
-                            if self.high[0] > self.high[1] and self.high[1] < self.high[2]:
-                                # Price confirmed a pivot up
-
-                                for i in range(i_candle, min_candles + i_candle):
-                                    if self.close[i] > self.ema_9[i - 1]:
-                                        if i == min_candles + i_candle - 1:
-                                            # [close] has been above [ema_9] for a while
-                                            is_setup_confirmed = True
-                                            stop_loss = self.low[1]
-                                    else:
-                                        # Aborting
-                                        break
+                            for i in range(i_candle, min_candles + i_candle):
+                                if self.close[i] > self.ema_9[i - 1]:
+                                    if i == min_candles + i_candle - 1:
+                                        # [close] has been above [ema_9] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = self.low[1]
+                                else:
+                                    # Aborting
+                                    break
 
                 elif self.close[0] < self.ema_9[0] < self.ema_21[0] < self.ema_50[0]:
                     # Price is bellow [ema_9] and [ema_50]
                     side = 'down'
 
-                    if min(self.low[:3]) < self.ema_9[1]:
+                    if max(self.high[:3]) > self.ema_9[1]:
                         # Price has tested [ema_9]
 
                         if max(self.change[:2]) > 0:
