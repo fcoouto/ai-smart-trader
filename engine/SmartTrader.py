@@ -3023,7 +3023,7 @@ class SmartTrader:
 
                 dst_ema_9_close_1 = utils.distance_percent_abs(v1=self.ema_9[0], v2=self.close[1])
 
-                if self.close[0] > self.ema_9[0] > self.ema_50[0]:
+                if self.close[0] > self.ema_9[0] > self.ema_21[0] > self.ema_50[0]:
                     # Price is above [ema_9] and [ema_50]
                     side = 'up'
 
@@ -3046,7 +3046,7 @@ class SmartTrader:
                                         # Aborting
                                         break
 
-                elif self.close[0] < self.ema_9[0] < self.ema_50[0]:
+                elif self.close[0] < self.ema_9[0] < self.ema_21[0] < self.ema_50[0]:
                     # Price is bellow [ema_9] and [ema_50]
                     side = 'down'
 
