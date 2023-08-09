@@ -3021,14 +3021,12 @@ class SmartTrader:
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
-                dst_ema_9_close_1 = utils.distance_percent_abs(v1=self.ema_9[0], v2=self.close[1])
-
                 if self.close[0] > self.ema_9[0] > self.ema_21[0] > self.ema_50[0]:
                     # Price is above [ema_9] and [ema_50]
                     side = 'up'
 
-                    if dst_ema_9_close_1 < 0.0001618:
-                        # Price is close to [ema_9]
+                    if max(self.high[:3]) > self.ema_9[1]:
+                        # Price has tested [ema_9]
 
                         if min(self.change[:2]) < 0:
                             # At least 1 red candle found
@@ -3050,8 +3048,8 @@ class SmartTrader:
                     # Price is bellow [ema_9] and [ema_50]
                     side = 'down'
 
-                    if dst_ema_9_close_1 < 0.0001618:
-                        # Price is closed to [ema_9]
+                    if min(self.low[:3]) < self.ema_9[1]:
+                        # Price has tested [ema_9]
 
                         if max(self.change[:2]) > 0:
                             # At least 1 green candle found
