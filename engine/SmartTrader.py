@@ -66,8 +66,8 @@ class SmartTrader:
 
     price = []
 
-    ema_50 = []
-    ema_21 = []
+    ema_144 = []
+    ema_72 = []
     ema_9 = []
     rsi = []
 
@@ -202,7 +202,7 @@ class SmartTrader:
         self.validate_trade_size()
 
         # Validating [super_strike]
-        self.validate_super_strike(context=context)
+        self.validate_super_strike()
 
     def get_asset_for_url_path(self):
         asset = None
@@ -422,7 +422,7 @@ class SmartTrader:
             self.playbook_go_to_trading_page()
             self.read_element(element_id='payout')
 
-    def validate_super_strike(self, context='Validation'):
+    def validate_super_strike(self):
         if self.asset.endswith('OTC'):
             if not self.is_super_strike_activated():
                 # [super_strike] hasn't been activated yet
@@ -724,7 +724,7 @@ class SmartTrader:
                     top = height * 0.38
                     right = width
                     bottom = height * 0.47
-                elif element_id == 'ema_50':
+                elif element_id == 'ema_144':
                     if platform.system().lower() == 'linux':
                         left = width * 0.51
                     else:
@@ -732,7 +732,7 @@ class SmartTrader:
                     top = height * 0.46
                     right = width * 0.75
                     bottom = height * 0.55
-                elif element_id == 'ema_21':
+                elif element_id == 'ema_72':
                     if platform.system().lower() == 'linux':
                         left = width * 0.51
                     else:
@@ -1128,7 +1128,7 @@ class SmartTrader:
 
         if element_ids is None:
             # Default chart elements
-            element_ids = ['price', 'ema_50', 'ema_21', 'ema_9', 'rsi']
+            element_ids = ['price', 'ema_144', 'ema_72', 'ema_9', 'rsi']
 
         action = None
         now = datetime.utcnow()
@@ -1162,8 +1162,8 @@ class SmartTrader:
         self.change.clear()
         self.change_pct.clear()
 
-        self.ema_50.clear()
-        self.ema_21.clear()
+        self.ema_144.clear()
+        self.ema_72.clear()
         self.ema_9.clear()
         self.rsi.clear()
 
@@ -1234,31 +1234,31 @@ class SmartTrader:
 
         return [o, h, l, c]
 
-    async def read_ema_50(self, action=None):
-        element_id = 'ema_50'
+    async def read_ema_144(self, action=None):
+        element_id = 'ema_144'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
         if action == 'update':
-            self.ema_50[0] = value
+            self.ema_144[0] = value
         elif action == 'insert':
-            self.ema_50.insert(0, value)
+            self.ema_144.insert(0, value)
 
         return value
 
-    async def read_ema_21(self, action=None):
-        element_id = 'ema_21'
+    async def read_ema_72(self, action=None):
+        element_id = 'ema_72'
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
         if action == 'update':
-            self.ema_21[0] = value
+            self.ema_72[0] = value
         elif action == 'insert':
-            self.ema_21.insert(0, value)
+            self.ema_72.insert(0, value)
 
         return value
 
@@ -2067,8 +2067,8 @@ class SmartTrader:
                 # Updating [ohlc]
                 self.read_element(element_id='ohlc',
                                   update_fields=['open', 'high', 'low', 'close'])
-            self.read_element(element_id='ema_50', action=action),
-            self.read_element(element_id='ema_21', action=action),
+            self.read_element(element_id='ema_144', action=action),
+            self.read_element(element_id='ema_72', action=action),
             self.read_element(element_id='ema_9', action=action),
             self.read_element(element_id='rsi', action=action)
 
@@ -2150,8 +2150,8 @@ class SmartTrader:
                 'close': self.close[1],
                 'change': self.change[1],
                 'price': self.price[1] if len(self.price) > 1 else None,
-                'ema_50': self.ema_50[1],
-                'ema_21': self.ema_21[1],
+                'ema_144': self.ema_144[1],
+                'ema_72': self.ema_72[1],
                 'ema_9': self.ema_9[1],
                 'rsi': self.rsi[1]}
 
@@ -2541,8 +2541,8 @@ class SmartTrader:
 
         # Reading [ema]
         async with asyncio.TaskGroup() as tg:
-            tg.create_task(self.read_element(element_id='ema_50', is_async=True, action='insert'))
-            tg.create_task(self.read_element(element_id='ema_21', is_async=True, action='insert'))
+            tg.create_task(self.read_element(element_id='ema_144', is_async=True, action='insert'))
+            tg.create_task(self.read_element(element_id='ema_72', is_async=True, action='insert'))
             tg.create_task(self.read_element(element_id='ema_9', is_async=True, action='insert'))
             tg.create_task(self.read_element(element_id='rsi', is_async=True, action='insert'))
 
@@ -2650,11 +2650,11 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_50[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_144[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if min(self.close[:5]) > self.ema_50[0]:
+                if min(self.close[:5]) > self.ema_144[0]:
                     # Price has been above [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
@@ -2663,7 +2663,7 @@ class SmartTrader:
                                                                 side='up',
                                                                 trade_size=trade_size)
 
-                elif max(self.close[:5]) < self.ema_50[0]:
+                elif max(self.close[:5]) < self.ema_144[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
@@ -2764,11 +2764,11 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_50[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_144[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if min(self.close[:5]) > self.ema_50[0]:
+                if min(self.close[:5]) > self.ema_144[0]:
                     # Price has been above [ema]
                     if dst_price_ema > 0.001200:
                         # Price is too far from [ema]: Contrarian
@@ -2777,7 +2777,7 @@ class SmartTrader:
                                                                 side='down',
                                                                 trade_size=trade_size)
 
-                elif max(self.close[:5]) < self.ema_50[0]:
+                elif max(self.close[:5]) < self.ema_144[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema > 0.001200:
                         # Price is far from [ema]: Contrarian
@@ -3042,53 +3042,66 @@ class SmartTrader:
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
-                if self.close[0] > self.ema_9[0] > self.ema_21[0] > self.ema_50[0]:
-                    # Price is above [ema_9] and [ema_50]
+                dst_close_ema_144 = utils.distance_percent(v1=self.close[0], v2=self.ema_144[0])
+                dst_close_ema_72 = utils.distance_percent(v1=self.close[0], v2=self.ema_72[0])
+
+                if self.close[0] > self.ema_9[0]:
+                    # Price is above [ema_9]
                     side = 'up'
 
-                    if min(self.low[:3]) < self.ema_9[1]:
-                        # Price has tested [ema_9]
+                    if dst_close_ema_144 < -0.0001618 or dst_close_ema_144 > 0:
+                        # Price doesn't have [ema_144] as immediate resistance
+                        if dst_close_ema_72 < -0.0001618 or dst_close_ema_72 > 0:
+                            # Price doesn't have [ema_72] as immediate resistance
 
-                        if min(self.change[:2]) < 0:
-                            # At least 1 red candle
+                            if min(self.low[:3]) < self.ema_9[1]:
+                                # Price has tested [ema_9]
 
-                            if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
-                                    self.close[0] > self.close[1]):
-                                # Price confirmed a pivot up
+                                if min(self.change[:2]) < 0:
+                                    # At least 1 red candle
 
-                                for i in range(i_candle, min_candles + i_candle):
-                                    if self.close[i] > self.ema_9[i - 1]:
-                                        if i == min_candles + i_candle - 1:
-                                            # [close] has been above [ema_9] for a while
-                                            is_setup_confirmed = True
-                                            stop_loss = self.low[1]
-                                    else:
-                                        # Aborting
-                                        break
+                                    if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
+                                            self.close[0] > self.close[1]):
+                                        # Price confirmed a pivot up
 
-                elif self.close[0] < self.ema_9[0] < self.ema_21[0] < self.ema_50[0]:
-                    # Price is bellow [ema_9] and [ema_50]
+                                        for i in range(i_candle, min_candles + i_candle):
+                                            if self.close[i] > self.ema_9[i - 1]:
+                                                if i == min_candles + i_candle - 1:
+                                                    # [close] has been above [ema_9] for a while
+                                                    is_setup_confirmed = True
+                                                    stop_loss = self.low[1]
+                                            else:
+                                                # Aborting
+                                                break
+
+                elif self.close[0] < self.ema_9[0]:
+                    # Price is bellow [ema_9]
                     side = 'down'
 
-                    if max(self.high[:3]) > self.ema_9[1]:
-                        # Price has tested [ema_9]
+                    if dst_close_ema_144 > 0.0001618 or dst_close_ema_144 < 0:
+                        # Price doesn't have [ema_144] as immediate support
+                        if dst_close_ema_72 > 0.0001618 or dst_close_ema_72 < 0:
+                            # Price doesn't have [ema_72] as immediate support
 
-                        if max(self.change[:2]) > 0:
-                            # At least 1 green candle found
+                            if max(self.high[:3]) > self.ema_9[1]:
+                                # Price has tested [ema_9]
 
-                            if (self.low[0] < self.low[1] and self.low[1] > self.low[2] and
-                                    self.close[0] < self.close[1]):
-                                # Price confirmed a pivot down
+                                if max(self.change[:2]) > 0:
+                                    # At least 1 green candle found
 
-                                for i in range(i_candle, min_candles + i_candle):
-                                    if self.close[i] < self.ema_9[i - 1]:
-                                        if i == min_candles + i_candle - 1:
-                                            # [close] has been bellow [ema_9] for a while
-                                            is_setup_confirmed = True
-                                            stop_loss = self.high[1]
-                                    else:
-                                        # Aborting
-                                        break
+                                    if (self.low[0] < self.low[1] and self.low[1] > self.low[2] and
+                                            self.close[0] < self.close[1]):
+                                        # Price confirmed a pivot down
+
+                                        for i in range(i_candle, min_candles + i_candle):
+                                            if self.close[i] < self.ema_9[i - 1]:
+                                                if i == min_candles + i_candle - 1:
+                                                    # [close] has been bellow [ema_9] for a while
+                                                    is_setup_confirmed = True
+                                                    stop_loss = self.high[1]
+                                            else:
+                                                # Aborting
+                                                break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
@@ -3196,44 +3209,53 @@ class SmartTrader:
             min_candles = 4
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
+            dst_close_ema_144 = utils.distance_percent(v1=self.close[0], v2=self.ema_144[0])
+            dst_close_ema_72 = utils.distance_percent(v1=self.close[0], v2=self.ema_72[0])
+
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
-                if self.ema_9[0] > self.ema_50[0] and self.ema_21[0] > self.ema_50[0]:
-                    # Support of [ema_21] and [ema_50]
-                    if self.close[1] < self.ema_9[1] < self.close[0]:
-                        crossing_up = True
+                if self.close[1] < self.ema_9[1] < self.close[0]:
+                    crossing_up = True
 
-                elif self.ema_9[0] < self.ema_50[0] and self.ema_21[0] < self.ema_50[0]:
-                    # Support of [ema_21] and [ema_50]
-                    if self.close[1] > self.ema_9[1] > self.close[0]:
-                        crossing_down = True
+                elif self.close[1] > self.ema_9[1] > self.close[0]:
+                    crossing_down = True
 
                 if crossing_up:
                     side = 'up'
 
-                    for i in range(i_candle, min_candles + i_candle):
-                        if self.close[i] > self.ema_9[i - 1]:
-                            if i == min_candles + i_candle - 1:
-                                # [close] has been above [ema_9] for a while
-                                is_setup_confirmed = True
-                                stop_loss = self.low[1]
-                        else:
-                            # Aborting
-                            break
+                    if dst_close_ema_144 < -0.0001618 or dst_close_ema_144 > 0:
+                        # Price doesn't have [ema_144] as immediate resistance
+                        if dst_close_ema_72 < -0.0001618 or dst_close_ema_72 > 0:
+                            # Price doesn't have [ema_72] as immediate resistance
+
+                            for i in range(i_candle, min_candles + i_candle):
+                                if self.close[i] > self.ema_9[i - 1]:
+                                    if i == min_candles + i_candle - 1:
+                                        # [close] has been above [ema_9] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = self.low[1]
+                                else:
+                                    # Aborting
+                                    break
 
                 elif crossing_down:
                     side = 'down'
 
-                    for i in range(i_candle, min_candles + i_candle):
-                        if self.close[i] < self.ema_9[i - 1]:
-                            if i == min_candles + i_candle - 1:
-                                # [close] has been bellow [ema_9] for a while
-                                is_setup_confirmed = True
-                                stop_loss = self.high[1]
-                        else:
-                            # Aborting
-                            break
+                    if dst_close_ema_144 > 0.0001618 or dst_close_ema_144 < 0:
+                        # Price doesn't have [ema_144] as immediate support
+                        if dst_close_ema_72 > 0.0001618 or dst_close_ema_72 < 0:
+                            # Price doesn't have [ema_72] as immediate support
+
+                            for i in range(i_candle, min_candles + i_candle):
+                                if self.close[i] < self.ema_9[i - 1]:
+                                    if i == min_candles + i_candle - 1:
+                                        # [close] has been bellow [ema_9] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = self.high[1]
+                                else:
+                                    # Aborting
+                                    break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed

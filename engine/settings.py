@@ -23,7 +23,7 @@ TRADING_STRATEGIES = ['ema_9_1', 'ema_9_2_3', 'ema_9_4']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
-BALANCE_TRADE_SIZE_PERCENT = 0.01
+BALANCE_TRADE_SIZE_PERCENT = 0.0025
 MAX_TRADES_PER_POSITION = 1
 MARTINGALE_STRATEGY = [1, 2, 1.10]
 
@@ -79,8 +79,8 @@ CORE_DATA = {
     'asset': 'string',
     'balance': 'currency',
     'clock': 'time',
-    'ema_50': 'float',
-    'ema_21': 'float',
+    'ema_144': 'float',
+    'ema_72': 'float',
     'ema_9': 'float',
     'expiry_time': 'time',
     'ohlc': 'string_ohlc',
@@ -127,7 +127,7 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.70,
                 'is_mandatory': True,
-                'elements': ['ohlc', 'ema_50', 'ema_21', 'ema_9', 'clock'],
+                'elements': ['ohlc', 'ema_144', 'ema_72', 'ema_9', 'clock'],
             },
             'chart_bottom': {
                 'id': 'chart_bottom',
