@@ -726,9 +726,9 @@ class SmartTrader:
                     bottom = height * 0.47
                 elif element_id == 'ema_144':
                     if platform.system().lower() == 'linux':
-                        left = width * 0.51
+                        left = width * 0.53
                     else:
-                        left = width * 0.45
+                        left = width * 0.47
                     top = height * 0.46
                     right = width * 0.75
                     bottom = height * 0.55
