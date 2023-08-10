@@ -1370,21 +1370,21 @@ class SmartTrader:
                 element['y'] = zone_region.top + 90
             elif element_id == 'btn_indicator_1_settings':
                 if platform.system().lower() == 'linux':
-                    element['x'] = zone_region.left + 230
+                    element['x'] = zone_region.left + 235
                 else:
-                    element['x'] = zone_region.left + 215
+                    element['x'] = zone_region.left + 220
                 element['y'] = zone_region.top + 132
             elif element_id == 'btn_indicator_2_settings':
                 if platform.system().lower() == 'linux':
-                    element['x'] = zone_region.left + 230
+                    element['x'] = zone_region.left + 235
                 else:
-                    element['x'] = zone_region.left + 215
+                    element['x'] = zone_region.left + 220
                 element['y'] = zone_region.top + 157
             elif element_id == 'btn_indicator_3_settings':
                 if platform.system().lower() == 'linux':
-                    element['x'] = zone_region.left + 230
+                    element['x'] = zone_region.left + 235
                 else:
-                    element['x'] = zone_region.left + 215
+                    element['x'] = zone_region.left + 220
                 element['y'] = zone_region.top + 182
             elif element_id == 'btn_rsi_settings':
                 if platform.system().lower() == 'linux':
