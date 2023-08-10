@@ -1781,8 +1781,8 @@ class SmartTrader:
         self.playbook_tv_add_indicator(hint='Moving Average Exponential')
 
         # Configuring EMAs
-        self.playbok_tv_configure_indicator_ema(i_indicator=1, length=50)
-        self.playbok_tv_configure_indicator_ema(i_indicator=2, length=21)
+        self.playbok_tv_configure_indicator_ema(i_indicator=1, length=144)
+        self.playbok_tv_configure_indicator_ema(i_indicator=2, length=72)
         self.playbok_tv_configure_indicator_ema(i_indicator=3, length=9)
 
         # Defining RSI
