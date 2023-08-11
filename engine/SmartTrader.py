@@ -3042,8 +3042,8 @@ class SmartTrader:
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
-                dst_close_ema_144 = utils.distance_percent(v1=self.close[0], v2=self.ema_144[0])
-                dst_close_ema_72 = utils.distance_percent(v1=self.close[0], v2=self.ema_72[0])
+                dst_close_ema_144 = utils.distance_percent(v1=self.close[1], v2=self.ema_144[0])
+                dst_close_ema_72 = utils.distance_percent(v1=self.close[1], v2=self.ema_72[0])
 
                 if self.close[0] > self.ema_9[0]:
                     # Price is above [ema_9]
@@ -3209,8 +3209,8 @@ class SmartTrader:
             min_candles = 4
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
-            dst_close_ema_144 = utils.distance_percent(v1=self.close[0], v2=self.ema_144[0])
-            dst_close_ema_72 = utils.distance_percent(v1=self.close[0], v2=self.ema_72[0])
+            dst_close_ema_144 = utils.distance_percent(v1=self.close[1], v2=self.ema_144[0])
+            dst_close_ema_72 = utils.distance_percent(v1=self.close[1], v2=self.ema_72[0])
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
