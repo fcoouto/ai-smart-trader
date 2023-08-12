@@ -2569,7 +2569,7 @@ class SmartTrader:
 
         return result
 
-    async def strategy_ema_rsi_8020(self):
+    async def strategy_ema_rsi_8020(self, trade_size):
         strategy_id = 'ema_rsi_8020'
 
         if strategy_id in self.ongoing_positions:
@@ -2662,8 +2662,6 @@ class SmartTrader:
             if len(self.datetime) >= 3:
                 dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
 
-                trade_size = self.get_optimal_trade_size()
-
                 if min(self.close[:5]) > self.ema_72[0]:
                     # Price has been above [ema]
                     if dst_price_ema < 0.0002618:
@@ -2683,7 +2681,7 @@ class SmartTrader:
                                                                 trade_size=trade_size)
         return position
 
-    async def strategy_ema_rsi_8020_contrarian(self):
+    async def strategy_ema_rsi_8020_contrarian(self, trade_size):
         strategy_id = 'ema_rsi_8020_contrarian'
 
         if strategy_id in self.ongoing_positions:
@@ -2775,8 +2773,6 @@ class SmartTrader:
 
             if len(self.datetime) >= 3:
                 dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
-
-                trade_size = self.get_optimal_trade_size()
 
                 if min(self.close[:5]) > self.ema_72[0]:
                     # Price has been above [ema]
