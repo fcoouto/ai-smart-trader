@@ -376,7 +376,7 @@ class SmartTrader:
             self.read_element(element_id='trade_size')
 
     def validate_expiry_time(self):
-        expected_expiry_time = '05:00'
+        expected_expiry_time = '03:00'
 
         while not self.is_expiry_time_fixed():
             # Waiting PB
@@ -1963,15 +1963,17 @@ class SmartTrader:
             self.click_element(element_id='trade_size', clicks=2)
             pyautogui.typewrite("%.2f" % trade_size)
 
-    def playbook_set_expiry_time(self, expiry_time='04:00'):
+    def playbook_set_expiry_time(self, expiry_time='03:00'):
         self.click_element(element_id='btn_expiry_time', wait_when_done=0.700)
 
         if expiry_time == '01:00':
             self.click_element(element_id='dp_item_1min')
-        elif expiry_time == '05:00':
-            self.click_element(element_id='dp_item_5min')
+        elif expiry_time == '03:00':
+            self.click_element(element_id='dp_item_3min')
         elif expiry_time == '04:00':
             self.click_element(element_id='dp_item_4min')
+        elif expiry_time == '05:00':
+            self.click_element(element_id='dp_item_5min')
         else:
             # Option is not supported. Closing dropdown menu
             pyautogui.press('escape')
@@ -2063,6 +2065,9 @@ class SmartTrader:
                 for item in utils.progress_bar([0], prefix=msg):
                     self.execute_playbook(playbook_id='refresh_page')
                     has_refreshed = True
+
+                # Running Validating
+                self.run_validation()
 
                 # Updating [ohlc]
                 self.read_element(element_id='ohlc',
@@ -2205,7 +2210,7 @@ class SmartTrader:
                    f"\t  - I think I'm done for today.{tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
 
-    def loss_management_close_trade(self, strategy_id, result=None, trade_size=0.00):
+    def loss_management_close_trade(self, strategy_id, trade):
         asset = self.get_asset_for_url_path()
 
         request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/close_trade/'
@@ -2213,9 +2218,8 @@ class SmartTrader:
         data = {
             'strategy_id': strategy_id,
             'initial_trade_size': self.initial_trade_size,
-            'trade_size': trade_size,
-            'trade_result': result,
-            'balance_trade_size_percent': settings.BALANCE_TRADE_SIZE_PERCENT
+            'balance_trade_size_percent': settings.BALANCE_TRADE_SIZE_PERCENT,
+            'trade': trade
         }
 
         try:
@@ -2319,8 +2323,7 @@ class SmartTrader:
 
         # [Loss Management] Updating [cumulative_loss]
         self.loss_management_close_trade(strategy_id=strategy_id,
-                                         result=result,
-                                         trade_size=trade['trade_size'])
+                                         trade=trade)
 
         return position['trades'][-1]
 
@@ -2329,17 +2332,18 @@ class SmartTrader:
         tmsg.print(context='Warming Up!', msg=msg, clear=True)
 
         refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
+        amount_candles_init = 7
 
         long_action_lock_file = os.path.join(settings.PATH_LOCK,
                                              f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
 
         self.run_validation()
 
-        # Reading last 10 candles PB
+        # Reading last 7 candles PB
         msg = "Reading previous 7 candles"
         if not os.path.exists(long_action_lock_file):
             for item in utils.progress_bar([0], prefix=msg):
-                self.execute_playbook(playbook_id='read_previous_candles', amount_candles=7)
+                self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
 
         # First run using estimated time (1.5 seconds)
         reading_chart_duration = default_reading_duration = timedelta(seconds=1.250).total_seconds()
@@ -2484,6 +2488,12 @@ class SmartTrader:
 
                 # Reseting [reading_chart_duration]
                 reading_chart_duration = default_reading_duration
+
+                # Reading last 7 candles PB
+                msg = "Reading previous 7 candles"
+                if not os.path.exists(long_action_lock_file):
+                    for item in utils.progress_bar([0], prefix=msg):
+                        self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
 
                 waiting_time = 5
                 sleep(waiting_time)
@@ -2650,22 +2660,22 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_144[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if min(self.close[:5]) > self.ema_144[0]:
+                if min(self.close[:5]) > self.ema_72[0]:
                     # Price has been above [ema]
-                    if dst_price_ema < 0.0001618:
+                    if dst_price_ema < 0.0002618:
                         # Price is close to [ema]: Trend continuation
                         if self.rsi[1] <= 20 and 40 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
                                                                 side='up',
                                                                 trade_size=trade_size)
 
-                elif max(self.close[:5]) < self.ema_144[0]:
+                elif max(self.close[:5]) < self.ema_72[0]:
                     # Price has been bellow [ema]
-                    if dst_price_ema < 0.0001618:
+                    if dst_price_ema < 0.0002618:
                         # Price is close to [ema]: Trend continuation
                         if self.rsi[1] >= 80 and 60 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
@@ -2764,11 +2774,11 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_144[0])
+                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
 
                 trade_size = self.get_optimal_trade_size()
 
-                if min(self.close[:5]) > self.ema_144[0]:
+                if min(self.close[:5]) > self.ema_72[0]:
                     # Price has been above [ema]
                     if dst_price_ema > 0.001200:
                         # Price is too far from [ema]: Contrarian
@@ -2777,7 +2787,7 @@ class SmartTrader:
                                                                 side='down',
                                                                 trade_size=trade_size)
 
-                elif max(self.close[:5]) < self.ema_144[0]:
+                elif max(self.close[:5]) < self.ema_72[0]:
                     # Price has been bellow [ema]
                     if dst_price_ema > 0.001200:
                         # Price is far from [ema]: Contrarian

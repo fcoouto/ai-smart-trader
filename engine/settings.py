@@ -19,7 +19,7 @@ CHART_DATA_READING_LIMIT_SECONDS = 5
 REFRESH_PAGE_EVERY_MINUTES = 15
 
 # TRADING
-TRADING_STRATEGIES = ['ema_9_1', 'ema_9_2_3', 'ema_9_4']
+TRADING_STRATEGIES = ['ema_9_1', 'ema_9_2_3', 'ema_9_4', 'ema_rsi_8020', 'ema_rsi_8020_contrarian']
 MODE_SIMULATION = 'simulation'
 MODE_DEMO = 'demo'
 MODE_LIVE = 'live'
@@ -510,6 +510,12 @@ BROKERS = {
             'dp_item_1min': {
                 'context': 'iqcent',
                 'zone': 'dp_item_1min',
+                'x': None,
+                'y': None
+            },
+            'dp_item_3min': {
+                'context': 'iqcent',
+                'zone': 'dp_item_3min',
                 'x': None,
                 'y': None
             },
