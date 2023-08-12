@@ -2215,6 +2215,12 @@ class SmartTrader:
 
         request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/close_trade/'
         headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
+
+        # Preparing [data]
+        trade = trade.copy()
+        trade['open_time'] = trade['open_time'].strftime("%Y-%m-%d %H:%M:%S")
+        trade['expiration_time'] = trade['expiration_time'].strftime("%Y-%m-%d %H:%M:%S")
+
         data = {
             'strategy_id': strategy_id,
             'initial_trade_size': self.initial_trade_size,
