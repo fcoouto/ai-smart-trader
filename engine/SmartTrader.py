@@ -2061,9 +2061,12 @@ class SmartTrader:
                                            insert_fields=ohcl_to_insert,
                                            update_fields=ohcl_to_update)
             if o == h == l == c and not has_refreshed:
+                # Flat candle identified
+                # Refresh page to make sure data is accurate
+                # [is_long_action] is set, so we ignore the lock_file created by [read_previous_candles]
                 msg = "Refreshing page"
                 for item in utils.progress_bar([0], prefix=msg):
-                    self.execute_playbook(playbook_id='refresh_page')
+                    self.execute_playbook(playbook_id='refresh_page', is_long_action=False)
                     has_refreshed = True
 
                 # Running Validating
@@ -2338,7 +2341,7 @@ class SmartTrader:
         tmsg.print(context='Warming Up!', msg=msg, clear=True)
 
         refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
-        amount_candles_init = 7
+        amount_candles_init = 6
 
         long_action_lock_file = os.path.join(settings.PATH_LOCK,
                                              f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
@@ -2346,7 +2349,7 @@ class SmartTrader:
         self.run_validation()
 
         # Reading last 7 candles PB
-        msg = "Reading previous 7 candles"
+        msg = f"Reading previous {amount_candles_init} candles"
         if not os.path.exists(long_action_lock_file):
             for item in utils.progress_bar([0], prefix=msg):
                 self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
@@ -2515,9 +2518,13 @@ class SmartTrader:
 
         # Reading [close] and [rsi]
         start = datetime.now()
-
-        element_ids = ['price', 'rsi']
         ohlc_insert_fields = ['open', 'high', 'low', 'close']
+        element_ids = ['rsi']
+
+        if self.ongoing_positions:
+            # Read [price] only if there are ongoing positions (for checking result)
+            element_ids.append('price')
+
         async with asyncio.TaskGroup() as tg:
             tg.create_task(self.read_chart_data(element_ids=element_ids))
             tg.create_task(self.read_element(element_id='ohlc',
@@ -2902,7 +2909,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 7
+            min_candles = 5
             crossed_up = crossed_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
