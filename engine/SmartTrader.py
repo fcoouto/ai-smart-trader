@@ -2168,13 +2168,13 @@ class SmartTrader:
                 'rsi': self.rsi[1]}
 
         try:
-            r = requests.post(url=request_url,
-                              headers=headers,
-                              json=data)
+            requests.post(url=request_url,
+                          headers=headers,
+                          json=data)
         except requests.exceptions.Timeout:
-            r = requests.post(url=request_url,
-                              headers=headers,
-                              json=data)
+            requests.post(url=request_url,
+                          headers=headers,
+                          json=data)
 
     ''' Loss Management '''
 
@@ -2333,6 +2333,7 @@ class SmartTrader:
         position = self.ongoing_positions[strategy_id]
         trade = position['trades'][-1]
         trade['result'] = result
+        trade['close_price'] = self.price[0]
 
         # [Loss Management] Updating [cumulative_loss]
         self.loss_management_close_trade(strategy_id=strategy_id,
