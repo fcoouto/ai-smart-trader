@@ -2559,7 +2559,7 @@ class SmartTrader:
         async with asyncio.TaskGroup() as tg:
             tg.create_task(self.read_element(element_id='ema_144', is_async=True, action='insert'))
             tg.create_task(self.read_element(element_id='ema_72', is_async=True, action='insert'))
-            tg.create_task(self.read_element(element_id='ema_9', is_async=True, action='insert')))
+            tg.create_task(self.read_element(element_id='ema_9', is_async=True, action='insert'))
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
