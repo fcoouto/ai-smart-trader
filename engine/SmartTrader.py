@@ -2502,8 +2502,8 @@ class SmartTrader:
                 # Reseting [reading_chart_duration]
                 reading_chart_duration = default_reading_duration
 
-                # Reading last 7 candles PB
-                msg = "Reading previous 7 candles"
+                # Reading last candles PB
+                msg = f"Reading previous {amount_candles_init} candles"
                 if not os.path.exists(long_action_lock_file):
                     for item in utils.progress_bar([0], prefix=msg):
                         self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
@@ -3229,20 +3229,20 @@ class SmartTrader:
 
         if position is None or position['result']:
             # No open position
-            i_candle = 3
+            i_candle = 2
             min_candles = 4
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
-            dst_close_ema_144 = utils.distance_percent(v1=self.close[2], v2=self.ema_144[1])
-            dst_close_ema_72 = utils.distance_percent(v1=self.close[2], v2=self.ema_72[1])
+            dst_close_ema_144 = utils.distance_percent(v1=self.close[1], v2=self.ema_144[0])
+            dst_close_ema_72 = utils.distance_percent(v1=self.close[1], v2=self.ema_72[0])
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
-                if self.close[2] < self.ema_9[2] < self.close[1]:
+                if self.close[1] < self.ema_9[1] < self.close[0]:
                     crossing_up = True
 
-                elif self.close[2] > self.ema_9[2] > self.close[1]:
+                elif self.close[1] > self.ema_9[1] > self.close[0]:
                     crossing_down = True
 
                 if crossing_up:
@@ -3261,7 +3261,7 @@ class SmartTrader:
                                         if i == min_candles + i_candle - 1:
                                             # [close] has been above [ema_9] for a while
                                             is_setup_confirmed = True
-                                            stop_loss = self.low[2]
+                                            stop_loss = self.low[1]
                                     else:
                                         # Aborting
                                         break
@@ -3282,7 +3282,7 @@ class SmartTrader:
                                         if i == min_candles + i_candle - 1:
                                             # [close] has been bellow [ema_9] for a while
                                             is_setup_confirmed = True
-                                            stop_loss = self.high[2]
+                                            stop_loss = self.high[1]
                                     else:
                                         # Aborting
                                         break
