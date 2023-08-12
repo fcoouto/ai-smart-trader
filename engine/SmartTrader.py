@@ -2451,7 +2451,7 @@ class SmartTrader:
                 self.run_validation()
 
             # Last candle data PB
-            msg = "Reading previous candle's data"
+            msg = "Reading previous candle"
             if not os.path.exists(long_action_lock_file):
                 for item in utils.progress_bar([0], prefix=msg):
                     self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
@@ -2688,7 +2688,7 @@ class SmartTrader:
                                               side=position['side'],
                                               trade_size=last_trade['trade_size'])
 
-        else:
+        if position is None or position['result']:
             # No open position
 
             if len(self.datetime) >= 3:
@@ -2802,7 +2802,7 @@ class SmartTrader:
                                               side=position['side'],
                                               trade_size=last_trade['trade_size'])
 
-        else:
+        if position is None or position['result']:
             # No open position
 
             if len(self.datetime) >= 3:
