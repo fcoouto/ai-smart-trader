@@ -2928,7 +2928,7 @@ class SmartTrader:
 
         if position is None or position['result']:
             # No open position
-            i_candle = 1
+            i_candle = 2
             min_candles = 5
             crossed_up = crossed_down = is_setup_confirmed = None
 
@@ -2940,9 +2940,9 @@ class SmartTrader:
                     crossed_down = True
 
                 if crossed_up:
-                    # Price  crosssed [ema_9] up
+                    # Price crossed over [ema_9]
 
-                    if self.close[0] > self.high[1]:
+                    if self.high[0] > self.high[1]:
                         # Price broke last candle's high
 
                         for i in range(i_candle, min_candles + i_candle):
@@ -2955,9 +2955,9 @@ class SmartTrader:
                                 break
 
                 elif crossed_down:
-                    # Price crosssed [ema_9] down
+                    # Price crossed under [ema_9]
 
-                    if self.close[0] < self.low[1]:
+                    if self.low[0] < self.low[1]:
                         # Price broke last candle's low
 
                         for i in range(i_candle, min_candles + i_candle):
