@@ -2516,7 +2516,7 @@ class SmartTrader:
         # Reading [close] and [rsi]
         start = datetime.now()
 
-        element_ids = ['price']
+        element_ids = ['price', 'rsi']
         ohlc_insert_fields = ['open', 'high', 'low', 'close']
         async with asyncio.TaskGroup() as tg:
             tg.create_task(self.read_chart_data(element_ids=element_ids))
@@ -2559,8 +2559,7 @@ class SmartTrader:
         async with asyncio.TaskGroup() as tg:
             tg.create_task(self.read_element(element_id='ema_144', is_async=True, action='insert'))
             tg.create_task(self.read_element(element_id='ema_72', is_async=True, action='insert'))
-            tg.create_task(self.read_element(element_id='ema_9', is_async=True, action='insert'))
-            tg.create_task(self.read_element(element_id='rsi', is_async=True, action='insert'))
+            tg.create_task(self.read_element(element_id='ema_9', is_async=True, action='insert')))
 
         if len(self.ongoing_positions) == 0:
             # There are no open positions
