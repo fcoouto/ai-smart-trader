@@ -2665,11 +2665,11 @@ class SmartTrader:
             # No open position
 
             if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
-
                 if min(self.close[:5]) > self.ema_72[0]:
                     # Price has been above [ema]
-                    if dst_price_ema < 0.0002618:
+
+                    dst_low_ema = utils.distance_percent_abs(v1=self.low[1], v2=self.ema_72[0])
+                    if dst_low_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
                         if self.rsi[1] <= 20 and 40 <= self.rsi[0] <= 80:
                             position = await self.open_position(strategy_id=strategy_id,
@@ -2678,7 +2678,9 @@ class SmartTrader:
 
                 elif max(self.close[:5]) < self.ema_72[0]:
                     # Price has been bellow [ema]
-                    if dst_price_ema < 0.0002618:
+
+                    dst_high_ema = utils.distance_percent_abs(v1=self.high[1], v2=self.ema_72[0])
+                    if dst_high_ema < 0.0001618:
                         # Price is close to [ema]: Trend continuation
                         if self.rsi[1] >= 80 and 60 >= self.rsi[0] >= 20:
                             position = await self.open_position(strategy_id=strategy_id,
