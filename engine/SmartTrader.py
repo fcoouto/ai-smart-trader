@@ -2323,6 +2323,7 @@ class SmartTrader:
             'expiration_time': expiration_time,
             'trade_size': trade_size,
             'open_price': self.price[0],
+            'close_price': None,
             'result': None
         }
 
