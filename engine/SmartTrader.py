@@ -1175,7 +1175,8 @@ class SmartTrader:
                                       type=self.broker['elements'][element_id]['type'])
         value = utils.str_to_float(value)
 
-        if action == 'update':
+        if action == 'update' and len(self.price) > 0:
+            # We are not reading [price] at every lookup anymore. So make sure [price] has values to be updated.
             self.price[0] = value
         elif action == 'insert':
             self.price.insert(0, value)
