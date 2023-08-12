@@ -1143,6 +1143,10 @@ class SmartTrader:
 
             self.datetime.insert(0, candle_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
+        if len(self.datetime) == 0:
+            # Overwriting [action]
+            action = 'insert'
+
         async with asyncio.TaskGroup() as tg:
             for element_id in element_ids:
                 tasks.append(tg.create_task(self.read_element(element_id=element_id,
@@ -1211,6 +1215,17 @@ class SmartTrader:
         change = round(c - o, 6)
 
         if update_fields:
+            if len(self.datetime) == 0:
+                # There are no values to update.
+                # Overwriting [action]
+                if insert_fields:
+                    insert_fields.append(update_fields)
+                else:
+                    insert_fields = update_fields.copy()
+
+                # Clearing [update_fields]
+                update_fields = []
+
             for field in update_fields:
                 if field.lower() == 'open':
                     self.open[0] = o
