@@ -2690,141 +2690,42 @@ class SmartTrader:
 
         if position is None or position['result']:
             # No open position
+            i_candle = 1
+            min_candles = 3
+            side = stop_loss = is_setup_confirmed = None
 
-            if len(self.datetime) >= 3:
-                if min(self.close[:5]) > self.ema_72[0]:
-                    # Price has been above [ema]
+            if len(self.datetime) >= min_candles + i_candle:
+                # We got enough candles
 
-                    dst_low_ema = utils.distance_percent_abs(v1=self.low[1], v2=self.ema_72[0])
-                    if dst_low_ema < 0.0001618:
-                        # Price is close to [ema]: Trend continuation
-                        if self.rsi[1] <= 20 and 40 <= self.rsi[0] <= 80:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
+                if self.rsi[1] < 20 and 40 <= self.rsi[0] <= 80:
+                    # [rsi] crossed over 20
+                    side = 'up'
 
-                elif max(self.close[:5]) < self.ema_72[0]:
-                    # Price has been bellow [ema]
+                    for i in range(i_candle, min_candles + i_candle):
+                        if self.rsi[i] < 20:
+                            if i == min_candles + i_candle - 1:
+                                # [rsi] has been bellow [20] for a while
+                                is_setup_confirmed = True
+                                stop_loss = min(self.low[:2])
 
-                    dst_high_ema = utils.distance_percent_abs(v1=self.high[1], v2=self.ema_72[0])
-                    if dst_high_ema < 0.0001618:
-                        # Price is close to [ema]: Trend continuation
-                        if self.rsi[1] >= 80 and 60 >= self.rsi[0] >= 20:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
-        return position
+                elif self.rsi[1] > 80 and 60 >= self.rsi[0] >= 20:
+                    # [rsi] crossed under 80
+                    side = 'down'
 
-    async def strategy_ema_rsi_8020_contrarian(self, trade_size):
-        strategy_id = 'ema_rsi_8020_contrarian'
+                    for i in range(i_candle, min_candles + i_candle):
+                        if self.rsi[i] > 80:
+                            if i == min_candles + i_candle - 1:
+                                # [rsi] has been above [80] for a while
+                                is_setup_confirmed = True
+                                stop_loss = max(self.high[:2])
 
-        if strategy_id in self.ongoing_positions:
-            position = self.ongoing_positions[strategy_id]
-        else:
-            position = None
+                if is_setup_confirmed:
+                    # Setup has been confirmed
+                    position = await self.open_position(strategy_id=strategy_id,
+                                                        side=side,
+                                                        trade_size=trade_size,
+                                                        stop_loss=stop_loss)
 
-        if position:
-            # Has position open
-            result = None
-            last_trade = position['trades'][-1]
-            amount_trades = len(position['trades'])
-
-            # Defining [expiration_countdown]
-            now = datetime.utcnow()
-            expiration_countdown = last_trade['expiration_time'] - now
-
-            if expiration_countdown < timedelta(seconds=10):
-                # Trade is about to expire
-
-                if position['side'] == 'up':
-                    # up
-                    if self.price[0] > last_trade['open_price']:
-                        result = 'gain'
-                    elif self.price[0] < last_trade['open_price']:
-                        result = 'loss'
-                    else:
-                        result = 'draw'
-
-                else:
-                    # down
-                    if self.price[0] < last_trade['open_price']:
-                        result = 'gain'
-                    elif self.price[0] > last_trade['open_price']:
-                        result = 'loss'
-                    else:
-                        result = 'draw'
-
-                if result == 'gain':
-                    position = await self.close_position(strategy_id=strategy_id,
-                                                         result=result)
-                elif result == 'loss':
-                    if amount_trades >= settings.MAX_TRADES_PER_POSITION:
-                        # No more tries
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-
-                    elif position['side'] == 'up':
-                        if self.rsi[0] < 20:
-                            # Abort it
-                            position = await self.close_position(strategy_id=strategy_id,
-                                                                 result=result)
-                    elif position['side'] == 'down':
-                        if self.rsi[0] > 80:
-                            # Abort it
-                            position = await self.close_position(strategy_id=strategy_id,
-                                                                 result=result)
-
-                    if not position['result']:
-                        # Martingale
-                        await self.close_trade(strategy_id=strategy_id,
-                                               result=result)
-
-                        if self.recovery_mode:
-                            trade_size = self.get_optimal_trade_size()
-                        else:
-                            trade_size = self.get_martingale_trade_size(i_trade=amount_trades,
-                                                                        last_trade_size=last_trade['trade_size'])
-
-                        await self.open_trade(strategy_id=strategy_id,
-                                              side=position['side'],
-                                              trade_size=trade_size)
-                else:
-                    # Draw
-                    if amount_trades == 1:
-                        # Draw on first trade
-                        # Abort it
-                        position = await self.close_position(strategy_id=strategy_id,
-                                                             result=result)
-                    else:
-                        await self.close_trade(strategy_id=strategy_id,
-                                               result=result)
-                        await self.open_trade(strategy_id=strategy_id,
-                                              side=position['side'],
-                                              trade_size=last_trade['trade_size'])
-
-        if position is None or position['result']:
-            # No open position
-
-            if len(self.datetime) >= 3:
-                dst_price_ema = utils.distance_percent_abs(v1=self.close[1], v2=self.ema_72[0])
-
-                if min(self.close[:5]) > self.ema_72[0]:
-                    # Price has been above [ema]
-                    if dst_price_ema > 0.001200:
-                        # Price is too far from [ema]: Contrarian
-                        if self.rsi[1] >= 80 and 70 >= self.rsi[0] >= 20:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='down',
-                                                                trade_size=trade_size)
-
-                elif max(self.close[:5]) < self.ema_72[0]:
-                    # Price has been bellow [ema]
-                    if dst_price_ema > 0.001200:
-                        # Price is far from [ema]: Contrarian
-                        if self.rsi[1] <= 20 and 30 <= self.rsi[0] <= 80:
-                            position = await self.open_position(strategy_id=strategy_id,
-                                                                side='up',
-                                                                trade_size=trade_size)
         return position
 
     async def strategy_ema_9_1(self, trade_size):
@@ -3097,7 +2998,7 @@ class SmartTrader:
                             if min(self.low[:3]) < self.ema_9[1]:
                                 # Price has tested [ema_9]
 
-                                if min(self.change[:2]) < 0:
+                                if min(self.change[1:3]) < 0:
                                     # At least 1 red candle
 
                                     if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
@@ -3126,7 +3027,7 @@ class SmartTrader:
                             if max(self.high[:3]) > self.ema_9[1]:
                                 # Price has tested [ema_9]
 
-                                if max(self.change[:2]) > 0:
+                                if max(self.change[1:3]) > 0:
                                     # At least 1 green candle found
 
                                     if (self.low[0] < self.low[1] and self.low[1] > self.low[2] and
@@ -3285,7 +3186,7 @@ class SmartTrader:
                 elif crossing_down:
                     side = 'down'
 
-                    if self.low[0] > self.low[1]:
+                    if self.low[0] < self.low[1]:
                         # Lower low
 
                         if dst_close_ema_144 > 0.0001618 or dst_close_ema_144 < 0:
