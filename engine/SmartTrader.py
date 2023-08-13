@@ -2701,23 +2701,29 @@ class SmartTrader:
                     # [rsi] crossed over 20
                     side = 'up'
 
-                    for i in range(i_candle, min_candles + i_candle):
-                        if self.rsi[i] < 20:
-                            if i == min_candles + i_candle - 1:
-                                # [rsi] has been bellow [20] for a while
-                                is_setup_confirmed = True
-                                stop_loss = min(self.low[:2])
+                    if min(self.close[:5]) > self.ema_72[0]:
+                        # Price has been above [ema_72]
+
+                        for i in range(i_candle, min_candles + i_candle):
+                            if self.rsi[i] < 20:
+                                if i == min_candles + i_candle - 1:
+                                    # [rsi] has been bellow [20] for a while
+                                    is_setup_confirmed = True
+                                    stop_loss = min(self.low[:2])
 
                 elif self.rsi[1] > 80 and 60 >= self.rsi[0] >= 20:
                     # [rsi] crossed under 80
                     side = 'down'
 
-                    for i in range(i_candle, min_candles + i_candle):
-                        if self.rsi[i] > 80:
-                            if i == min_candles + i_candle - 1:
-                                # [rsi] has been above [80] for a while
-                                is_setup_confirmed = True
-                                stop_loss = max(self.high[:2])
+                    if max(self.close[:5]) < self.ema_72[0]:
+                        # Price has been bellow [ema_72]
+
+                        for i in range(i_candle, min_candles + i_candle):
+                            if self.rsi[i] > 80:
+                                if i == min_candles + i_candle - 1:
+                                    # [rsi] has been above [80] for a while
+                                    is_setup_confirmed = True
+                                    stop_loss = max(self.high[:2])
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
