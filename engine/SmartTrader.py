@@ -2336,6 +2336,7 @@ class SmartTrader:
         trade = {
             'open_time': now,
             'expiration_time': expiration_time,
+            'side': side,
             'trade_size': trade_size,
             'open_price': self.price[0],
             'close_price': None,
@@ -2348,8 +2349,8 @@ class SmartTrader:
     async def close_trade(self, strategy_id, result):
         position = self.ongoing_positions[strategy_id]
         trade = position['trades'][-1]
-        trade['result'] = result
         trade['close_price'] = self.price[0]
+        trade['result'] = result
 
         # [Loss Management] Updating [cumulative_loss]
         self.loss_management_close_trade(strategy_id=strategy_id,
