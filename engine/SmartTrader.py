@@ -2692,44 +2692,51 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 1
+            min_candles = 3
             side = stop_loss = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
-                if min(self.close[:5]) > self.ema_72[0]:
-                    # Price has been above [ema_72]
+                if self.rsi[1] < 20 and 40 <= self.rsi[0] <= 80:
+                    # [rsi] crossed over 20
+                    side = 'up'
 
-                    if self.low[0] < self.low[1]:
-                        # Lower low
+                    if min(self.close[:5]) > self.ema_72[0]:
+                        # Price has been above [ema_72]
 
-                        for i in range(i_candle, min_candles + i_candle):
-                            if self.rsi[i] < 20:
-                                if i == min_candles + i_candle - 1:
-                                    # [rsi] has been bellow [20] for a while
-                                    is_setup_confirmed = True
-                                    stop_loss = min(self.low[:2])
-                            else:
-                                # Aborting
-                                break
+                        if self.high[0] < self.high[1]:
+                            # Higher high
+
+                            for i in range(i_candle, min_candles + i_candle):
+                                if self.rsi[i] < 20:
+                                    if i == min_candles + i_candle - 1:
+                                        # [rsi] has been bellow [20] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = min(self.low[:2])
+                                else:
+                                    # Aborting
+                                    break
 
                 elif self.rsi[1] > 80 and 60 >= self.rsi[0] >= 20:
                     # [rsi] crossed under 80
                     side = 'down'
 
-                    if self.high[0] < self.high[1]:
-                        # Higher high
+                    if max(self.close[:5]) < self.ema_72[0]:
+                        # Price has been bellow [ema_72]
 
-                        for i in range(i_candle, min_candles + i_candle):
-                            if self.rsi[i] > 80:
-                                if i == min_candles + i_candle - 1:
-                                    # [rsi] has been above [80] for a while
-                                    is_setup_confirmed = True
-                                    stop_loss = max(self.high[:2])
-                            else:
-                                # Aborting
-                                break
+                        if self.low[0] < self.low[1]:
+                            # Lower low
+
+                            for i in range(i_candle, min_candles + i_candle):
+                                if self.rsi[i] > 80:
+                                    if i == min_candles + i_candle - 1:
+                                        # [rsi] has been above [80] for a while
+                                        is_setup_confirmed = True
+                                        stop_loss = max(self.high[:2])
+                                else:
+                                    # Aborting
+                                    break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
