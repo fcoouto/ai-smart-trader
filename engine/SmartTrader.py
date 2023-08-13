@@ -1496,7 +1496,7 @@ class SmartTrader:
                 element['x'] = zone_region.left + 190
                 element['y'] = zone_region.top + 130
             elif element_id == 'input_url':
-                element['x'] = zone_region.left + zone_region.width + 50
+                element['x'] = zone_region.left + zone_region.width + 100
                 element['y'] = zone_center_y
             elif element_id == 'slider_background_opacity':
                 element['x'] = zone_region.left + 260
