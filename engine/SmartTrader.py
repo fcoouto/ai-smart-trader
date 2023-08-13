@@ -2883,8 +2883,8 @@ class SmartTrader:
                                                         trade_size=trade_size)
         return position
 
-    async def strategy_ema_9_2_3(self, trade_size):
-        strategy_id = 'ema_9_2_3'
+    async def strategy_ema_72_2_3(self, trade_size):
+        strategy_id = 'ema_72_2_3'
 
         if strategy_id in self.ongoing_positions:
             position = self.ongoing_positions[strategy_id]
@@ -2982,67 +2982,59 @@ class SmartTrader:
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
-
-                dst_close_ema_144 = utils.distance_percent(v1=self.close[1], v2=self.ema_144[0])
-                dst_close_ema_72 = utils.distance_percent(v1=self.close[1], v2=self.ema_72[0])
-
-                if self.close[0] > self.ema_9[0]:
-                    # Price is above [ema_9]
+                if self.close[0] > self.ema_72[0]:
+                    # Price is above [ema_72]
                     side = 'up'
 
-                    if dst_close_ema_144 < -0.0001618 or dst_close_ema_144 > 0:
-                        # Price doesn't have [ema_144] as immediate resistance
-                        if dst_close_ema_72 < -0.0001618 or dst_close_ema_72 > 0:
-                            # Price doesn't have [ema_72] as immediate resistance
+                    if self.ema_72[1] > self.ema_144[1]:
+                        # Moving Averages aligned
 
-                            if min(self.low[:3]) < self.ema_9[1]:
-                                # Price has tested [ema_9]
+                        if min(self.low[:3]) < self.ema_72[1]:
+                            # Price has tested [ema_72]
 
-                                if min(self.change[1:3]) < 0:
-                                    # At least 1 red candle
+                            if min(self.change[1:3]) < 0:
+                                # At least 1 red candle
 
-                                    if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
-                                            self.close[0] > self.close[1]):
-                                        # Price confirmed a pivot up
+                                if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
+                                        self.close[0] > self.close[1]):
+                                    # Price confirmed a pivot up
 
-                                        for i in range(i_candle, min_candles + i_candle):
-                                            if self.close[i] > self.ema_9[i - 1]:
-                                                if i == min_candles + i_candle - 1:
-                                                    # [close] has been above [ema_9] for a while
-                                                    is_setup_confirmed = True
-                                                    stop_loss = self.low[1]
-                                            else:
-                                                # Aborting
-                                                break
+                                    for i in range(i_candle, min_candles + i_candle):
+                                        if self.close[i] > self.ema_72[i - 1]:
+                                            if i == min_candles + i_candle - 1:
+                                                # [close] has been above [ema_72] for a while
+                                                is_setup_confirmed = True
+                                                stop_loss = self.low[1]
+                                        else:
+                                            # Aborting
+                                            break
 
-                elif self.close[0] < self.ema_9[0]:
-                    # Price is bellow [ema_9]
+                elif self.close[0] < self.ema_72[0]:
+                    # Price is bellow [ema_72]
                     side = 'down'
 
-                    if dst_close_ema_144 > 0.0001618 or dst_close_ema_144 < 0:
-                        # Price doesn't have [ema_144] as immediate support
-                        if dst_close_ema_72 > 0.0001618 or dst_close_ema_72 < 0:
-                            # Price doesn't have [ema_72] as immediate support
+                    if self.ema_72[1] < self.ema_144[1]:
+                        # Moving Averages aligned
 
-                            if max(self.high[:3]) > self.ema_9[1]:
-                                # Price has tested [ema_9]
+                        if max(self.high[:3]) > self.ema_72[1]:
+                            # Price has tested [ema_72]
 
-                                if max(self.change[1:3]) > 0:
-                                    # At least 1 green candle found
+                            if max(self.change[1:3]) > 0:
+                                # At least 1 green candle found
 
-                                    if (self.low[0] < self.low[1] and self.low[1] > self.low[2] and
-                                            self.close[0] < self.close[1]):
-                                        # Price confirmed a pivot down
+                                if (self.low[0] < self.low[1] and self.low[1] > self.low[2] and
+                                        self.close[0] < self.close[1]):
+                                    # Price confirmed a pivot down
 
-                                        for i in range(i_candle, min_candles + i_candle):
-                                            if self.close[i] < self.ema_9[i - 1]:
-                                                if i == min_candles + i_candle - 1:
-                                                    # [close] has been bellow [ema_9] for a while
-                                                    is_setup_confirmed = True
-                                                    stop_loss = self.high[1]
-                                            else:
-                                                # Aborting
-                                                break
+                                    for i in range(i_candle, min_candles + i_candle):
+                                        if self.close[i] < self.ema_72[i - 1]:
+                                            if i == min_candles + i_candle - 1:
+                                                # [close] has been bellow [ema_72] for a while
+                                                is_setup_confirmed = True
+                                                stop_loss = self.high[1]
+                                        else:
+                                            # Aborting
+                                            break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
@@ -3150,9 +3142,6 @@ class SmartTrader:
             min_candles = 4
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
-            dst_close_ema_144 = utils.distance_percent(v1=self.close[1], v2=self.ema_144[0])
-            dst_close_ema_72 = utils.distance_percent(v1=self.close[1], v2=self.ema_72[0])
-
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
 
@@ -3165,44 +3154,34 @@ class SmartTrader:
                 if crossing_up:
                     side = 'up'
 
-                    if self.high[0] > self.high[1]:
-                        # Higher high
+                    if self.ema_9[1] > self.ema_72[1] > self.ema_144[1]:
+                        # Moving Averages aligned
 
-                        if dst_close_ema_144 < -0.0001618 or dst_close_ema_144 > 0:
-                            # Price doesn't have [ema_144] as immediate resistance
-                            if dst_close_ema_72 < -0.0001618 or dst_close_ema_72 > 0:
-                                # Price doesn't have [ema_72] as immediate resistance
-
-                                for i in range(i_candle, min_candles + i_candle):
-                                    if self.close[i] > self.ema_9[i - 1]:
-                                        if i == min_candles + i_candle - 1:
-                                            # [close] has been above [ema_9] for a while
-                                            is_setup_confirmed = True
-                                            stop_loss = self.low[1]
-                                    else:
-                                        # Aborting
-                                        break
+                        for i in range(i_candle, min_candles + i_candle):
+                            if self.close[i] > self.ema_9[i - 1]:
+                                if i == min_candles + i_candle - 1:
+                                    # [close] has been above [ema_9] for a while
+                                    is_setup_confirmed = True
+                                    stop_loss = self.low[1]
+                            else:
+                                # Aborting
+                                break
 
                 elif crossing_down:
                     side = 'down'
 
-                    if self.low[0] < self.low[1]:
-                        # Lower low
+                    if self.ema_9[1] < self.ema_72[1] < self.ema_144[1]:
+                        # Moving Averages aligned
 
-                        if dst_close_ema_144 > 0.0001618 or dst_close_ema_144 < 0:
-                            # Price doesn't have [ema_144] as immediate support
-                            if dst_close_ema_72 > 0.0001618 or dst_close_ema_72 < 0:
-                                # Price doesn't have [ema_72] as immediate support
-
-                                for i in range(i_candle, min_candles + i_candle):
-                                    if self.close[i] < self.ema_9[i - 1]:
-                                        if i == min_candles + i_candle - 1:
-                                            # [close] has been bellow [ema_9] for a while
-                                            is_setup_confirmed = True
-                                            stop_loss = self.high[1]
-                                    else:
-                                        # Aborting
-                                        break
+                        for i in range(i_candle, min_candles + i_candle):
+                            if self.close[i] < self.ema_9[i - 1]:
+                                if i == min_candles + i_candle - 1:
+                                    # [close] has been bellow [ema_9] for a while
+                                    is_setup_confirmed = True
+                                    stop_loss = self.high[1]
+                            else:
+                                # Aborting
+                                break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
