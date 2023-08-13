@@ -2843,7 +2843,7 @@ class SmartTrader:
                 if crossed_up:
                     # Price crossed over [ema_9]
 
-                    if self.high[0] > self.high[1]:
+                    if self.close[0] > self.close[1] and self.high[0] > self.high[1]:
                         # Price broke last candle's high
 
                         for i in range(i_candle, min_candles + i_candle):
@@ -2858,7 +2858,7 @@ class SmartTrader:
                 elif crossed_down:
                     # Price crossed under [ema_9]
 
-                    if self.low[0] < self.low[1]:
+                    if self.close[0] < self.close[1] and self.low[0] < self.low[1]:
                         # Price broke last candle's low
 
                         for i in range(i_candle, min_candles + i_candle):
