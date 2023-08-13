@@ -2701,7 +2701,7 @@ class SmartTrader:
                     # [rsi] crossed over 20
                     side = 'up'
 
-                    if min(self.close[:5]) > self.ema_72[0]:
+                    if min(self.close[:5]) > self.ema_144[0]:
                         # Price has been above [ema_72]
 
                         for i in range(i_candle, min_candles + i_candle):
@@ -2715,7 +2715,7 @@ class SmartTrader:
                     # [rsi] crossed under 80
                     side = 'down'
 
-                    if max(self.close[:5]) < self.ema_72[0]:
+                    if max(self.close[:5]) < self.ema_144[0]:
                         # Price has been bellow [ema_72]
 
                         for i in range(i_candle, min_candles + i_candle):
