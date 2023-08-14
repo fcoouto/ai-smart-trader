@@ -376,7 +376,7 @@ class SmartTrader:
             self.read_element(element_id='trade_size')
 
     def validate_expiry_time(self):
-        expected_expiry_time = '03:00'
+        expected_expiry_time = '05:00'
 
         while not self.is_expiry_time_fixed():
             # Waiting PB
@@ -2232,6 +2232,38 @@ class SmartTrader:
                    f"\t  - I think I'm done for today.{tmsg.endc}")
             tmsg.input(msg=msg, clear=True)
 
+    def loss_management_open_trade(self, strategy_id, trade):
+        asset = self.get_asset_for_url_path()
+
+        request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/open_trade/'
+        headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
+
+        # Preparing [data]
+        trade = trade.copy()
+        trade['open_time'] = trade['open_time'].strftime("%Y-%m-%d %H:%M:%S")
+        trade['expiration_time'] = trade['expiration_time'].strftime("%Y-%m-%d %H:%M:%S")
+
+        data = {
+            'strategy_id': strategy_id,
+            'initial_trade_size': self.initial_trade_size,
+            'trade': trade
+        }
+
+        try:
+            r = requests.post(url=request_url,
+                              headers=headers,
+                              json=data)
+        except requests.exceptions.Timeout:
+            r = requests.post(url=request_url,
+                              headers=headers,
+                              json=data)
+        r = json.loads(r.text)
+
+        # Updating [loss_management] data
+        for k, v in r.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+
     def loss_management_close_trade(self, strategy_id, trade):
         asset = self.get_asset_for_url_path()
 
@@ -2338,6 +2370,10 @@ class SmartTrader:
         }
 
         self.ongoing_positions[strategy_id]['trades'].append(trade)
+
+        # [Loss Management] Opening Trade
+        self.loss_management_open_trade(strategy_id=strategy_id,
+                                        trade=trade)
         return trade
 
     async def close_trade(self, strategy_id, result):
@@ -2346,7 +2382,7 @@ class SmartTrader:
         trade['close_price'] = self.price[0]
         trade['result'] = result
 
-        # [Loss Management] Updating [cumulative_loss]
+        # [Loss Management] Closing Trade
         self.loss_management_close_trade(strategy_id=strategy_id,
                                          trade=trade)
 
@@ -2843,7 +2879,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 2
-            min_candles = 6
+            min_candles = 8
             side = crossing_up = crossing_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
@@ -3008,7 +3044,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 6
+            min_candles = 4
             side = stop_loss = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
@@ -3027,12 +3063,11 @@ class SmartTrader:
                         if dst_low_ema_9 <= 0.0001:
                             # Price has tested [ema_9]
 
-                            if min(self.change[1:3]) < 0:
-                                # At least 1 red candle
+                            if self.rsi[1] < 25:
+                                # [rsi] oversold zone
 
-                                if (self.high[0] > self.high[1] and self.high[1] < self.high[2] and
-                                        self.close[0] > self.close[1]):
-                                    # Price confirmed a pivot up
+                                if self.high[0] > self.high[1]:
+                                    # Higher high
 
                                     for i in range(i_candle, min_candles + i_candle):
                                         if self.close[i] > self.ema_9[i - 1]:
@@ -3057,12 +3092,11 @@ class SmartTrader:
                         if dst_high_ema_9 <= 0.0001:
                             # Price has tested [ema_9]
 
-                            if max(self.change[1:3]) > 0:
-                                # At least 1 green candle found
+                            if self.rsi[1] > 75:
+                                # [rsi] overbought zone
 
-                                if (self.low[0] < self.low[1] and self.low[1] > self.low[2] and
-                                        self.close[0] < self.close[1]):
-                                    # Price confirmed a pivot down
+                                if self.low[0] > self.low[1]:
+                                    # Lower low
 
                                     for i in range(i_candle, min_candles + i_candle):
                                         if self.close[i] < self.ema_9[i - 1]:
@@ -3202,40 +3236,46 @@ class SmartTrader:
                 if crossing_up:
                     side = 'up'
 
-                    if self.high[0] > self.high[1]:
-                        # higher high
+                    if self.ema_9[0] > self.ema_72[1] or self.ema_72[1] > self.ema_144[1]:
+                        # Moving Averages aligned
 
-                        if self.ema_9[0] > self.ema_72[1] or self.ema_72[1] > self.ema_144[1]:
-                            # Moving Averages aligned
+                        if self.rsi[i_candle - 1] < 25:
+                            # [rsi] oversold
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] > self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been above [ema_9] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = self.low[1]
-                                else:
-                                    # Aborting
-                                    break
+                            if self.high[0] > self.high[1]:
+                                # higher high
+
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] > self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been above [ema_9] for a while
+                                            is_setup_confirmed = True
+                                            stop_loss = self.low[1]
+                                    else:
+                                        # Aborting
+                                        break
 
                 elif crossing_down:
                     side = 'down'
 
-                    if self.low[0] < self.low[1]:
-                        # Lower low
+                    if self.ema_9[0] < self.ema_72[1] or self.ema_72[1] < self.ema_144[1]:
+                        # Moving Averages aligned
 
-                        if self.ema_9[0] < self.ema_72[1] or self.ema_72[1] < self.ema_144[1]:
-                            # Moving Averages aligned
+                        if self.rsi[i_candle - 1] > 75:
+                            # [rsi] overbought
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] < self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been bellow [ema_9] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = self.high[i_candle - 1]
-                                else:
-                                    # Aborting
-                                    break
+                            if self.low[0] < self.low[1]:
+                                # Lower low
+
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] < self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been bellow [ema_9] for a while
+                                            is_setup_confirmed = True
+                                            stop_loss = self.high[i_candle - 1]
+                                    else:
+                                        # Aborting
+                                        break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
