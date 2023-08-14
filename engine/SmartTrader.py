@@ -2843,7 +2843,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 2
-            min_candles = 6
+            min_candles = 7
             side = crossed_up = crossed_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
@@ -2857,39 +2857,49 @@ class SmartTrader:
                     # Price crossed over [ema_9]
                     side = 'up'
 
-                    if self.close[0] > self.ema_9[0]:
-                        # Price still above [ema_9]
+                    dst_ema_9_72 = utils.distance_percent(v1=self.ema_9[1], v2=self.ema_72[1])
 
-                        if self.high[0] > self.high[1]:
-                            # Price broke last candle's high
+                    if dst_ema_9_72 < -0.0005:
+                        # [ema_9] is way bellow [ema_72]
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] < self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been bellow [ema_9] for a while
-                                        is_setup_confirmed = True
-                                else:
-                                    # Aborting
-                                    break
+                        if self.close[0] > self.ema_9[0]:
+                            # Price still above [ema_9]
+
+                            if self.high[0] > self.high[1]:
+                                # Price broke last candle's high
+
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] < self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been bellow [ema_9] for a while
+                                            is_setup_confirmed = True
+                                    else:
+                                        # Aborting
+                                        break
 
                 elif crossed_down:
                     # Price crossed under [ema_9]
                     side = 'down'
 
-                    if self.close[0] < self.ema_9[0]:
-                        # Price still above [ema_9]
+                    dst_ema_9_72 = utils.distance_percent(v1=self.ema_9[1], v2=self.ema_72[1])
 
-                        if self.low[0] < self.low[1]:
-                            # Price broke last candle's low
+                    if dst_ema_9_72 > 0.0005:
+                        # [ema_9] is way above [ema_72]
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.close[i] > self.ema_9[i - 1]:
-                                    if i == min_candles + i_candle - 1:
-                                        # [close] has been above [ema_9] for a while
-                                        is_setup_confirmed = True
-                                else:
-                                    # Aborting
-                                    break
+                        if self.close[0] < self.ema_9[0]:
+                            # Price still above [ema_9]
+
+                            if self.low[0] < self.low[1]:
+                                # Price broke last candle's low
+
+                                for i in range(i_candle, min_candles + i_candle):
+                                    if self.close[i] > self.ema_9[i - 1]:
+                                        if i == min_candles + i_candle - 1:
+                                            # [close] has been above [ema_9] for a while
+                                            is_setup_confirmed = True
+                                    else:
+                                        # Aborting
+                                        break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
