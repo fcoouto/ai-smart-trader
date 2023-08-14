@@ -2843,7 +2843,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 2
-            min_candles = 7
+            min_candles = 6
             side = crossed_up = crossed_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
@@ -2993,7 +2993,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 7
+            min_candles = 6
             side = stop_loss = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
@@ -3162,7 +3162,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 3
-            min_candles = 7
+            min_candles = 6
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
