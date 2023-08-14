@@ -2843,8 +2843,8 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 2
-            min_candles = 5
-            crossed_up = crossed_down = is_setup_confirmed = None
+            min_candles = 8
+            side = crossed_up = crossed_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
@@ -2855,6 +2855,7 @@ class SmartTrader:
 
                 if crossed_up:
                     # Price crossed over [ema_9]
+                    side = 'up'
 
                     if self.close[0] > self.ema_9[0]:
                         # Price still above [ema_9]
@@ -2873,6 +2874,7 @@ class SmartTrader:
 
                 elif crossed_down:
                     # Price crossed under [ema_9]
+                    side = 'down'
 
                     if self.close[0] < self.ema_9[0]:
                         # Price still above [ema_9]
@@ -2891,11 +2893,6 @@ class SmartTrader:
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
-                    if crossed_up:
-                        side = 'up'
-                    else:
-                        side = 'down'
-
                     # Opening position
                     position = await self.open_position(strategy_id=strategy_id,
                                                         side=side,
