@@ -2843,7 +2843,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 2
-            min_candles = 8
+            min_candles = 7
             side = crossed_up = crossed_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
@@ -2993,19 +2993,23 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 1
-            min_candles = 4
+            min_candles = 7
             side = stop_loss = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
+
                 if self.close[0] > self.ema_9[0]:
                     # Price is above [ema_9]
                     side = 'up'
 
+                    dst_low_ema_9 = utils.distance_percent_abs(v1=min(self.low[:3]),
+                                                               v2=max(self.ema_9[:3]))
+
                     if self.ema_9[1] > self.ema_72[1] or self.ema_72[1] > self.ema_144[1]:
                         # Moving Averages aligned
 
-                        if min(self.low[:3]) < self.ema_9[1]:
+                        if dst_low_ema_9 <= 0.0001:
                             # Price has tested [ema_9]
 
                             if min(self.change[1:3]) < 0:
@@ -3029,10 +3033,13 @@ class SmartTrader:
                     # Price is bellow [ema_9]
                     side = 'down'
 
+                    dst_high_ema_9 = utils.distance_percent_abs(v1=max(self.high[:3]),
+                                                                v2=min(self.ema_9[:3]))
+
                     if self.ema_9[1] < self.ema_72[1] or self.ema_72[1] < self.ema_144[1]:
                         # Moving Averages aligned
 
-                        if max(self.high[:3]) > self.ema_9[1]:
+                        if dst_high_ema_9 <= 0.0001:
                             # Price has tested [ema_9]
 
                             if max(self.change[1:3]) > 0:
@@ -3155,7 +3162,7 @@ class SmartTrader:
         if position is None or position['result']:
             # No open position
             i_candle = 3
-            min_candles = 4
+            min_candles = 7
             side = stop_loss = crossing_up = crossing_down = is_setup_confirmed = None
 
             if len(self.datetime) >= min_candles + i_candle:
