@@ -1579,7 +1579,7 @@ class SmartTrader:
         if hasattr(self, f_playbook) and callable(playbook := getattr(self, f_playbook)):
             # Playbook has been found
 
-            if is_long_action is False and playbook_id not in settings.PLAYBOOK_LONG_ACTION:
+            if is_long_action is False or playbook_id not in settings.PLAYBOOK_LONG_ACTION:
                 # It's not a long action
                 result = playbook(**kwargs)
 
@@ -2083,7 +2083,7 @@ class SmartTrader:
                 # Flat candle identified
                 # Refresh page to make sure data is accurate
                 # [is_long_action] is set, so we ignore the lock_file created by [read_previous_candles]
-                msg = "Refreshing page"
+                msg = "\nRefreshing page"
                 for item in utils.progress_bar([0], prefix=msg):
                     self.execute_playbook(playbook_id='refresh_page', is_long_action=False)
                     has_refreshed = True
