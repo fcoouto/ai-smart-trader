@@ -3043,70 +3043,50 @@ class SmartTrader:
 
         if position is None or position['result']:
             # No open position
-            i_candle = 1
-            min_candles = 4
+            i_candle = 0
+            max_candles = 10
             side = stop_loss = is_setup_confirmed = None
 
-            if len(self.datetime) >= min_candles + i_candle:
+            if len(self.datetime) >= max_candles + i_candle:
                 # We got enough candles
 
                 if self.close[0] > self.ema_9[0]:
                     # Price is above [ema_9]
                     side = 'up'
 
-                    dst_low_ema_9 = utils.distance_percent_abs(v1=min(self.low[:3]),
-                                                               v2=max(self.ema_9[:3]))
-
                     if self.ema_9[1] > self.ema_72[1] or self.ema_72[1] > self.ema_144[1]:
                         # Moving Averages aligned
 
-                        if dst_low_ema_9 <= 0.0001:
-                            # Price has tested [ema_9]
+                        if self.rsi[1] < 50 < self.rsi[0]:
+                            # [rsi] pullback
 
-                            if self.rsi[1] < 25:
-                                # [rsi] oversold zone
-
-                                if self.high[0] > self.high[1]:
-                                    # Higher high
-
-                                    for i in range(i_candle, min_candles + i_candle):
-                                        if self.close[i] > self.ema_9[i - 1]:
-                                            if i == min_candles + i_candle - 1:
-                                                # [close] has been above [ema_9] for a while
-                                                is_setup_confirmed = True
-                                                stop_loss = self.low[1]
-                                        else:
-                                            # Aborting
-                                            break
+                            for i in range(i_candle, max_candles + i_candle):
+                                if self.close[i] < self.ema_9[i - 1]:
+                                    # [close] has been above [ema_9] for a while
+                                    is_setup_confirmed = True
+                                    stop_loss = min(self.low[:2])
+                                else:
+                                    # Aborting
+                                    break
 
                 elif self.close[0] < self.ema_9[0]:
                     # Price is bellow [ema_9]
                     side = 'down'
 
-                    dst_high_ema_9 = utils.distance_percent_abs(v1=max(self.high[:3]),
-                                                                v2=min(self.ema_9[:3]))
-
                     if self.ema_9[1] < self.ema_72[1] or self.ema_72[1] < self.ema_144[1]:
                         # Moving Averages aligned
 
-                        if dst_high_ema_9 <= 0.0001:
-                            # Price has tested [ema_9]
+                        if self.rsi[1] > 50 > self.rsi[0]:
+                            # [rsi] pullback
 
-                            if self.rsi[1] > 75:
-                                # [rsi] overbought zone
-
-                                if self.low[0] > self.low[1]:
-                                    # Lower low
-
-                                    for i in range(i_candle, min_candles + i_candle):
-                                        if self.close[i] < self.ema_9[i - 1]:
-                                            if i == min_candles + i_candle - 1:
-                                                # [close] has been bellow [ema_72] for a while
-                                                is_setup_confirmed = True
-                                                stop_loss = self.high[1]
-                                        else:
-                                            # Aborting
-                                            break
+                            for i in range(i_candle, max_candles + i_candle):
+                                if self.close[i] > self.ema_9[i - 1]:
+                                    # [close] has been bellow [ema_72] for a while
+                                    is_setup_confirmed = True
+                                    stop_loss = max(self.high[:2])
+                                else:
+                                    # Aborting
+                                    break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
