@@ -2245,7 +2245,7 @@ class SmartTrader:
 
         data = {
             'strategy_id': strategy_id,
-            'initial_trade_size': self.initial_trade_size,
+            'balance_trade_size_pct': settings.BALANCE_TRADE_SIZE_PERCENT,
             'trade': trade
         }
 
