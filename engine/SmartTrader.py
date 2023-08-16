@@ -3043,7 +3043,8 @@ class SmartTrader:
 
         if position is None or position['result']:
             # No open position
-            i_candle = 0
+            i_candle = 1
+            min_candles = 4
             max_candles = 10
             side = stop_loss = is_setup_confirmed = None
 
@@ -3062,12 +3063,16 @@ class SmartTrader:
 
                             for i in range(i_candle, max_candles + i_candle):
                                 if self.close[i] < self.ema_9[i - 1]:
-                                    # [close] has been above [ema_9] for a while
-                                    is_setup_confirmed = True
-                                    stop_loss = min(self.low[:2])
-                                else:
-                                    # Aborting
-                                    break
+                                    # [close] is bellow [ema_9]
+
+                                    if i < min_candles:
+                                        # Aborting
+                                        # [close] went bellow [ema_9] too soon
+                                        break
+
+                                    elif i >= min_candles:
+                                        is_setup_confirmed = True
+                                        stop_loss = min(self.low[:2])
 
                 elif self.close[0] < self.ema_9[0]:
                     # Price is bellow [ema_9]
@@ -3081,12 +3086,16 @@ class SmartTrader:
 
                             for i in range(i_candle, max_candles + i_candle):
                                 if self.close[i] > self.ema_9[i - 1]:
-                                    # [close] has been bellow [ema_72] for a while
-                                    is_setup_confirmed = True
-                                    stop_loss = max(self.high[:2])
-                                else:
-                                    # Aborting
-                                    break
+                                    # [close] is above [ema_9]
+
+                                    if i < min_candles:
+                                        # Aborting
+                                        # [close] went above [ema_9] too soon
+                                        break
+
+                                    elif i >= min_candles:
+                                        is_setup_confirmed = True
+                                        stop_loss = max(self.high[:2])
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
