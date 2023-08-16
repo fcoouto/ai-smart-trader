@@ -402,7 +402,7 @@ class SmartTrader:
         while self.payout < settings.MIN_PAYOUT:
             now = datetime.utcnow()
             trigger = now - timedelta(seconds=now.second)
-            trigger += timedelta(seconds=302)
+            trigger += timedelta(seconds=305)
 
             # Defining [wait_secs]
             wait_secs = trigger - now
@@ -419,7 +419,7 @@ class SmartTrader:
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-            self.playbook_go_to_trading_page()
+            self.execute_playbook(playbook_id='go_to_trading_page')
             self.read_element(element_id='payout')
 
     def validate_super_strike(self):
