@@ -402,7 +402,7 @@ class SmartTrader:
         while self.payout < settings.MIN_PAYOUT:
             now = datetime.utcnow()
             trigger = now - timedelta(seconds=now.second)
-            trigger += timedelta(seconds=305)
+            trigger += timedelta(seconds=302)
 
             # Defining [wait_secs]
             wait_secs = trigger - now
