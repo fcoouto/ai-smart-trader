@@ -1966,7 +1966,7 @@ class SmartTrader:
 
         # Leaving Settings, selection and mouse houvering
         pyautogui.press(['escape', 'escape'], interval=0.100)
-        self.mouse_event_on_neutral_area(event='move', area_id='within_app')
+        self.mouse_event_on_neutral_area(event='click', area_id='within_app')
 
     def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=0):
         # Opening Settings
