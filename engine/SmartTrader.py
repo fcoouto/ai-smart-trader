@@ -1278,7 +1278,8 @@ class SmartTrader:
                         self.change.insert(0, change)
 
         # Defining [change_avg]
-        self.change_avg_15 = mean(self.change[:15])
+        if len(self.change) > 0:
+            self.change_avg_15 = mean(self.change[:15])
 
         return [o, h, l, c]
 
