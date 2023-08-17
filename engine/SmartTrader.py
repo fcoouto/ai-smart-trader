@@ -1965,7 +1965,7 @@ class SmartTrader:
         self.click_element(element_id='navitem_ema_settings_tab1', wait_when_done=0.300)
 
         # Leaving Settings and Selection
-        pyautogui.press(['escape', 'escape'], interval=0.100)
+        pyautogui.press(['escape', 'escape', 'escape'], interval=0.100)
 
     def playbok_tv_configure_indicator_rsi(self, length, color='black', opacity=0):
         # Opening Settings
@@ -2005,7 +2005,7 @@ class SmartTrader:
         self.click_element(element_id='navitem_rsi_settings_tab1', wait_when_done=0.300)
 
         # Leaving Settings and Selection
-        pyautogui.press(['escape', 'escape'], interval=0.100)
+        pyautogui.press(['escape', 'escape', 'escape'], interval=0.100)
 
     def playbook_set_trade_size(self, trade_size):
         if self.trade_size != trade_size:
