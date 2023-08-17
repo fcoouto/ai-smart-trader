@@ -1591,7 +1591,7 @@ class SmartTrader:
 
     ''' Playbooks '''
 
-    def execute_playbook(self, playbook_id, is_long_action=False, **kwargs):
+    def execute_playbook(self, playbook_id, is_long_action=None, **kwargs):
         self.is_automation_running = True
         result = None
 
