@@ -234,7 +234,7 @@ class SmartTrader:
             for item in utils.progress_bar([0], prefix=msg, reverse=True):
                 self.loss_management_sync()
 
-            else:
+            if not self.is_cluster_ready:
                 # Waiting PB
                 msg = "Waiting for cluster to get ready..."
                 wait_secs = 15
