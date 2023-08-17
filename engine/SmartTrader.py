@@ -427,7 +427,7 @@ class SmartTrader:
             for item in utils.progress_bar([0], prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
-            self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size, is_long_action=True)
+            self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size)
             self.read_element(element_id='trade_size')
 
     def validate_trading_session(self, context='Validation'):
