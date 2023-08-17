@@ -178,8 +178,9 @@ class SmartTrader:
 
         context = 'Validation'
 
-        # Validating trading session
-        self.validate_trading_session()
+        if len(self.ongoing_positions) == 0:
+            # Validating trading session
+            self.validate_trading_session()
 
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
@@ -187,14 +188,15 @@ class SmartTrader:
         # Validating [clock]
         self.validate_clock(context=context)
 
-        # Validating [balance]
-        self.validate_balance(context=context)
+        if len(self.ongoing_positions) == 0:
+            # Validating [balance]
+            self.validate_balance(context=context)
+
+            # Validating [payout]
+            self.validate_payout(context=context)
 
         # Validating [expiry_time]
         self.validate_expiry_time()
-
-        # Validating [payout]
-        self.validate_payout(context=context)
 
         # Validating [cluster]
         self.validate_cluster()
@@ -2238,9 +2240,6 @@ class SmartTrader:
         for k, v in r.items():
             if hasattr(self, k):
                 setattr(self, k, v)
-
-        # Updating [assets_in_cluster]
-        self.assets_in_cluster = r['assets']
 
         if r['is_stop_loss_triggered']:
             msg = (f"{tmsg.danger}[ERROR]{tmsg.endc} "
