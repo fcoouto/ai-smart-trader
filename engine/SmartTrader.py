@@ -1964,7 +1964,7 @@ class SmartTrader:
         # [tab1]
         self.click_element(element_id='navitem_ema_settings_tab1', wait_when_done=0.300)
 
-        # Leaving Settings and Selection
+        # Leaving Settings, selection and mouse houvering
         pyautogui.press(['escape', 'escape'], interval=0.100)
         self.mouse_event_on_neutral_area(event='move', area_id='within_app')
 
