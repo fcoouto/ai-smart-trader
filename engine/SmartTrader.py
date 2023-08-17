@@ -62,10 +62,10 @@ class SmartTrader:
     high = []
     low = []
     close = []
+    price = []
+
     change = []
     change_pct = []
-
-    price = []
 
     ema_144 = []
     ema_72 = []
@@ -2459,7 +2459,7 @@ class SmartTrader:
                 print(f"{tb_positions}\n\n")
 
             if str(self.agent_id).endswith('1'):
-                validation_trigger = 10
+                validation_trigger = 7.5
             elif str(self.agent_id).endswith('2'):
                 validation_trigger = 27.5
             else:
