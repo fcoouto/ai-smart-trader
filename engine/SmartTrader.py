@@ -362,6 +362,16 @@ class SmartTrader:
 
     def validate_expiry_time(self):
         expected_expiry_time = '05:00'
+        
+        while self.expiry_time != expected_expiry_time:
+            # Waiting PB
+            msg = f"Setting Expiry Time to [{expected_expiry_time}]"
+            for item in utils.progress_bar([0], prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            # Executing playbook
+            self.execute_playbook(playbook_id='set_expiry_time', expiry_time=expected_expiry_time)
+            self.read_element(element_id='expiry_time')
 
         while not self.is_expiry_time_fixed():
             # Waiting PB
@@ -371,16 +381,6 @@ class SmartTrader:
 
             # Executing playbook
             self.execute_playbook(playbook_id='toggle_expiry_time')
-            self.read_element(element_id='expiry_time')
-
-        while self.expiry_time != expected_expiry_time:
-            # Waiting PB
-            msg = f"Setting Expiry Time to [{expected_expiry_time}]"
-            for item in utils.progress_bar([0], prefix=msg, reverse=True):
-                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
-            # Executing playbook
-            self.execute_playbook(playbook_id='set_expiry_time', expiry_time=expected_expiry_time)
             self.read_element(element_id='expiry_time')
 
     def validate_payout(self, context='Validation'):
