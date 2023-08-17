@@ -362,7 +362,7 @@ class SmartTrader:
 
     def validate_expiry_time(self):
         expected_expiry_time = '05:00'
-        
+
         while self.expiry_time != expected_expiry_time:
             # Waiting PB
             msg = f"Setting Expiry Time to [{expected_expiry_time}]"
@@ -2019,7 +2019,7 @@ class SmartTrader:
             pyautogui.press('escape')
 
         # Waiting CSS components
-        sleep(0.500)
+        sleep(1)
 
     def playbook_toggle_expiry_time(self):
         self.click_element(element_id='toggle_expiry_time', wait_when_done=0.250)
