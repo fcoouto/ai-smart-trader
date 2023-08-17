@@ -2004,7 +2004,7 @@ class SmartTrader:
             pyautogui.typewrite("%.2f" % trade_size)
 
     def playbook_set_expiry_time(self, expiry_time='03:00'):
-        self.click_element(element_id='btn_expiry_time', wait_when_done=0.700)
+        self.click_element(element_id='btn_expiry_time', wait_when_done=1.000)
 
         if expiry_time == '01:00':
             self.click_element(element_id='dp_item_1min')
