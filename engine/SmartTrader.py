@@ -47,6 +47,7 @@ class SmartTrader:
     initial_trade_size = None
     trade_size = None
 
+    is_cluster_ready = None
     recovery_mode = False
     cumulative_loss = 0.00
     recovery_trade_size = 0.00
@@ -195,8 +196,8 @@ class SmartTrader:
         # Validating [payout]
         self.validate_payout(context=context)
 
-        # Updating [loss_management] data
-        self.loss_management_sync()
+        # Validating [cluster]
+        self.validate_cluster()
 
         # Validating [trade_size]
         self.validate_trade_size()
@@ -221,27 +222,25 @@ class SmartTrader:
 
         return url
 
-    def validate_trading_session(self, context='Validation'):
-        if not self.ignore_trading_window:
-            now = datetime.utcnow()
+    def validate_cluster(self):
+        first_run = True
 
-            trading_start = 6
-            trading_end = 19
+        while first_run or not self.is_cluster_ready:
+            self.loss_management_sync()
+            first_run = False
 
-            while now.hour < trading_start or now.hour > trading_end:
-                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                       f"{utils.tmsg.italic}- We are currently out of the trading time range, "
-                       f"which should be between {trading_start} and {trading_end}. {utils.tmsg.endc}")
-                tmsg.print(context=context, msg=msg, clear=True)
+            # Waiting PB
+            msg = f"Syncing with cluster"
+            for item in utils.progress_bar([0], prefix=msg, reverse=True):
+                self.loss_management_sync()
 
+            else:
                 # Waiting PB
-                msg = "Waiting for it (CTRL + C to cancel)"
-                wait_secs = 300
+                msg = "Waiting for cluster to get ready..."
+                wait_secs = 15
                 items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
-                now = datetime.utcnow()
 
     def validate_credentials(self, context='Validation'):
         key_file = 'key'
@@ -361,20 +360,6 @@ class SmartTrader:
             app_now = datetime.fromisoformat(f'{now.date().isoformat()} {clock}')
             delta = now - app_now
 
-    def validate_trade_size(self):
-        optimal_trade_size = self.get_optimal_trade_size()
-
-        if len(self.ongoing_positions) == 0 and self.trade_size != optimal_trade_size:
-            # [trade_size] is different from [initial_trade_size]
-
-            # Waiting PB
-            msg = f"Setting Trade Size to [{optimal_trade_size} USD]"
-            for item in utils.progress_bar([0], prefix=msg, reverse=True):
-                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
-            self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size, is_long_action=True)
-            self.read_element(element_id='trade_size')
-
     def validate_expiry_time(self):
         expected_expiry_time = '05:00'
 
@@ -430,6 +415,42 @@ class SmartTrader:
                 if self.is_super_strike_available():
                     # It's available to be activated
                     self.execute_playbook(playbook_id='activate_super_strike')
+
+    def validate_trade_size(self):
+        optimal_trade_size = self.get_optimal_trade_size()
+
+        if len(self.ongoing_positions) == 0 and self.trade_size != optimal_trade_size:
+            # [trade_size] is different from [initial_trade_size]
+
+            # Waiting PB
+            msg = f"Setting Trade Size to [{optimal_trade_size} USD]"
+            for item in utils.progress_bar([0], prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size, is_long_action=True)
+            self.read_element(element_id='trade_size')
+
+    def validate_trading_session(self, context='Validation'):
+        if not self.ignore_trading_window:
+            now = datetime.utcnow()
+
+            trading_start = 6
+            trading_end = 19
+
+            while now.hour < trading_start or now.hour > trading_end:
+                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
+                       f"{utils.tmsg.italic}- We are currently out of the trading time range, "
+                       f"which should be between {trading_start} and {trading_end}. {utils.tmsg.endc}")
+                tmsg.print(context=context, msg=msg, clear=True)
+
+                # Waiting PB
+                msg = "Waiting for it (CTRL + C to cancel)"
+                wait_secs = 300
+                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+                for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+                now = datetime.utcnow()
 
     def is_reading_taking_too_long(self, element_id, duration):
         context = 'Validation'
@@ -2213,9 +2234,13 @@ class SmartTrader:
                               json=data)
         r = json.loads(r.text)
 
+        # Updating data
         for k, v in r.items():
             if hasattr(self, k):
                 setattr(self, k, v)
+
+        # Updating [assets_in_cluster]
+        self.assets_in_cluster = r['assets']
 
         if r['is_stop_loss_triggered']:
             msg = (f"{tmsg.danger}[ERROR]{tmsg.endc} "
