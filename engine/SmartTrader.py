@@ -2278,6 +2278,7 @@ class SmartTrader:
 
         data = {
             'strategy_id': strategy_id,
+            'initial_trade_size': self.initial_trade_size,
             'trade': trade
         }
 
