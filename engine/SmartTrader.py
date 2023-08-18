@@ -2231,7 +2231,8 @@ class SmartTrader:
         headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
         data = {
             'highest_balance': self.highest_balance,
-            'payout': self.payout
+            'payout': self.payout,
+            'balance_trace_size_pct': settings.BALANCE_TRADE_SIZE_PCT
         }
 
         try:
@@ -2277,7 +2278,6 @@ class SmartTrader:
 
         data = {
             'strategy_id': strategy_id,
-            'balance_trade_size_pct': settings.BALANCE_TRADE_SIZE_PERCENT,
             'trade': trade
         }
 
@@ -2310,7 +2310,6 @@ class SmartTrader:
         data = {
             'strategy_id': strategy_id,
             'initial_trade_size': self.initial_trade_size,
-            'balance_trade_size_percent': settings.BALANCE_TRADE_SIZE_PERCENT,
             'trade': trade
         }
 
@@ -2332,7 +2331,7 @@ class SmartTrader:
     ''' TA & Trading '''
 
     def get_optimal_trade_size(self):
-        balance_trade_size = self.highest_balance * settings.BALANCE_TRADE_SIZE_PERCENT
+        balance_trade_size = self.highest_balance * settings.BALANCE_TRADE_SIZE_PCT
 
         if self.recovery_mode:
             # [recovery_mode] is activated
@@ -2768,8 +2767,8 @@ class SmartTrader:
                     # [rsi] crossed over 20
                     side = 'up'
 
-                    if self.high[0] < self.high[1]:
-                        # Higher high
+                    if self.high[0] > self.high[1] and self.low[0] > self.low[1]:
+                        # Higher high and low
 
                         for i in range(i_candle, min_candles + i_candle):
                             if self.rsi[i] < 20:
@@ -2785,8 +2784,8 @@ class SmartTrader:
                     # [rsi] crossed under 80
                     side = 'down'
 
-                    if self.low[0] < self.low[1]:
-                        # Lower low
+                    if self.high[0] < self.high[1] and self.low[0] < self.low[1]:
+                        # Lower high and low
 
                         for i in range(i_candle, min_candles + i_candle):
                             if self.rsi[i] > 80:
@@ -2937,12 +2936,14 @@ class SmartTrader:
                     if not self.is_big_ass_candle():
                         # Last candle isn't a big ass candle
 
-                        dst_ema_9_72 = utils.distance_percent(v1=self.ema_9[1], v2=self.ema_72[1])
-                        if dst_ema_9_72 < -0.0005:
+                        dst_ema_9_72 = utils.distance_percent(v1=self.ema_9[1],
+                                                              v2=self.ema_72[1])
+                        if dst_ema_9_72 < -0.0012:
                             # [ema_9] is way bellow [ema_72]
 
-                            if self.high[0] > self.high[1]:
-                                # Higher high
+                            if self.high[0] > self.high[1] and self.low[0] >= self.low[1]:
+                                # Higher high and low
+                                above_ema_9 = 0
 
                                 for i in range(i_candle, min_candles + i_candle):
                                     if self.close[i] < self.ema_9[i - 1]:
@@ -2950,8 +2951,10 @@ class SmartTrader:
                                             # [close] has been bellow [ema_9] for a while
                                             is_setup_confirmed = True
                                     else:
-                                        # Aborting
-                                        break
+                                        above_ema_9 += 1
+                                        if above_ema_9 >= 2:
+                                            # 2 candles above [ema_9] have been found
+                                            break
 
                 elif crossing_down:
                     # Price crossed under [ema_9]
@@ -2960,12 +2963,15 @@ class SmartTrader:
                     if not self.is_big_ass_candle():
                         # Last candle isn't a big ass candle
 
-                        dst_ema_9_72 = utils.distance_percent(v1=self.ema_9[1], v2=self.ema_72[1])
-                        if dst_ema_9_72 > 0.0005:
+                        dst_ema_9_72 = utils.distance_percent(v1=self.ema_9[1],
+                                                              v2=self.ema_72[1])
+                        if dst_ema_9_72 > 0.0012:
                             # [ema_9] is way above [ema_72]
 
-                            if self.low[0] < self.low[1]:
-                                # Lower low
+                            if self.high[0] <= self.high[1] and self.low[0] < self.low[1]:
+                                # Lower high and low
+
+                                bellow_ema_9 = 0
 
                                 for i in range(i_candle, min_candles + i_candle):
                                     if self.close[i] > self.ema_9[i - 1]:
@@ -2973,8 +2979,10 @@ class SmartTrader:
                                             # [close] has been above [ema_9] for a while
                                             is_setup_confirmed = True
                                     else:
-                                        # Aborting
-                                        break
+                                        bellow_ema_9 += 1
+                                        if bellow_ema_9 >= 2:
+                                            # 2 candles bellow [ema_9] have been found
+                                            break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
@@ -3098,18 +3106,21 @@ class SmartTrader:
                             if self.rsi[1] < 50 < self.rsi[0]:
                                 # [rsi] pullback
 
-                                for i in range(i_candle, max_candles + i_candle):
-                                    if self.close[i] < self.ema_9[i - 1]:
-                                        # [close] is bellow [ema_9]
+                                if self.high[0] > self.high[1] and self.low[0] >= self.low[1]:
+                                    # Higher high and low
 
-                                        if i < min_candles:
-                                            # Aborting
-                                            # [close] went bellow [ema_9] too soon
-                                            break
+                                    for i in range(i_candle, max_candles + i_candle):
+                                        if self.close[i] < self.ema_9[i - 1]:
+                                            # [close] is bellow [ema_9]
 
-                                        elif i >= min_candles:
-                                            is_setup_confirmed = True
-                                            stop_loss = min(self.low[:2])
+                                            if i < min_candles:
+                                                # Aborting
+                                                # [close] went bellow [ema_9] too soon
+                                                break
+
+                                            elif i >= min_candles:
+                                                is_setup_confirmed = True
+                                                stop_loss = min(self.low[:2])
 
                     elif self.close[0] < self.ema_9[0]:
                         # Price is bellow [ema_9]
@@ -3121,18 +3132,21 @@ class SmartTrader:
                             if self.rsi[1] > 50 > self.rsi[0]:
                                 # [rsi] pullback
 
-                                for i in range(i_candle, max_candles + i_candle):
-                                    if self.close[i] > self.ema_9[i - 1]:
-                                        # [close] is above [ema_9]
+                                if self.high[0] <= self.high[1] and self.low[0] < self.low[1]:
+                                    # Lower high and low
 
-                                        if i < min_candles:
-                                            # Aborting
-                                            # [close] went above [ema_9] too soon
-                                            break
+                                    for i in range(i_candle, max_candles + i_candle):
+                                        if self.close[i] > self.ema_9[i - 1]:
+                                            # [close] is above [ema_9]
 
-                                        elif i >= min_candles:
-                                            is_setup_confirmed = True
-                                            stop_loss = max(self.high[:2])
+                                            if i < min_candles:
+                                                # Aborting
+                                                # [close] went above [ema_9] too soon
+                                                break
+
+                                            elif i >= min_candles:
+                                                is_setup_confirmed = True
+                                                stop_loss = max(self.high[:2])
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
@@ -3268,8 +3282,8 @@ class SmartTrader:
                         if self.rsi[i_candle - 1] < 25:
                             # [rsi] oversold
 
-                            if self.high[0] > self.high[1]:
-                                # higher high
+                            if self.high[0] > self.high[1] and self.low[0] >= self.low[1]:
+                                # Higher high and low
 
                                 for i in range(i_candle, min_candles + i_candle):
                                     if self.close[i] > self.ema_9[i - 1]:
@@ -3290,8 +3304,8 @@ class SmartTrader:
                         if self.rsi[i_candle - 1] > 75:
                             # [rsi] overbought
 
-                            if self.low[0] < self.low[1]:
-                                # Lower low
+                            if self.high[0] <= self.high[1] and self.low[0] < self.low[1]:
+                                # Lower high and low
 
                                 for i in range(i_candle, min_candles + i_candle):
                                     if self.close[i] < self.ema_9[i - 1]:
