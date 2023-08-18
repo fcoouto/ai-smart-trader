@@ -1652,7 +1652,7 @@ class SmartTrader:
                         if playbook_id_running:
                             # Currently running playbook has been identified
 
-                            if total_waiting_time > settings.PLAYBOOK_LONG_ACTION[playbook_id_running] * 2:
+                            if total_waiting_time > settings.PLAYBOOK_LONG_ACTION[playbook_id_running]:
                                 # It's taking way too long
 
                                 # Trying to remove [lock_file]
