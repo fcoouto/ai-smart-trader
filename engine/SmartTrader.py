@@ -2232,7 +2232,7 @@ class SmartTrader:
         data = {
             'highest_balance': self.highest_balance,
             'payout': self.payout,
-            'balance_trace_size_pct': settings.BALANCE_TRADE_SIZE_PCT
+            'balance_trade_size_pct': settings.BALANCE_TRADE_SIZE_PCT
         }
 
         try:
