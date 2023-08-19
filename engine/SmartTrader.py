@@ -2096,7 +2096,12 @@ class SmartTrader:
             ohcl_to_insert = ['open', 'high', 'low', 'close']
             ohcl_to_update = None
 
-        msg = f"Reading previous {amount_candles} candles"
+        # Defining iteration for candles
+        if amount_candles == 1:
+            msg = "Reading previous candle"
+        else:
+            msg = f"Reading previous {amount_candles} candles"
+
         candles = range(amount_candles, 0, -1)
         for i_candle in utils.progress_bar(candles, prefix=msg):
             # Reverse iteration from candle X to latest candle
@@ -2518,10 +2523,8 @@ class SmartTrader:
                 self.run_validation()
 
             # Last candle data PB
-            msg = "Reading previous candle"
             if not os.path.exists(long_action_lock_file):
-                for item in utils.progress_bar([0], prefix=msg):
-                    self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
+                self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
 
             if datetime.now() < lookup_time_threshold:
                 # Ready for Trading
