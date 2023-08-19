@@ -2096,7 +2096,9 @@ class SmartTrader:
             ohcl_to_insert = ['open', 'high', 'low', 'close']
             ohcl_to_update = None
 
-        for i_candle in range(amount_candles, 0, -1):
+        msg = f"Reading previous {amount_candles} candles"
+        candles = range(amount_candles, 0, -1)
+        for i_candle in utils.progress_bar(candles, prefix=msg):
             # Reverse iteration from candle X to latest candle
             self.playbook_move_to_candle(i_candle=i_candle)
 
@@ -2437,9 +2439,7 @@ class SmartTrader:
         self.run_validation()
 
         # Reading previous candles PB
-        msg = f"Reading previous {amount_candles_init} candles"
-        for item in utils.progress_bar([0], prefix=msg):
-            self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
+        self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
 
         # First run using estimated time (1.5 seconds)
         reading_chart_duration = default_reading_duration = timedelta(seconds=1.250).total_seconds()
@@ -2586,10 +2586,8 @@ class SmartTrader:
                 reading_chart_duration = default_reading_duration
 
                 # Reading last candles PB
-                msg = f"Reading previous {amount_candles_init} candles"
                 if not os.path.exists(long_action_lock_file):
-                    for item in utils.progress_bar([0], prefix=msg):
-                        self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
+                    self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
 
                 waiting_time = 5
                 sleep(waiting_time)
