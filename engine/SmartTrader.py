@@ -1600,6 +1600,10 @@ class SmartTrader:
 
     ''' Playbooks '''
 
+    def get_long_action_lock_file_path(self):
+        return os.path.join(settings.PATH_LOCK,
+                            f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
+
     def execute_playbook(self, playbook_id, is_long_action=None, **kwargs):
         self.is_automation_running = True
         result = None
@@ -1615,8 +1619,7 @@ class SmartTrader:
 
             else:
                 # It's a long action
-                lock_file = os.path.join(settings.PATH_LOCK,
-                                         f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
+                lock_file = self.get_long_action_lock_file_path()
 
                 is_done = False
                 total_waiting_time = 0
@@ -2126,6 +2129,10 @@ class SmartTrader:
                     self.execute_playbook(playbook_id='refresh_page', is_long_action=False)
                     has_refreshed = True
 
+                # Deleting [lock_file] for validations
+                lock_file = self.get_long_action_lock_file_path()
+                utils.try_to_delete_file(path=lock_file)
+
                 # Running Validating
                 self.run_validation()
 
@@ -2438,8 +2445,7 @@ class SmartTrader:
         refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
         amount_candles_init = 6
 
-        long_action_lock_file = os.path.join(settings.PATH_LOCK,
-                                             f'{settings.LOCK_LONG_ACTION_FILENAME}{settings.LOCK_FILE_EXTENSION}')
+        long_action_lock_file = self.get_long_action_lock_file_path()
 
         self.run_validation()
 
