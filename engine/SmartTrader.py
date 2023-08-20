@@ -2246,14 +2246,14 @@ class SmartTrader:
         data = {
             'highest_balance': self.highest_balance,
             'payout': self.payout,
-            'balance_trade_size_pct': settings.BALANCE_TRADE_SIZE_PCT
-        }
+            'balance_trade_size_pct': settings.BALANCE_TRADE_SIZE_PCT}
 
         try:
             r = requests.post(url=request_url,
                               headers=headers,
                               json=data)
-        except requests.exceptions.Timeout:
+        except requests.exceptions.Timeout as e:
+            print(e)
             r = requests.post(url=request_url,
                               headers=headers,
                               json=data)
