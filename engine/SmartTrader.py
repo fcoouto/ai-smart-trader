@@ -231,7 +231,6 @@ class SmartTrader:
         first_run = True
 
         while first_run or not self.is_cluster_ready:
-            self.loss_management_sync()
             first_run = False
 
             # Waiting PB
