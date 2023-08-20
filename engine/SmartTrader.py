@@ -2252,8 +2252,7 @@ class SmartTrader:
             r = requests.post(url=request_url,
                               headers=headers,
                               json=data)
-        except requests.exceptions.Timeout as e:
-            print(e)
+        except requests.exceptions.Timeout:
             r = requests.post(url=request_url,
                               headers=headers,
                               json=data)
