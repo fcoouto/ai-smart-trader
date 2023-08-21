@@ -2243,7 +2243,7 @@ class SmartTrader:
         request_url = settings.LOSS_MANAGEMENT_SERVER_ADDRESS + f'/api/loss_management/{asset}/sync/'
         headers = {'api_key': settings.LOSS_MANAGEMENT_SERVER_API_KEY}
         data = {
-            'highest_balance': self.highest_balance,
+            'balance': self.balance,
             'payout': self.payout,
             'balance_trade_size_pct': settings.BALANCE_TRADE_SIZE_PCT}
 
