@@ -365,7 +365,7 @@ class SmartTrader:
             delta = now - app_now
 
     def validate_expiry_time(self):
-        expected_expiry_time = '05:00'
+        expected_expiry_time = '01:00'
 
         while not self.is_expiry_time_fixed():
             # Waiting PB
