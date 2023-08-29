@@ -2015,11 +2015,13 @@ class SmartTrader:
             self.click_element(element_id='trade_size', clicks=2)
             pyautogui.typewrite("%.2f" % trade_size)
 
-    def playbook_set_expiry_time(self, expiry_time='03:00'):
+    def playbook_set_expiry_time(self, expiry_time='01:00'):
         self.click_element(element_id='btn_expiry_time', wait_when_done=1.000)
 
         if expiry_time == '01:00':
             self.click_element(element_id='dp_item_1min')
+        elif expiry_time == '02:00':
+            self.click_element(element_id='dp_item_2min')
         elif expiry_time == '03:00':
             self.click_element(element_id='dp_item_3min')
         elif expiry_time == '04:00':
