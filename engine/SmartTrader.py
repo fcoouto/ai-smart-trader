@@ -199,7 +199,7 @@ class SmartTrader:
             self.validate_payout(context=context)
 
         # Validating [expiry_time]
-        self.validate_expiry_time()
+        self.validate_expiry_time(expected_expiry_time='01:00')
 
         # Validating [cluster]
         self.validate_cluster()
@@ -364,9 +364,7 @@ class SmartTrader:
             app_now = datetime.fromisoformat(f'{now.date().isoformat()} {clock}')
             delta = now - app_now
 
-    def validate_expiry_time(self):
-        expected_expiry_time = '02:00'
-
+    def validate_expiry_time(self, expected_expiry_time='01:00'):
         while not self.is_expiry_time_fixed():
             # Waiting PB
             msg = "Toggling Expiry Time to Fixed"
@@ -2780,16 +2778,18 @@ class SmartTrader:
 
                         if self.high[0] > self.high[1] and self.low[0] > self.low[1]:
                             # Higher high and low
+                            is_setup_confirmed = True
+                            stop_loss = min(self.low[:1])
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.rsi[i] < 20:
-                                    if i == min_candles + i_candle - 1:
-                                        # [rsi] has been bellow [20] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = min(self.low[:1])
-                                else:
-                                    # Aborting
-                                    break
+                            # for i in range(i_candle, min_candles + i_candle):
+                            #     if self.rsi[i] < 20:
+                            #         if i == min_candles + i_candle - 1:
+                            #             # [rsi] has been bellow [20] for a while
+                            #             is_setup_confirmed = True
+                            #             stop_loss = min(self.low[:1])
+                            #     else:
+                            #         # Aborting
+                            #         break
 
                     elif self.rsi[1] > 80 and 60 >= self.rsi[0] >= 20:
                         # [rsi] crossed under 80
@@ -2797,16 +2797,18 @@ class SmartTrader:
 
                         if self.high[0] < self.high[1] and self.low[0] < self.low[1]:
                             # Lower high and low
+                            is_setup_confirmed = True
+                            stop_loss = max(self.high[:1])
 
-                            for i in range(i_candle, min_candles + i_candle):
-                                if self.rsi[i] > 80:
-                                    if i == min_candles + i_candle - 1:
-                                        # [rsi] has been above [80] for a while
-                                        is_setup_confirmed = True
-                                        stop_loss = max(self.high[:1])
-                                else:
-                                    # Aborting
-                                    break
+                            # for i in range(i_candle, min_candles + i_candle):
+                            #     if self.rsi[i] > 80:
+                            #         if i == min_candles + i_candle - 1:
+                            #             # [rsi] has been above [80] for a while
+                            #             is_setup_confirmed = True
+                            #             stop_loss = max(self.high[:1])
+                            #     else:
+                            #         # Aborting
+                            #         break
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
