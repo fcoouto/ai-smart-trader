@@ -2772,43 +2772,29 @@ class SmartTrader:
                 if not self.is_big_ass_candle():
                     # Last candle isn't a big ass candle
 
-                    if self.rsi[1] < 20 and 40 <= self.rsi[0] <= 80:
-                        # [rsi] crossed over 20
+                    if self.ema_9[0] > self.ema_144[0]:
+                        # [ema_9] above [ema_144]
                         side = 'up'
 
-                        if self.high[0] > self.high[1] and self.low[0] > self.low[1]:
-                            # Higher high and low
-                            is_setup_confirmed = True
-                            stop_loss = min(self.low[:1])
+                        if self.rsi[1] < 20 and 40 <= self.rsi[0] <= 80:
+                            # [rsi] crossed over 20
 
-                            # for i in range(i_candle, min_candles + i_candle):
-                            #     if self.rsi[i] < 20:
-                            #         if i == min_candles + i_candle - 1:
-                            #             # [rsi] has been bellow [20] for a while
-                            #             is_setup_confirmed = True
-                            #             stop_loss = min(self.low[:1])
-                            #     else:
-                            #         # Aborting
-                            #         break
+                            if self.high[0] > self.high[1] and self.low[0] > self.low[1]:
+                                # Higher high and low
+                                is_setup_confirmed = True
+                                stop_loss = min(self.low[:1])
 
-                    elif self.rsi[1] > 80 and 60 >= self.rsi[0] >= 20:
-                        # [rsi] crossed under 80
+                    elif self.ema_9[0] < self.ema_144[0]:
+                        # [ema_9] bellow [ema_144]
                         side = 'down'
 
-                        if self.high[0] < self.high[1] and self.low[0] < self.low[1]:
-                            # Lower high and low
-                            is_setup_confirmed = True
-                            stop_loss = max(self.high[:1])
+                        if self.rsi[1] > 80 and 60 >= self.rsi[0] >= 20:
+                            # [rsi] crossed under 80
 
-                            # for i in range(i_candle, min_candles + i_candle):
-                            #     if self.rsi[i] > 80:
-                            #         if i == min_candles + i_candle - 1:
-                            #             # [rsi] has been above [80] for a while
-                            #             is_setup_confirmed = True
-                            #             stop_loss = max(self.high[:1])
-                            #     else:
-                            #         # Aborting
-                            #         break
+                            if self.high[0] < self.high[1] and self.low[0] < self.low[1]:
+                                # Lower high and low
+                                is_setup_confirmed = True
+                                stop_loss = max(self.high[:1])
 
                 if is_setup_confirmed:
                     # Setup has been confirmed
