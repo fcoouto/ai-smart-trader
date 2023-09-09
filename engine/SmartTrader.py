@@ -436,7 +436,7 @@ class SmartTrader:
         if not self.ignore_trading_window:
             now = datetime.utcnow()
 
-            trading_start = 6
+            trading_start = 5
             trading_end = 19
 
             while now.hour < trading_start or now.hour > trading_end:
