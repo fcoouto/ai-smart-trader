@@ -181,9 +181,9 @@ class SmartTrader:
 
         context = 'Validation'
 
-        if len(self.ongoing_positions) == 0:
+        # if len(self.ongoing_positions) == 0:
             # Validating trading session
-            self.validate_trading_session()
+            # self.validate_trading_session()
 
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
