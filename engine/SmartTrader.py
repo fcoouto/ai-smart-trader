@@ -2772,7 +2772,7 @@ class SmartTrader:
                 if not self.is_big_ass_candle():
                     # Last candle isn't a big ass candle
 
-                    if self.ema_9[0] > self.ema_72[0]:
+                    if self.ema_9[0] > self.ema_72[0] or self.ema_9[0] > self.ema_144[0]:
                         # [ema_9] above [ema_144]
                         side = 'up'
 
@@ -2784,7 +2784,7 @@ class SmartTrader:
                                 is_setup_confirmed = True
                                 stop_loss = min(self.low[:1])
 
-                    elif self.ema_9[0] < self.ema_72[0]:
+                    elif self.ema_9[0] < self.ema_72[0] or self.ema_9[0] < self.ema_144[0]:
                         # [ema_9] bellow [ema_144]
                         side = 'down'
 
