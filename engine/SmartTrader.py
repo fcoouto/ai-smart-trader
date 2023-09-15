@@ -622,10 +622,13 @@ class SmartTrader:
                             sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                         # Executing playbook
-                        if zone_id == 'chart_top' and len(self.datetime) == 0:
-                            # Browser just got launched
-                            self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
+                        if len(self.datetime) == 0:
+                            if zone_id == 'chart_top':
+                                # Browser just got launched
+                                self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
                         else:
+                            if zone_id == 'drawing_toolbar':
+                                self.execute_playbook(playbook_id=f"{self.broker['id']}_set_chart_candle")
                             self.execute_playbook(playbook_id='go_to_trading_page')
 
                         msg = f"\t  - Done !"
@@ -1811,12 +1814,16 @@ class SmartTrader:
         # If there are no indicators on the chart, just close dropdown-menu
         pyautogui.press('escape')
 
+    def playbook_iqcent_set_chart_candle(self):
+        # Chart Type
+        self.click_element(element_id='btn_chart_type_candle', wait_when_done=5.00)
+
     def playbook_iqcent_chart_setup(self):
         # Refreshing page
         self.playbook_refresh_page()
 
         # Chart Type
-        self.click_element(element_id='btn_chart_type_candle', wait_when_done=5.00)
+        self.playbook_iqcent_set_chart_candle()
 
         # Defining Chart Settings
         self.playbook_tv_set_chart_settings()
