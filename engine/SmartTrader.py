@@ -2783,7 +2783,7 @@ class SmartTrader:
                         # [ema_9] above [ema_144]
                         side = 'up'
 
-                        if self.rsi[1] < 20 and 40 <= self.rsi[0] <= 80:
+                        if self.rsi[1] < 20 and 30 <= self.rsi[0] <= 80:
                             # [rsi] crossed over 20
 
                             if self.high[0] > self.high[1] and self.low[0] > self.low[1]:
@@ -2795,7 +2795,7 @@ class SmartTrader:
                         # [ema_9] bellow [ema_144]
                         side = 'down'
 
-                        if self.rsi[1] > 80 and 60 >= self.rsi[0] >= 20:
+                        if self.rsi[1] > 80 and 70 >= self.rsi[0] >= 20:
                             # [rsi] crossed under 80
 
                             if self.high[0] < self.high[1] and self.low[0] < self.low[1]:
