@@ -4,7 +4,7 @@ import tempfile
 
 
 # DEBUG
-DEBUG_OCR = False
+DEBUG_OCR = True
 DEBUG_HISTORY = True
 DEBUG_PERFORMANCE = True
 
@@ -85,6 +85,7 @@ CORE_DATA = {
     'price': 'float',
     'payout': 'percentage',
     'rsi': 'float',
+    'timeframe': 'string',
     'trade_size': 'float',
 }
 BROKERS = {
@@ -125,7 +126,7 @@ BROKERS = {
                 'region': None,
                 'locate_confidence': 0.70,
                 'is_mandatory': True,
-                'elements': ['ohlc', 'ema_144', 'ema_72', 'ema_9', 'clock'],
+                'elements': ['ohlc', 'ema_144', 'ema_72', 'ema_9', 'timeframe', 'clock'],
             },
             'chart_bottom': {
                 'id': 'chart_bottom',

@@ -55,6 +55,7 @@ class SmartTrader:
     recovery_trade_size = 0.00
 
     clock = None
+    timeframe = None
     expiry_time = None
     payout = None
 
@@ -162,13 +163,14 @@ class SmartTrader:
                 ohlc = self.read_element(element_id='ohlc')
                 price = self.read_element(element_id='price')
                 trade_size = self.read_element(element_id='trade_size')
+                timeframe = self.read_element(element_id='timeframe')
                 expiry_time = self.read_element(element_id='expiry_time')
 
-                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}"
-                      f"\ntrade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time}"
-                      f"\nchart_data: {str(chart_data)}"
-                      f"\nohlc: {str(ohlc)}"
-                      f"\nprice: {str(price)}")
+                print(f"asset: {asset}\t | balance: {balance}\t | clock: {clock}\t | timeframe: {timeframe} \n"
+                      f"trade_size: {str(trade_size)}\t | payout: {payout}\t | expiry_time: {expiry_time} \n"
+                      f"chart_data: {str(chart_data)} \n"
+                      f"ohlc: {str(ohlc)} \n"
+                      f"price: {str(price)} \n")
                 print()
 
     def run_validation(self):
@@ -417,6 +419,19 @@ class SmartTrader:
                 if self.is_super_strike_available():
                     # It's available to be activated
                     self.execute_playbook(playbook_id='activate_super_strike')
+
+    def validate_timeframe(self):
+        expected_timeframe = '5m'
+
+        while self.timeframe != expected_timeframe:
+            # Waiting PB
+            msg = f"Setting Timeframe to [{expected_timeframe}]"
+            for item in utils.progress_bar([0], prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
+            # Executing playbook
+            self.execute_playbook(playbook_id='set_timeframe', expiry_time=expected_timeframe)
+            self.read_element(element_id='timeframe')
 
     def validate_trade_size(self):
         optimal_trade_size = self.get_optimal_trade_size()
@@ -774,6 +789,11 @@ class SmartTrader:
                     top = height * 0.64
                     right = width * 0.75
                     bottom = height * 0.73
+                elif element_id == 'timeframe':
+                    left = width * 0.463
+                    top = height * 0.145
+                    right = width * 0.573
+                    bottom = height * 0.211
                 elif element_id == 'clock':
                     left = width * 0.26
                     top = height * 0.095
@@ -1352,6 +1372,15 @@ class SmartTrader:
 
         self.expiry_time = value
         return self.expiry_time
+
+    def read_timeframe(self):
+        element_id = 'timeframe'
+        value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
+                                      element_id=element_id,
+                                      type=self.broker['elements'][element_id]['type'])
+
+        self.timeframe = value
+        return self.timeframe
 
     def read_payout(self):
         element_id = 'payout'
