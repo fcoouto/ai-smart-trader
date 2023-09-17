@@ -431,7 +431,7 @@ class SmartTrader:
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Executing playbook
-            self.execute_playbook(playbook_id='tv_set_chart_timeframe', expiry_time=expected_timeframe)
+            self.execute_playbook(playbook_id='tv_set_chart_timeframe', timeframe=expected_timeframe)
             self.read_element(element_id='timeframe')
 
     def validate_trade_size(self):
