@@ -271,7 +271,7 @@ BROKERS = {
                 'y': None
             },
             'btn_chart_timeframe': {
-                'zone': 'header',
+                'zone': 'chart_top',
                 'x': None,
                 'y': None
             },
