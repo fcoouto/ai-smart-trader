@@ -2051,9 +2051,9 @@ class SmartTrader:
         self.click_element(element_id='btn_chart_timeframe', wait_when_done=1.000)
 
         if timeframe == '1m':
-            self.click_element(element_id='dp_item_1min')
+            self.click_element(element_id='dp_item_1m')
         elif timeframe == '5m':
-            self.click_element(element_id='dp_item_5min')
+            self.click_element(element_id='dp_item_5m')
         else:
             # Option is not supported. Closing dropdown menu
             pyautogui.press('escape')
