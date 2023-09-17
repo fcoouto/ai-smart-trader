@@ -200,8 +200,11 @@ class SmartTrader:
             # Validating [payout]
             self.validate_payout(context=context)
 
+        # Validating [timeframe]
+        self.validate_timeframe(expected_timeframe='5m')
+
         # Validating [expiry_time]
-        self.validate_expiry_time(expected_expiry_time='01:00')
+        self.validate_expiry_time(expected_expiry_time='05:00')
 
         # Validating [cluster]
         self.validate_cluster()
@@ -420,9 +423,7 @@ class SmartTrader:
                     # It's available to be activated
                     self.execute_playbook(playbook_id='activate_super_strike')
 
-    def validate_timeframe(self):
-        expected_timeframe = '5m'
-
+    def validate_timeframe(self, expected_timeframe='5m'):
         while self.timeframe != expected_timeframe:
             # Waiting PB
             msg = f"Setting Timeframe to [{expected_timeframe}]"
@@ -430,7 +431,7 @@ class SmartTrader:
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
             # Executing playbook
-            self.execute_playbook(playbook_id='set_timeframe', expiry_time=expected_timeframe)
+            self.execute_playbook(playbook_id='tv_set_chart_timeframe', expiry_time=expected_timeframe)
             self.read_element(element_id='timeframe')
 
     def validate_trade_size(self):
@@ -1443,8 +1444,8 @@ class SmartTrader:
                 element['x'] = zone_region.left + 62
                 element['y'] = zone_region.top + 90
             elif element_id == 'btn_chart_timeframe':
-                element['x'] = zone_region.left + 240
-                element['y'] = zone_region.top + 20
+                element['x'] = zone_region.left + 230
+                element['y'] = zone_region.top + 40
             elif element_id == 'btn_chart_indicators':
                 element['x'] = zone_region.left + 420
                 element['y'] = zone_region.top + 90
@@ -2046,12 +2047,21 @@ class SmartTrader:
         # Leaving Settings and Selection
         pyautogui.press(['escape', 'escape'], interval=0.100)
 
-    def playbook_set_trade_size(self, trade_size):
-        if self.trade_size != trade_size:
-            self.click_element(element_id='trade_size', clicks=2)
-            pyautogui.typewrite("%.2f" % trade_size)
+    def playbook_tv_set_chart_timeframe(self, timeframe='5m'):
+        self.click_element(element_id='btn_chart_timeframe', wait_when_done=1.000)
 
-    def playbook_set_expiry_time(self, expiry_time='01:00'):
+        if timeframe == '1m':
+            self.click_element(element_id='dp_item_1min')
+        elif timeframe == '5m':
+            self.click_element(element_id='dp_item_5min')
+        else:
+            # Option is not supported. Closing dropdown menu
+            pyautogui.press('escape')
+
+        # Waiting CSS components
+        sleep(0.500)
+
+    def playbook_set_expiry_time(self, expiry_time='05:00'):
         self.click_element(element_id='btn_expiry_time', wait_when_done=1.000)
 
         if expiry_time == '01:00':
@@ -2073,6 +2083,11 @@ class SmartTrader:
 
     def playbook_toggle_expiry_time(self):
         self.click_element(element_id='toggle_expiry_time', wait_when_done=0.250)
+
+    def playbook_set_trade_size(self, trade_size):
+        if self.trade_size != trade_size:
+            self.click_element(element_id='trade_size', clicks=2)
+            pyautogui.typewrite("%.2f" % trade_size)
 
     def playbook_activate_super_strike(self):
         # Activationg [super_Strike] mode
