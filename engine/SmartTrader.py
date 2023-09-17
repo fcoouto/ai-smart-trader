@@ -2048,15 +2048,11 @@ class SmartTrader:
         pyautogui.press(['escape', 'escape'], interval=0.100)
 
     def playbook_tv_set_chart_timeframe(self, timeframe='5m'):
+        # Opening drop-down btn
         self.click_element(element_id='btn_chart_timeframe', wait_when_done=1.000)
 
-        if timeframe == '1m':
-            self.click_element(element_id='dp_item_1m')
-        elif timeframe == '5m':
-            self.click_element(element_id='dp_item_5m')
-        else:
-            # Option is not supported. Closing dropdown menu
-            pyautogui.press('escape')
+        # Selecting timeframe
+        self.click_element(element_id=f'dp_item_{timeframe}')
 
         # Waiting CSS components
         sleep(0.500)
