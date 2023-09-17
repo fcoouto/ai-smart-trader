@@ -85,7 +85,7 @@ CORE_DATA = {
     'price': 'float',
     'payout': 'percentage',
     'rsi': 'float',
-    'timeframe': 'string',
+    'timeframe': 'string_timeframe',
     'trade_size': 'float',
 }
 BROKERS = {
