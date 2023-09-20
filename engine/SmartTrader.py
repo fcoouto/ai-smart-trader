@@ -2576,7 +2576,7 @@ class SmartTrader:
             next_trading_time = self.get_next_trading_time()
             validation_time = next_trading_time - timedelta(seconds=validation_trigger)
 
-            secs_to_validation = validation_time - datetime.utcnow()
+            secs_to_validation = validation_time - datetime.utcnow().replace(tzinfo=timezone.utc)
             secs_to_validation = secs_to_validation.total_seconds()
             lookup_time_threshold = datetime.utcnow() + \
                                     timedelta(seconds=lookup_trigger - utils.now_seconds())
