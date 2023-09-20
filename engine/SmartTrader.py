@@ -2556,14 +2556,10 @@ class SmartTrader:
 
         # First run using estimated time (1 second)
         reading_chart_duration = default_reading_duration = timedelta(seconds=1).total_seconds()
-        lookup_trigger = 60 - default_reading_duration
 
         while True:
             context = 'Trading' if self.ongoing_positions else 'Getting Ready'
             tmsg.print(context=context, clear=True)
-
-            # Calculating [lookup_trigger]: average with last value
-            lookup_trigger = (lookup_trigger + (60 - reading_chart_duration)) / 2
 
             if self.ongoing_positions:
                 # Printing [ongoing_positions]
@@ -2649,11 +2645,13 @@ class SmartTrader:
 
                 # Running Lookup
                 result = asyncio.run(self.strategies_lookup(context=context))
-                reading_chart_duration = result['reading_chart_duration']
+
+                # Storing [reading_chart_duration]: avg with last reading
+                reading_chart_duration += result['reading_chart_duration'] / 2
 
                 # Checking if [lookup] is taking too long
                 if self.is_reading_taking_too_long(element_id='chart_data',
-                                                   duration=reading_chart_duration):
+                                                   duration=result['reading_chart_duration']):
                     # Waiting PB
                     msg = "Reseting Lookup Trigger (CTRL + C to cancel)"
                     wait_secs = 5
