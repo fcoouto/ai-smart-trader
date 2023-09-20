@@ -2437,6 +2437,8 @@ class SmartTrader:
                     # Leaving loop after first successful test
                     break
 
+        print(f'next_oclock_time: {next_oclock_time}')
+        print(f'last_trading_time_within_curr_hour: {last_trading_time_within_curr_hour}')
         print(f'next_trading_time: {next_trading_time}')
 
         return next_trading_time
