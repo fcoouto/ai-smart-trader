@@ -56,6 +56,7 @@ class SmartTrader:
 
     clock = None
     timeframe = None
+    timeframe_minutes = None
     expiry_time = None
     payout = None
 
@@ -1184,11 +1185,13 @@ class SmartTrader:
         if now.second >= settings.CHART_DATA_MIN_SECONDS or now.second <= settings.CHART_DATA_MAX_SECONDS:
             action = 'insert'
 
+            timeframe_interval = self.timeframe_minutes
+
             # Calculating candle's [datetime]
             if now.second >= settings.CHART_DATA_MIN_SECONDS:
-                candle_datetime = now - timedelta(seconds=now.second)
+                candle_datetime = now - timedelta(minutes=timeframe_interval - 1, seconds=now.second)
             else:
-                candle_datetime = now - timedelta(minutes=1, seconds=now.second)
+                candle_datetime = now - timedelta(minutes=timeframe_interval, seconds=now.second)
 
             self.datetime.insert(0, candle_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -1381,8 +1384,20 @@ class SmartTrader:
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
+        # Defining [unit]
+        unit = re.sub(r'[0-9]', '', value)
+
+        # Defining [interval]
+        interval_minutes = re.sub(r'[^0-9]', '', value)
+
+        if unit == 'd':
+            interval_minutes *= 1440
+        elif unit == 'h':
+            interval_minutes *= 60
 
         self.timeframe = value
+        self.timeframe_minutes = int(interval_minutes)
+
         return self.timeframe
 
     def read_payout(self):
@@ -2391,21 +2406,16 @@ class SmartTrader:
                 setattr(self, k, v)
 
     ''' TA & Trading '''
-
     def get_next_trading_time(self):
         now_utc = utils.now_utc_tz()
         next_trading_time = None
 
-        # Defining [unit]
-        unit = re.sub(r'[0-9]', '', self.timeframe)
-
         # Defining [interval]
-        interval = re.sub(r'[^0-9]', '', self.timeframe)
-        interval = int(interval)
+        interval = self.timeframe_minutes
 
         # Defining [last_trading_time_within_curr_hour]
         next_oclock_time = now_utc + timedelta(minutes=59 - now_utc.minute,
-                                           seconds=59 - now_utc.second)
+                                               seconds=59 - now_utc.second)
         last_trading_time_within_curr_hour = next_oclock_time - timedelta(minutes=interval)
 
         # Defining [next_trading_time]
