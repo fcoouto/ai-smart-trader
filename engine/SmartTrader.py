@@ -2594,7 +2594,6 @@ class SmartTrader:
             validation_time = (next_trading_time -
                                timedelta(minutes=self.timeframe_minutes) +
                                timedelta(minutes=self.timeframe_minutes * validation_trigger))
-            print(f'validation_time: {validation_time}')
 
             secs_to_validation = validation_time - utils.now_utc_tz()
             secs_to_validation = secs_to_validation.total_seconds()
@@ -2640,9 +2639,11 @@ class SmartTrader:
 
                 # Waiting PB
                 msg = "Watching candle closure"
-                diff_sec = lookup_trigger - utils.now_seconds()
+                lookup_time = next_trading_time - timedelta(seconds=reading_chart_duration)
+                secs_to_lookup = lookup_time - utils.now_utc_tz()
+                secs_to_lookup = secs_to_lookup.total_seconds()
 
-                items = range(0, int(diff_sec / settings.PROGRESS_BAR_INTERVAL_TIME))
+                items = range(0, int(secs_to_lookup / settings.PROGRESS_BAR_INTERVAL_TIME))
                 for item in utils.progress_bar(items, prefix=msg, reverse=True):
                     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
