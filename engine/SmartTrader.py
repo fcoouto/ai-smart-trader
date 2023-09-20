@@ -2393,7 +2393,7 @@ class SmartTrader:
     ''' TA & Trading '''
 
     def get_next_trading_time(self):
-        now = datetime.utcnow()
+        now_utc = utils.now_utc_tz()
         next_trading_time = None
 
         # Defining [unit]
@@ -2404,25 +2404,25 @@ class SmartTrader:
         interval = int(interval)
 
         # Defining [last_trading_time_within_curr_hour]
-        next_oclock_time = now + timedelta(minutes=59 - now.minute,
-                                           seconds=59 - now.second)
+        next_oclock_time = now_utc + timedelta(minutes=59 - now_utc.minute,
+                                           seconds=59 - now_utc.second)
         last_trading_time_within_curr_hour = next_oclock_time - timedelta(minutes=interval)
 
         # Defining [next_trading_time]
         intervals = list(range(interval, 60, interval))
 
-        if now >= last_trading_time_within_curr_hour:
+        if now_utc >= last_trading_time_within_curr_hour:
             # We are almost at o'clock time
             next_trading_time = next_oclock_time
 
         else:
             # Until next interval, [hour] won't change
             for minute in intervals:
-                if minute > now.minute:
-                    next_trading_time = datetime(year=now.year,
-                                                 month=now.month,
-                                                 day=now.day,
-                                                 hour=now.hour,
+                if minute > now_utc.minute:
+                    next_trading_time = datetime(year=now_utc.year,
+                                                 month=now_utc.month,
+                                                 day=now_utc.day,
+                                                 hour=now_utc.hour,
                                                  minute=minute,
                                                  tzinfo=timezone.utc)
                     # Leaving loop after first successful test
