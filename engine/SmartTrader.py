@@ -2144,7 +2144,7 @@ class SmartTrader:
         pyautogui.moveTo(x=x_candle, y=y)
 
         # Give it some time for CSS loading
-        # sleep(0.250)
+        sleep(0.500)
 
     def playbook_read_previous_candles(self, amount_candles=1):
         action = 'update'
