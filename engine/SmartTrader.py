@@ -2143,6 +2143,9 @@ class SmartTrader:
         x_candle = x_candle_0_center - (candle_width * i_candle)
         pyautogui.moveTo(x=x_candle, y=y)
 
+        # CSS loading
+        sleep(0.250)
+
     def playbook_read_previous_candles(self, amount_candles=1):
         action = 'update'
         ohcl_to_insert = None
