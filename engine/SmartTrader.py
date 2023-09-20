@@ -2437,6 +2437,8 @@ class SmartTrader:
                     # Leaving loop after first successful test
                     break
 
+        print(f'next_trading_time: {next_trading_time}')
+
         return next_trading_time
 
     def get_optimal_trade_size(self):
