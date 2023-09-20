@@ -2430,23 +2430,6 @@ class SmartTrader:
 
         return next_trading_time
 
-    def wait_for_next_trading_time(self, lookup_trigger):
-
-
-        # if validation_trigger > utils.now_seconds():
-        #     diff_sec = validation_trigger - utils.now_seconds()
-        #     lookup_time_threshold = datetime.utcnow() + \
-        #                             timedelta(seconds=lookup_trigger - utils.now_seconds())
-        # else:
-        #     diff_sec = validation_trigger - utils.now_seconds() + 60
-        #     lookup_time_threshold = datetime.utcnow() + \
-        #                             timedelta(seconds=lookup_trigger - utils.now_seconds()) + \
-        #                             timedelta(seconds=60)
-
-        # items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
-        # for item in utils.progress_bar(items, prefix=msg, reverse=True):
-        #     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
     def get_optimal_trade_size(self):
         balance_trade_size = self.highest_balance * settings.BALANCE_TRADE_SIZE_PCT
 
