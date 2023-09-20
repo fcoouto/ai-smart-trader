@@ -2152,7 +2152,7 @@ class SmartTrader:
         ohcl_to_update = ['open', 'high', 'low', 'close']
         has_refreshed = None
 
-        # Reseting chart (zooms and deslocation)
+        # Reseting chart (zooms and dislocation)
         self.playbook_tv_reset_chart()
 
         if len(self.datetime) < amount_candles:
