@@ -10,7 +10,7 @@ import json
 import random
 import re
 from time import sleep
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import asyncio
 import subprocess
@@ -184,8 +184,8 @@ class SmartTrader:
         context = 'Validation'
 
         # if len(self.ongoing_positions) == 0:
-            # Validating trading session
-            # self.validate_trading_session()
+        # Validating trading session
+        # self.validate_trading_session()
 
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
@@ -2392,6 +2392,61 @@ class SmartTrader:
 
     ''' TA & Trading '''
 
+    def get_next_trading_time(self):
+        now = datetime.utcnow()
+        next_trading_time = None
+
+        # Defining [unit]
+        unit = re.sub(r'[0-9]', '', self.timeframe)
+
+        # Defining [interval]
+        interval = re.sub(r'[^0-9]', '', self.timeframe)
+        interval = int(interval)
+
+        # Defining [last_trading_time_within_curr_hour]
+        next_oclock_time = now + timedelta(minutes=59 - now.minute,
+                                           seconds=59 - now.second)
+        last_trading_time_within_curr_hour = next_oclock_time - timedelta(minutes=interval)
+
+        # Defining [next_trading_time]
+        intervals = list(range(interval, 60, interval))
+
+        if now >= last_trading_time_within_curr_hour:
+            # We are almost at o'clock time
+            next_trading_time = next_oclock_time
+
+        else:
+            # Until next interval, [hour] won't change
+            for minute in intervals:
+                if minute > now.minute:
+                    next_trading_time = datetime(year=now.year,
+                                                 month=now.month,
+                                                 day=now.day,
+                                                 hour=now.hour,
+                                                 minute=minute,
+                                                 tzinfo=timezone.utc)
+                    # Leaving loop after first successful test
+                    break
+
+        return next_trading_time
+
+    def wait_for_next_trading_time(self, lookup_trigger):
+
+
+        # if validation_trigger > utils.now_seconds():
+        #     diff_sec = validation_trigger - utils.now_seconds()
+        #     lookup_time_threshold = datetime.utcnow() + \
+        #                             timedelta(seconds=lookup_trigger - utils.now_seconds())
+        # else:
+        #     diff_sec = validation_trigger - utils.now_seconds() + 60
+        #     lookup_time_threshold = datetime.utcnow() + \
+        #                             timedelta(seconds=lookup_trigger - utils.now_seconds()) + \
+        #                             timedelta(seconds=60)
+
+        # items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
+        # for item in utils.progress_bar(items, prefix=msg, reverse=True):
+        #     sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
+
     def get_optimal_trade_size(self):
         balance_trade_size = self.highest_balance * settings.BALANCE_TRADE_SIZE_PCT
 
@@ -2499,8 +2554,8 @@ class SmartTrader:
         # Reading previous candles PB
         self.execute_playbook(playbook_id='read_previous_candles', amount_candles=amount_candles_init)
 
-        # First run using estimated time (1.5 seconds)
-        reading_chart_duration = default_reading_duration = timedelta(seconds=1.250).total_seconds()
+        # First run using estimated time (1 second)
+        reading_chart_duration = default_reading_duration = timedelta(seconds=1).total_seconds()
         lookup_trigger = 60 - default_reading_duration
 
         while True:
@@ -2527,26 +2582,25 @@ class SmartTrader:
                 tb_positions = tabulate(df, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
+            # Defining [validation_trigger]
             if str(self.agent_id).endswith('1'):
                 validation_trigger = 7.5
             elif str(self.agent_id).endswith('2'):
                 validation_trigger = 27.5
             else:
-                validation_trigger = 42.5
+                validation_trigger = 47.5
+
+            next_trading_time = self.get_next_trading_time()
+            validation_time = next_trading_time - timedelta(seconds=validation_trigger)
+
+            secs_to_validation = validation_time - datetime.utcnow()
+            secs_to_validation = secs_to_validation.total_seconds()
+            lookup_time_threshold = datetime.utcnow() + \
+                                    timedelta(seconds=lookup_trigger - utils.now_seconds())
 
             # Waiting PB
             msg = "Watching Price Action"
-            if validation_trigger > utils.now_seconds():
-                diff_sec = validation_trigger - utils.now_seconds()
-                lookup_time_threshold = datetime.now() + \
-                                        timedelta(seconds=lookup_trigger - utils.now_seconds())
-            else:
-                diff_sec = validation_trigger - utils.now_seconds() + 60
-                lookup_time_threshold = datetime.now() + \
-                                        timedelta(seconds=lookup_trigger - utils.now_seconds()) + \
-                                        timedelta(seconds=60)
-
-            items = range(0, int(diff_sec * 1 / settings.PROGRESS_BAR_INTERVAL_TIME))
+            items = range(0, int(secs_to_validation / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
@@ -2579,7 +2633,7 @@ class SmartTrader:
             if not os.path.exists(long_action_lock_file):
                 self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
 
-            if datetime.now() < lookup_time_threshold:
+            if datetime.utcnow() < lookup_time_threshold:
                 # Ready for Trading
 
                 # Waiting PB
@@ -2671,7 +2725,6 @@ class SmartTrader:
             tg.create_task(self.read_element(element_id='ohlc',
                                              is_async=True,
                                              insert_fields=ohlc_insert_fields))
-        # await self.read_chart_data(element_ids=element_ids)
 
         delta = datetime.now() - start
         result['reading_chart_duration'] = delta.total_seconds()

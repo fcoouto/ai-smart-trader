@@ -72,7 +72,7 @@ def progress_bar(iterable, prefix='', suffix='', decimals=1, length=20, fill='â–
         filledLength = int(length * iteration // total)
         bar = fill * filledLength + '-' * (length - filledLength)
         padding_left = os.get_terminal_size().columns - length - len(prefix) - len(suffix) - 3
-        
+
         bar_line = f"\r{' ' * padding_left if padding_left > 0 else ''}{tmsg.italic}{prefix}{tmsg.endc}"
         if prefix:
             bar_line += ' '
@@ -139,7 +139,7 @@ def does_file_exist(path):
 
 
 def now_seconds():
-    return float(f'{datetime.now().second}.{datetime.now().microsecond}')
+    return float(f'{datetime.utcnow().second}.{datetime.utcnow().microsecond}')
 
 
 # Technical Analysis
