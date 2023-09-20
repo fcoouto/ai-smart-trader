@@ -2544,7 +2544,7 @@ class SmartTrader:
         msg = "Validating\n"
         tmsg.print(context='Warming Up!', msg=msg, clear=True)
 
-        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
+        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_RUN
         amount_candles_init = 6
 
         long_action_lock_file = self.get_long_action_lock_file_path()
@@ -2584,14 +2584,17 @@ class SmartTrader:
 
             # Defining [validation_trigger]
             if str(self.agent_id).endswith('1'):
-                validation_trigger = 7.5
+                validation_trigger = 0.12
             elif str(self.agent_id).endswith('2'):
-                validation_trigger = 27.5
+                validation_trigger = 0.45
             else:
-                validation_trigger = 47.5
+                validation_trigger = 0.80
 
             next_trading_time = self.get_next_trading_time()
-            validation_time = next_trading_time - timedelta(seconds=60 - validation_trigger)
+            validation_time = (next_trading_time -
+                               timedelta(minutes=self.timeframe_minutes) +
+                               timedelta(minutes=self.timeframe_minutes * validation_trigger))
+            print(f'validation_time: {validation_time}')
 
             secs_to_validation = validation_time - utils.now_utc_tz()
             secs_to_validation = secs_to_validation.total_seconds()
@@ -2613,7 +2616,7 @@ class SmartTrader:
                     msg = "Session expired... Refreshing page"
                     for item in utils.progress_bar([0], prefix=msg):
                         self.execute_playbook(playbook_id='go_to_trading_page')
-                        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
+                        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_RUN
 
                 elif refresh_page_countdown <= 0:
                     # [bug-fix] Refreshing page here
@@ -2621,7 +2624,7 @@ class SmartTrader:
                     msg = "Refreshing page"
                     for item in utils.progress_bar([0], prefix=msg):
                         self.execute_playbook(playbook_id='refresh_page')
-                        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_MINUTES
+                        refresh_page_countdown = settings.REFRESH_PAGE_EVERY_RUN
 
             # Validation PB
             msg = "Quick validation"
