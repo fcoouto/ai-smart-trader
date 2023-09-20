@@ -2576,14 +2576,9 @@ class SmartTrader:
             next_trading_time = self.get_next_trading_time()
             validation_time = next_trading_time - timedelta(seconds=60 - validation_trigger)
 
-            secs_to_validation = validation_time - datetime.utcnow().replace(tzinfo=timezone.utc)
+            secs_to_validation = validation_time - utils.now_utc_tz()
             secs_to_validation = secs_to_validation.total_seconds()
             lookup_time_threshold = next_trading_time - timedelta(seconds=reading_chart_duration)
-
-            print(f'next_trading_time: {next_trading_time}')
-            print(f'validation_time: {validation_time}')
-            print(f'secs_to_validation: {secs_to_validation}')
-            print(f'lookup_time_threshold: {lookup_time_threshold}')
 
             # Waiting PB
             msg = "Watching Price Action"
@@ -2620,7 +2615,7 @@ class SmartTrader:
             if not os.path.exists(long_action_lock_file):
                 self.execute_playbook(playbook_id='read_previous_candles', amount_candles=1)
 
-            if datetime.utcnow() < lookup_time_threshold:
+            if utils.now_utc_tz() < lookup_time_threshold:
                 # Ready for Trading
 
                 # Waiting PB

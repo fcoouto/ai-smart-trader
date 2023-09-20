@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from engine import settings
 
 
@@ -136,6 +136,11 @@ def does_file_exist(path):
     if os.path.exists(path):
         return True
     return False
+
+
+def now_utc_tz():
+    # Returns [datetime.utcnow] timezone aware
+    return datetime.utcnow().replace(tzinfo=timezone.utc)
 
 
 def now_seconds():
