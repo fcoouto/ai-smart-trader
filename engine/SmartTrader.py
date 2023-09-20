@@ -2417,7 +2417,7 @@ class SmartTrader:
 
         # Defining [last_trading_time_within_curr_hour]
         next_oclock_time = now_utc + timedelta(minutes=59 - now_utc.minute,
-                                               seconds=60 - now_utc.second,
+                                               seconds=59 - now_utc.second,
                                                microseconds=1000000 - now_utc.microsecond)
         last_trading_time_within_curr_hour = next_oclock_time - timedelta(minutes=interval)
 
