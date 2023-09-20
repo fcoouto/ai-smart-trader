@@ -2581,6 +2581,11 @@ class SmartTrader:
             lookup_time_threshold = datetime.utcnow() + \
                                     timedelta(seconds=lookup_trigger - utils.now_seconds())
 
+            print(f'next_trading_time: {next_trading_time}')
+            print(f'validation_time: {validation_time}')
+            print(f'secs_to_validation: {secs_to_validation}')
+            print(f'lookup_time_threshold: {lookup_time_threshold}')
+
             # Waiting PB
             msg = "Watching Price Action"
             items = range(0, int(secs_to_validation / settings.PROGRESS_BAR_INTERVAL_TIME))
