@@ -1233,18 +1233,9 @@ class SmartTrader:
         value = self.ocr_read_element(zone_id=self.broker['elements'][element_id]['zone'],
                                       element_id=element_id,
                                       type=self.broker['elements'][element_id]['type'])
-        value = utils.str_to_float(value)
+        self.price = utils.str_to_float(value)
 
-        if action == 'update':
-            if len(self.price) > 0:
-                self.price[0] = value
-            else:
-                # We are not reading [price] at every lookup anymore. So make sure [price] has values to be updated.
-                self.price.insert(0, value)
-        elif action == 'insert':
-            self.price.insert(0, value)
-
-        return value
+        return self.price
 
     async def read_ohlc(self, insert_fields=None, update_fields=None):
         # Returns [open, high, low, close, change]
@@ -2290,7 +2281,7 @@ class SmartTrader:
                 'low': self.low[1],
                 'close': self.close[1],
                 'change': self.change[1],
-                'price': self.price[1] if len(self.price) > 1 else None,
+                'price': self.price,
                 'ema_144': self.ema_144[1],
                 'ema_72': self.ema_72[1],
                 'ema_9': self.ema_9[1],
@@ -2520,7 +2511,7 @@ class SmartTrader:
             'expiration_time': expiration_time,
             'side': side,
             'trade_size': trade_size,
-            'open_price': self.price[0],
+            'open_price': self.price,
             'close_price': None,
             'result': None
         }
@@ -2535,7 +2526,7 @@ class SmartTrader:
     async def close_trade(self, strategy_id, result):
         position = self.ongoing_positions[strategy_id]
         trade = position['trades'][-1]
-        trade['close_price'] = self.price[0]
+        trade['close_price'] = self.price
         trade['result'] = result
 
         # [Loss Management] Closing Trade
@@ -2683,6 +2674,10 @@ class SmartTrader:
 
                 self.send_chart_data()
 
+                if len(self.ongoing_positions) == 0:
+                    # Reseting [price]
+                    self.price = None
+
             else:
                 # Missed candle data (too late)
 
@@ -2803,18 +2798,18 @@ class SmartTrader:
 
                 if position['side'] == 'up':
                     # up
-                    if self.price[0] > last_trade['open_price']:
+                    if self.price > last_trade['open_price']:
                         result = 'gain'
-                    elif self.price[0] < last_trade['open_price']:
+                    elif self.price < last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
 
                 else:
                     # down
-                    if self.price[0] < last_trade['open_price']:
+                    if self.price < last_trade['open_price']:
                         result = 'gain'
-                    elif self.price[0] > last_trade['open_price']:
+                    elif self.price > last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
@@ -2935,9 +2930,9 @@ class SmartTrader:
 
                 if position['side'] == 'up':
                     # up
-                    if self.price[0] > last_trade['open_price']:
+                    if self.price > last_trade['open_price']:
                         result = 'gain'
-                    elif self.price[0] < last_trade['open_price']:
+                    elif self.price < last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
@@ -2948,9 +2943,9 @@ class SmartTrader:
 
                 else:
                     # down
-                    if self.price[0] < last_trade['open_price']:
+                    if self.price < last_trade['open_price']:
                         result = 'gain'
-                    elif self.price[0] > last_trade['open_price']:
+                    elif self.price > last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
@@ -3121,18 +3116,18 @@ class SmartTrader:
 
                 if position['side'] == 'up':
                     # up
-                    if self.price[0] > last_trade['open_price']:
+                    if self.price > last_trade['open_price']:
                         result = 'gain'
-                    elif self.price[0] < last_trade['open_price']:
+                    elif self.price < last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
 
                 else:
                     # down
-                    if self.price[0] < last_trade['open_price']:
+                    if self.price < last_trade['open_price']:
                         result = 'gain'
-                    elif self.price[0] > last_trade['open_price']:
+                    elif self.price > last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
@@ -3286,18 +3281,18 @@ class SmartTrader:
 
                 if position['side'] == 'up':
                     # up
-                    if self.price[0] > last_trade['open_price']:
+                    if self.price > last_trade['open_price']:
                         result = 'gain'
-                    elif self.price[0] < last_trade['open_price']:
+                    elif self.price < last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
 
                 else:
                     # down
-                    if self.price[0] < last_trade['open_price']:
+                    if self.price < last_trade['open_price']:
                         result = 'gain'
-                    elif self.price[0] > last_trade['open_price']:
+                    elif self.price > last_trade['open_price']:
                         result = 'loss'
                     else:
                         result = 'draw'
