@@ -643,9 +643,13 @@ class SmartTrader:
                             if zone_id == 'chart_top':
                                 # Browser just got launched
                                 self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
+                            else:
+                                self.execute_playbook(playbook_id='go_to_trading_page')
+                                
                         else:
                             if zone_id == 'drawing_toolbar':
                                 self.execute_playbook(playbook_id=f"{self.broker['id']}_set_chart_candle")
+
                             self.execute_playbook(playbook_id='go_to_trading_page')
 
                         msg = f"\t  - Done !"
