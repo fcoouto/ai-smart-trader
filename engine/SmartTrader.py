@@ -93,6 +93,7 @@ class SmartTrader:
     #                      }
     # }
 
+    is_starting_up = True
     is_automation_running = None
     is_super_strike_active = None
     ignore_trading_window = None
@@ -114,6 +115,9 @@ class SmartTrader:
 
         # Setting zones
         self.set_zones()
+
+        # Startup is finished
+        self.is_starting_up = False
 
     def set_awareness(self, k, v):
         if k in self.awareness:
@@ -632,14 +636,14 @@ class SmartTrader:
                         tmsg.print(context=context, msg=msg, clear=True)
 
                         # Waiting PB
-                        msg = "Gathering tools for Chart Setup (CTRL + C to cancel)"
+                        msg = "Trying to fix it myself (CTRL + C to cancel)"
                         wait_secs = settings.PROGRESS_BAR_WAITING_TIME
                         items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
                         for item in utils.progress_bar(items, prefix=msg, reverse=True):
                             sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
                         # Executing playbook
-                        if len(self.datetime) == 0:
+                        if self.is_starting_up:
                             if zone_id == 'chart_top':
                                 # Browser just got launched
                                 self.execute_playbook(playbook_id=f"{self.broker['id']}_chart_setup")
@@ -649,7 +653,6 @@ class SmartTrader:
                         else:
                             if zone_id == 'drawing_toolbar':
                                 self.execute_playbook(playbook_id=f"{self.broker['id']}_set_chart_candle")
-
                             self.execute_playbook(playbook_id='go_to_trading_page')
 
                         msg = f"\t  - Done !"
@@ -2059,7 +2062,7 @@ class SmartTrader:
 
     def playbook_tv_set_chart_timeframe(self, timeframe='5m'):
         # Opening drop-down btn
-        self.click_element(element_id='btn_chart_timeframe', wait_when_done=1.000)
+        self.click_element(element_id='btn_chart_timeframe', wait_when_done=1.500)
 
         # Selecting timeframe
         self.click_element(element_id=f'dp_item_{timeframe}')
@@ -2068,7 +2071,7 @@ class SmartTrader:
         sleep(0.500)
 
     def playbook_set_expiry_time(self, expiry_time='05:00'):
-        self.click_element(element_id='btn_expiry_time', wait_when_done=1.000)
+        self.click_element(element_id='btn_expiry_time', wait_when_done=1.500)
 
         if expiry_time == '01:00':
             self.click_element(element_id='dp_item_1min')
