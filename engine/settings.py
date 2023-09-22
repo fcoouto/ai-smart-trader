@@ -49,6 +49,7 @@ PLAYBOOK_LONG_ACTION = {
     'set_expiry_time': 5,
     'toggle_expiry_time': 2,
     'tv_reset': 10,
+    'tv_set_chart_timeframe': 2
 }
 PATH_LOCK = 'lock'
 LOCK_FILE_EXTENSION = '.lck'
