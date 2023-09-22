@@ -2429,7 +2429,7 @@ class SmartTrader:
         else:
             # Until next interval, [hour] won't change
             for minute in intervals:
-                if minute > now_utc.minute:
+                if minute > now_utc.minute + 1:
                     next_trading_time = datetime(year=now_utc.year,
                                                  month=now_utc.month,
                                                  day=now_utc.day,
