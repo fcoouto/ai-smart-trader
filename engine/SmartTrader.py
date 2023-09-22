@@ -2423,7 +2423,7 @@ class SmartTrader:
         intervals = list(range(interval, 60, interval))
         now_utc_ahead_10_pct = now_utc + timedelta(minutes=self.timeframe_minutes * 0.10)
 
-        if now_utc_ahead_10_pct >= last_trading_time_within_curr_hour:
+        if last_trading_time_within_curr_hour < now_utc_ahead_10_pct < next_oclock_time:
             # We are almost at o'clock time
             next_trading_time = next_oclock_time
 
