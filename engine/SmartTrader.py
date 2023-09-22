@@ -2421,15 +2421,16 @@ class SmartTrader:
 
         # Defining [next_trading_time]
         intervals = list(range(interval, 60, interval))
+        now_utc_ahead_10_pct = now_utc + timedelta(minutes=self.timeframe_minutes * 0.10)
 
-        if now_utc >= last_trading_time_within_curr_hour:
+        if now_utc_ahead_10_pct >= last_trading_time_within_curr_hour:
             # We are almost at o'clock time
             next_trading_time = next_oclock_time
 
         else:
             # Until next interval, [hour] won't change
             for minute in intervals:
-                if minute > now_utc.minute + 1:
+                if minute > now_utc_ahead_10_pct.minute:
                     next_trading_time = datetime(year=now_utc.year,
                                                  month=now_utc.month,
                                                  day=now_utc.day,
