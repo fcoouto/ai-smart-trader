@@ -2427,7 +2427,7 @@ class SmartTrader:
 
             intervals = list(range(interval, 60, interval))
 
-            if now_utc_ahead.minute > intervals[-1]:
+            if now_utc_ahead.minute >= intervals[-1]:
                 # We are almost at o'clock time
                 next_trading_time = next_oclock_time
             else:
