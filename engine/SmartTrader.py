@@ -2417,31 +2417,37 @@ class SmartTrader:
         next_oclock_time = now_utc + timedelta(minutes=59 - now_utc.minute,
                                                seconds=59 - now_utc.second,
                                                microseconds=1000000 - now_utc.microsecond)
-        last_trading_time_within_curr_hour = next_oclock_time - timedelta(minutes=interval)
+
+        # Defining [now_utc_ahead] 10% of [timeframe]
+        now_utc_ahead = now_utc + timedelta(minutes=self.timeframe_minutes * 0.10)
 
         # Defining [next_trading_time]
-        intervals = list(range(interval, 60, interval))
-        now_utc_ahead_10_pct = now_utc + timedelta(minutes=self.timeframe_minutes * 0.10)
+        if self.timeframe_minutes < 60:
+            # [timeframe] < 60m
 
-        if last_trading_time_within_curr_hour < now_utc_ahead_10_pct < next_oclock_time:
-            # We are almost at o'clock time
-            next_trading_time = next_oclock_time
+            intervals = list(range(interval, 60, interval))
 
-        else:
-            # Until next interval, [hour] won't change
-            for minute in intervals:
-                if minute > now_utc_ahead_10_pct.minute:
-                    next_trading_time = datetime(year=now_utc.year,
-                                                 month=now_utc.month,
-                                                 day=now_utc.day,
-                                                 hour=now_utc.hour,
-                                                 minute=minute,
-                                                 tzinfo=timezone.utc)
-                    # Leaving loop after first successful test
-                    break
+            if now_utc_ahead.minute > intervals[-1]:
+                # We are almost at o'clock time
+                next_trading_time = next_oclock_time
+            else:
+                for minute in intervals:
+                    if minute > now_utc_ahead.minute:
+                        next_trading_time = datetime(year=now_utc_ahead.year,
+                                                     month=now_utc_ahead.month,
+                                                     day=now_utc_ahead.day,
+                                                     hour=now_utc_ahead.hour,
+                                                     minute=minute,
+                                                     tzinfo=timezone.utc)
+                        # Leaving loop after first successful test
+                        break
+
+        elif self.timeframe_minutes < 1440:
+            # [timeframe] < 1d
+            # to be developed
+            pass
 
         print(f'next_oclock_time: {next_oclock_time}')
-        print(f'last_trading_time_within_curr_hour: {last_trading_time_within_curr_hour}')
         print(f'next_trading_time: {next_trading_time}')
 
         return next_trading_time
