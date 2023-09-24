@@ -96,19 +96,17 @@ class SmartTrader:
     is_starting_up = True
     is_automation_running = None
     is_super_strike_active = None
-    ignore_trading_window = None
     awareness = {
         'balance_equal_to_zero': None,
         'balance_less_than_min_balance': None,
     }
 
-    def __init__(self, agent_id, region, broker, asset, initial_trade_size, ignore_trading_window):
+    def __init__(self, agent_id, region, broker, asset, initial_trade_size):
         self.agent_id = agent_id
         self.region = region
         self.broker = broker
         self.asset = asset
         self.initial_trade_size = initial_trade_size
-        self.ignore_trading_window = ignore_trading_window
 
         # Setting [credentials]
         self.validate_credentials()
@@ -188,9 +186,9 @@ class SmartTrader:
 
         context = 'Validation'
 
-        # if len(self.ongoing_positions) == 0:
-        # Validating trading session
-        # self.validate_trading_session()
+        if len(self.ongoing_positions) == 0:
+            # Validating trading session
+            self.validate_trading_session()
 
         # Validating readability of elements within the region (user logged in)
         self.set_zones()
@@ -453,27 +451,27 @@ class SmartTrader:
             self.execute_playbook(playbook_id='set_trade_size', trade_size=optimal_trade_size)
             self.read_element(element_id='trade_size')
 
-    def validate_trading_session(self, context='Validation'):
-        if not self.ignore_trading_window:
-            now = datetime.utcnow()
+    def validate_trading_session(self):
+        now_utc = datetime.utcnow()
 
-            trading_start = 5
-            trading_end = 19
+        if now_utc.weekday() >= 4 and now_utc.hour >= 20:
+            # Weekend has started
+            next_monday = now_utc + timedelta(days=7 - now_utc.weekday())
+            next_monday = datetime(year=next_monday.year,
+                                   month=next_monday.month,
+                                   day=next_monday.day,
+                                   hour=0,
+                                   minute=0,
+                                   second=0)
 
-            while now.hour < trading_start or now.hour > trading_end:
-                msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
-                       f"{utils.tmsg.italic}- We are currently out of the trading time range, "
-                       f"which should be between {trading_start} and {trading_end}. {utils.tmsg.endc}")
-                tmsg.print(context=context, msg=msg, clear=True)
+            secs_to_open_market = next_monday - utils.now_utc_tz()
+            secs_to_open_market = secs_to_open_market.total_seconds()
 
-                # Waiting PB
-                msg = "Waiting for it (CTRL + C to cancel)"
-                wait_secs = 300
-                items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
-                for item in utils.progress_bar(items, prefix=msg, reverse=True):
-                    sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
-
-                now = datetime.utcnow()
+            # Waiting PB
+            msg = "Weekend is here. Enjoy life! Take a break :)"
+            items = range(0, int(secs_to_open_market / settings.PROGRESS_BAR_INTERVAL_TIME))
+            for item in utils.progress_bar(items, prefix=msg, reverse=True):
+                sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
     def is_reading_taking_too_long(self, element_id, duration):
         context = 'Validation'

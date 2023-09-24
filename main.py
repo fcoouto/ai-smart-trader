@@ -6,7 +6,7 @@ from engine import settings, ScreenManager, SmartTrader, utils
 
 
 def execute(amount_regions_per_monitor,
-            i_monitor, i_region, broker, asset, trade_size, ignore_trading_window):
+            i_monitor, i_region, broker, asset, trade_size):
 
     sm = ScreenManager.ScreenManager(amount_regions_per_monitor=amount_regions_per_monitor)
     region = sm.get_region(i_monitor=i_monitor, i_region=i_region)
@@ -16,8 +16,7 @@ def execute(amount_regions_per_monitor,
                                       region=region,
                                       broker=broker,
                                       asset=asset,
-                                      initial_trade_size=trade_size,
-                                      ignore_trading_window=ignore_trading_window)
+                                      initial_trade_size=trade_size)
     strader.start()
 
 
@@ -34,9 +33,9 @@ def main(argsv):
 
     try:
         opts, args = getopt.getopt(argsv,
-                                   'hm:r:b:a:t:i:',
+                                   'hm:r:b:a:t:',
                                    ['help', 'amount_regions_per_monitor=', 'monitor=', 'region=',
-                                    'broker=', 'asset=', 'trade_size=', 'ignore_trading_window='])
+                                    'broker=', 'asset=', 'trade_size='])
     except getopt.GetoptError:
         print('\nException: One or more arguments were not expected.')
         print_help()
@@ -58,8 +57,6 @@ def main(argsv):
             asset = str(arg)
         elif opt in ['-t', '--trade_size']:
             trade_size = float(arg)
-        elif opt in ['-i', '--ignore_trading_window']:
-            ignore_trading_window = True
 
     if (i_monitor is not None and
             i_region is not None and
@@ -73,8 +70,7 @@ def main(argsv):
                     i_region=i_region,
                     broker=broker,
                     asset=asset,
-                    trade_size=trade_size,
-                    ignore_trading_window=ignore_trading_window)
+                    trade_size=trade_size)
 
         else:
             print('\nException: Broker [%s] is not supported yet. '
