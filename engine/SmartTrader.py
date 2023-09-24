@@ -469,7 +469,7 @@ class SmartTrader:
             secs_to_open_market = secs_to_open_market.total_seconds()
 
             # Waiting PB
-            msg = "It's weekend! Taking a break... :)"
+            msg = "It's weekend! Go enjoy your life while I take a break... :)"
             items = range(0, int(secs_to_open_market / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
