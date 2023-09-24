@@ -464,7 +464,6 @@ class SmartTrader:
                                    minute=0,
                                    second=0,
                                    tzinfo=timezone.utc)
-            print(f'next_monday: {next_monday}')
 
             secs_to_open_market = next_monday - utils.now_utc_tz()
             secs_to_open_market = secs_to_open_market.total_seconds()
