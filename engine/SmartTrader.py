@@ -2652,7 +2652,7 @@ class SmartTrader:
                 result = asyncio.run(self.strategies_lookup(context=context))
 
                 # Storing [reading_chart_duration]: avg with last reading
-                reading_chart_duration += result['reading_chart_duration'] / 2
+                reading_chart_duration = (reading_chart_duration + result['reading_chart_duration']) / 2
 
                 # Checking if [lookup] is taking too long
                 if self.is_reading_taking_too_long(element_id='chart_data',
