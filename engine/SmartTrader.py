@@ -454,7 +454,7 @@ class SmartTrader:
     def validate_trading_session(self):
         now_utc = datetime.utcnow()
 
-        if now_utc.weekday() >= 4 and now_utc.hour >= 20:
+        if (now_utc.weekday() >= 4 and now_utc.hour >= 20) or now_utc.weekday() >= 5:
             # Weekend has started
             next_monday = now_utc + timedelta(days=7 - now_utc.weekday())
             next_monday = datetime(year=next_monday.year,
