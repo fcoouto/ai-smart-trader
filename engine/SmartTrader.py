@@ -462,7 +462,8 @@ class SmartTrader:
                                    day=next_monday.day,
                                    hour=0,
                                    minute=0,
-                                   second=0)
+                                   second=0,
+                                   tzinfo=timezone.utc)
 
             secs_to_open_market = next_monday - utils.now_utc_tz()
             secs_to_open_market = secs_to_open_market.total_seconds()
