@@ -2585,11 +2585,15 @@ class SmartTrader:
 
             # Defining [validation_trigger]
             if str(self.agent_id).endswith('1'):
-                validation_trigger = 0.12
-                validation_trigger = 0.33
+                if self.timeframe_minutes == 1:
+                    validation_trigger = 0.12
+                else:
+                    validation_trigger = 0.45
             elif str(self.agent_id).endswith('2'):
-                validation_trigger = 0.45
-                validation_trigger = 0.66
+                if self.timeframe_minutes == 1:
+                    validation_trigger = 0.45
+                else:
+                    validation_trigger = 0.75
             else:
                 validation_trigger = 0.90
 
