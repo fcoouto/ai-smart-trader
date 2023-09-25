@@ -2586,10 +2586,10 @@ class SmartTrader:
             # Defining [validation_trigger]
             if str(self.agent_id).endswith('1'):
                 validation_trigger = 0.12
-                validation_trigger = 0.45
+                validation_trigger = 0.40
             elif str(self.agent_id).endswith('2'):
                 validation_trigger = 0.45
-                validation_trigger = 0.80
+                validation_trigger = 0.70
             else:
                 validation_trigger = 0.90
 
