@@ -196,15 +196,15 @@ class SmartTrader:
         # Validating [clock]
         self.validate_clock(context=context)
 
+        # Validating [timeframe]
+        self.validate_timeframe(expected_timeframe='5m')
+
         if len(self.ongoing_positions) == 0:
             # Validating [balance]
             self.validate_balance(context=context)
 
             # Validating [payout]
             self.validate_payout(context=context)
-
-        # Validating [timeframe]
-        self.validate_timeframe(expected_timeframe='5m')
 
         # Validating [expiry_time]
         self.validate_expiry_time(expected_expiry_time='05:00')
@@ -2433,11 +2433,11 @@ class SmartTrader:
                 for minute in intervals:
                     if minute > now_utc_ahead.minute:
                         next_candle_time = datetime(year=now_utc_ahead.year,
-                                                     month=now_utc_ahead.month,
-                                                     day=now_utc_ahead.day,
-                                                     hour=now_utc_ahead.hour,
-                                                     minute=minute,
-                                                     tzinfo=timezone.utc)
+                                                    month=now_utc_ahead.month,
+                                                    day=now_utc_ahead.day,
+                                                    hour=now_utc_ahead.hour,
+                                                    minute=minute,
+                                                    tzinfo=timezone.utc)
                         # Leaving loop after first successful test
                         break
 
