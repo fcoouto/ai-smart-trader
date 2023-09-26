@@ -395,7 +395,11 @@ class SmartTrader:
 
     def validate_payout(self, context='Validation'):
         while self.payout < settings.MIN_PAYOUT:
-            validation_time = self.get_validation_time()
+
+            next_candle_time = self.get_next_candle_time()
+            validation_trigger_pct = self.get_validation_trigger_pct()
+            validation_time = (next_candle_time +
+                               timedelta(minutes=self.timeframe_minutes * validation_trigger_pct))
             secs_to_validation = validation_time - utils.now_utc_tz()
             secs_to_validation = secs_to_validation.total_seconds()
 
@@ -2453,10 +2457,8 @@ class SmartTrader:
 
         return previous_candle_time
 
-    def get_validation_time(self):
+    def get_validation_trigger_pct(self):
         # Retrieves [validation_trigger] in percentage format based on [self.timeframe_minutes]
-        previous_candle_time = self.get_previous_candle_time()
-
         if self.timeframe_minutes == 1:
             # 1m
             if str(self.agent_id).endswith('1'):
@@ -2475,10 +2477,7 @@ class SmartTrader:
             else:
                 trigger_pct = 0.90
 
-        validation_time = (previous_candle_time +
-                           timedelta(minutes=self.timeframe_minutes * trigger_pct))
-
-        return validation_time
+        return trigger_pct
 
     def get_optimal_trade_size(self):
         balance_trade_size = self.highest_balance * settings.BALANCE_TRADE_SIZE_PCT
@@ -2612,7 +2611,10 @@ class SmartTrader:
                 print(f"{tb_positions}\n\n")
 
             # Defining [validation_time]
-            validation_time = self.get_validation_time()
+            previous_candle_time = self.get_previous_candle_time()
+            validation_trigger_pct = self.get_validation_trigger_pct()
+            validation_time = (previous_candle_time +
+                               timedelta(minutes=self.timeframe_minutes * validation_trigger_pct))
             secs_to_validation = validation_time - utils.now_utc_tz()
             secs_to_validation = secs_to_validation.total_seconds()
 
