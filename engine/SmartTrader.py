@@ -395,13 +395,9 @@ class SmartTrader:
 
     def validate_payout(self, context='Validation'):
         while self.payout < settings.MIN_PAYOUT:
-            now = datetime.utcnow()
-            trigger = now - timedelta(seconds=now.second)
-            trigger += timedelta(seconds=305)
-
-            # Defining [wait_secs]
-            wait_secs = trigger - now
-            wait_secs = wait_secs.total_seconds()
+            validation_time = self.get_validation_time()
+            secs_to_validation = validation_time - utils.now_utc_tz()
+            secs_to_validation = secs_to_validation.total_seconds()
 
             msg = (f"{utils.tmsg.warning}[WARNING]{utils.tmsg.endc} "
                    f"{utils.tmsg.italic}- Payout is currently [{self.payout}%]. "
@@ -409,8 +405,8 @@ class SmartTrader:
             tmsg.print(context=context, msg=msg, clear=True)
 
             # Waiting PB
-            msg = "Waiting for payout get higher again (CTRL + C to cancel)"
-            items = range(0, int(wait_secs / settings.PROGRESS_BAR_INTERVAL_TIME))
+            msg = "Waiting payout get higher again (CTRL + C to cancel)"
+            items = range(0, int(secs_to_validation / settings.PROGRESS_BAR_INTERVAL_TIME))
             for item in utils.progress_bar(items, prefix=msg, reverse=True):
                 sleep(settings.PROGRESS_BAR_INTERVAL_TIME)
 
@@ -1197,8 +1193,7 @@ class SmartTrader:
                 candle_datetime = now - timedelta(minutes=self.timeframe_minutes - 1,
                                                   seconds=now.second)
             else:
-                candle_datetime = now - timedelta(minutes=self.timeframe_minutes,
-                                                  seconds=now.second)
+                candle_datetime = self.get_previous_candle_time()
 
             self.datetime.insert(0, candle_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -2406,9 +2401,9 @@ class SmartTrader:
                 setattr(self, k, v)
 
     ''' TA & Trading '''
-    def get_next_trading_time(self):
+    def get_next_candle_time(self):
         now_utc = utils.now_utc_tz()
-        next_trading_time = None
+        next_candle_time = None
 
         # Defining [interval]
         interval = self.timeframe_minutes
@@ -2421,7 +2416,7 @@ class SmartTrader:
         # Defining [now_utc_ahead] 10% of [timeframe]
         now_utc_ahead = now_utc + timedelta(minutes=self.timeframe_minutes * 0.10)
 
-        # Defining [next_trading_time]
+        # Defining [next_candle_time]
         if self.timeframe_minutes < 60:
             # [timeframe] < 60m
 
@@ -2429,11 +2424,11 @@ class SmartTrader:
 
             if now_utc_ahead.minute >= intervals[-1]:
                 # We are almost at o'clock time
-                next_trading_time = next_oclock_time
+                next_candle_time = next_oclock_time
             else:
                 for minute in intervals:
                     if minute > now_utc_ahead.minute:
-                        next_trading_time = datetime(year=now_utc_ahead.year,
+                        next_candle_time = datetime(year=now_utc_ahead.year,
                                                      month=now_utc_ahead.month,
                                                      day=now_utc_ahead.day,
                                                      hour=now_utc_ahead.hour,
@@ -2448,9 +2443,42 @@ class SmartTrader:
             pass
 
         print(f'next_oclock_time: {next_oclock_time}')
-        print(f'next_trading_time: {next_trading_time}')
+        print(f'next_candle_time: {next_candle_time}')
 
-        return next_trading_time
+        return next_candle_time
+
+    def get_previous_candle_time(self):
+        next_candle_time = self.get_next_candle_time()
+        previous_candle_time = next_candle_time - timedelta(minutes=self.timeframe_minutes)
+
+        return previous_candle_time
+
+    def get_validation_time(self):
+        # Retrieves [validation_trigger] in percentage format based on [self.timeframe_minutes]
+        previous_candle_time = self.get_previous_candle_time()
+
+        if self.timeframe_minutes == 1:
+            # 1m
+            if str(self.agent_id).endswith('1'):
+                trigger_pct = 0.12
+            elif str(self.agent_id).endswith('2'):
+                trigger_pct = 0.45
+            else:
+                trigger_pct = 0.90
+
+        else:
+            # any timeframe
+            if str(self.agent_id).endswith('1'):
+                trigger_pct = 0.45
+            elif str(self.agent_id).endswith('2'):
+                trigger_pct = 0.75
+            else:
+                trigger_pct = 0.90
+
+        validation_time = (previous_candle_time +
+                           timedelta(minutes=self.timeframe_minutes * trigger_pct))
+
+        return validation_time
 
     def get_optimal_trade_size(self):
         balance_trade_size = self.highest_balance * settings.BALANCE_TRADE_SIZE_PCT
@@ -2583,28 +2611,14 @@ class SmartTrader:
                 tb_positions = tabulate(df, headers='keys', showindex=False)
                 print(f"{tb_positions}\n\n")
 
-            # Defining [validation_trigger]
-            if str(self.agent_id).endswith('1'):
-                if self.timeframe_minutes == 1:
-                    validation_trigger = 0.12
-                else:
-                    validation_trigger = 0.45
-            elif str(self.agent_id).endswith('2'):
-                if self.timeframe_minutes == 1:
-                    validation_trigger = 0.45
-                else:
-                    validation_trigger = 0.75
-            else:
-                validation_trigger = 0.90
-
-            next_trading_time = self.get_next_trading_time()
-            validation_time = (next_trading_time -
-                               timedelta(minutes=self.timeframe_minutes) +
-                               timedelta(minutes=self.timeframe_minutes * validation_trigger))
-
+            # Defining [validation_time]
+            validation_time = self.get_validation_time()
             secs_to_validation = validation_time - utils.now_utc_tz()
             secs_to_validation = secs_to_validation.total_seconds()
-            lookup_time_threshold = next_trading_time - timedelta(seconds=reading_chart_duration)
+
+            # Defining [lookup_time_threshold]
+            next_candle_time = self.get_next_candle_time()
+            lookup_time_threshold = next_candle_time - timedelta(seconds=reading_chart_duration)
 
             # Waiting PB
             msg = "Watching Price Action"
@@ -2646,7 +2660,7 @@ class SmartTrader:
 
                 # Waiting PB
                 msg = "Watching candle closure"
-                lookup_time = next_trading_time - timedelta(seconds=reading_chart_duration)
+                lookup_time = next_candle_time - timedelta(seconds=reading_chart_duration)
                 secs_to_lookup = lookup_time - utils.now_utc_tz()
                 secs_to_lookup = secs_to_lookup.total_seconds()
 
