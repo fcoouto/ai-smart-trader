@@ -1188,14 +1188,14 @@ class SmartTrader:
             element_ids = ['price', 'ema_144', 'ema_72', 'ema_9', 'rsi']
 
         action = None
-        now = datetime.utcnow()
-        if now.second >= settings.CHART_DATA_MIN_SECONDS or now.second <= settings.CHART_DATA_MAX_SECONDS:
+        now_utc = datetime.utcnow()
+        if now_utc.second >= settings.CHART_DATA_MIN_SECONDS or now_utc.second <= settings.CHART_DATA_MAX_SECONDS:
             action = 'insert'
 
             # Calculating candle's [datetime]
-            if now.second >= settings.CHART_DATA_MIN_SECONDS:
-                candle_datetime = now - timedelta(minutes=self.timeframe_minutes - 1,
-                                                  seconds=now.second)
+            if now_utc.second >= settings.CHART_DATA_MIN_SECONDS:
+                candle_datetime = now_utc - timedelta(minutes=self.timeframe_minutes - 1,
+                                                      seconds=now_utc.second)
             else:
                 candle_datetime = self.get_previous_candle_time()
 
@@ -2171,13 +2171,12 @@ class SmartTrader:
             self.playbook_move_to_candle(i_candle=i_candle)
 
             # Calculating candle's [datetime]
-            now = datetime.utcnow()
-            if now.second > settings.CHART_DATA_MIN_SECONDS:
-                candle_datetime = now - timedelta(minutes=self.timeframe_minutes - 1,
-                                                  seconds=now.second)
+            now_utc = datetime.utcnow()
+            if now_utc.second >= settings.CHART_DATA_MIN_SECONDS:
+                candle_datetime = now_utc - timedelta(minutes=self.timeframe_minutes - 1,
+                                                      seconds=now_utc.second)
             else:
-                candle_datetime = now - timedelta(minutes=self.timeframe_minutes,
-                                                  seconds=now.second)
+                candle_datetime = self.get_previous_candle_time()
 
             o, h, l, c = self.read_element(element_id='ohlc',
                                            insert_fields=ohcl_to_insert,
