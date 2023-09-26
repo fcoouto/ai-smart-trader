@@ -2446,9 +2446,6 @@ class SmartTrader:
             # to be developed
             pass
 
-        print(f'next_oclock_time: {next_oclock_time}')
-        print(f'next_candle_time: {next_candle_time}')
-
         return next_candle_time
 
     def get_previous_candle_time(self):
