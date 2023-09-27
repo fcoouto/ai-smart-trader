@@ -2502,7 +2502,7 @@ class SmartTrader:
         return trade_size
 
     def is_big_ass_candle(self, i=0):
-        if self.change[i] > self.change_avg_15 * 1.5:
+        if self.change[i] > self.change_avg_15 * 3:
             return True
 
     async def open_position(self, strategy_id, side, trade_size, stop_loss=None):
