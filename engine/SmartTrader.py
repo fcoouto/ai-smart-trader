@@ -2894,7 +2894,7 @@ class SmartTrader:
             # No open position
             i_candle = 1
             min_candles = 3
-            side = stop_loss = is_setup_confirmed = None
+            side = stop_loss = None
 
             if len(self.datetime) >= min_candles + i_candle:
                 # We got enough candles
@@ -2907,7 +2907,6 @@ class SmartTrader:
                         if self.rsi[1] < 20 and 30 <= self.rsi[0] <= 80:
                             # [rsi] crossed over 20
                             side = 'up'
-                            is_setup_confirmed = True
                             stop_loss = min(self.low[:1])
 
                     if self.ema_9[0] < self.ema_72[0] or self.ema_9[0] < self.ema_144[0]:
@@ -2915,10 +2914,9 @@ class SmartTrader:
                         if self.rsi[1] > 80 and 70 >= self.rsi[0] >= 20:
                             # [rsi] crossed under 80
                             side = 'down'
-                            is_setup_confirmed = True
                             stop_loss = max(self.high[:1])
 
-                if is_setup_confirmed:
+                if side:
                     # Setup has been confirmed
                     position = await self.open_position(strategy_id=strategy_id,
                                                         side=side,
