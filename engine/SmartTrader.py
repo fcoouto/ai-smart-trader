@@ -2902,21 +2902,28 @@ class SmartTrader:
                 if not self.is_big_ass_candle():
                     # Last candle isn't a big ass candle
 
-                    if self.ema_9[0] > self.ema_72[0] or self.ema_9[0] > self.ema_144[0]:
-                        # [ema_9] above [ema_72] or [ema_144]
+                    if self.ema_9[0] > self.ema_72[0] and self.ema_9[0] > self.ema_144[0]:
+                        side = 'up'
+
+                    elif self.ema_72[0] > self.ema_9[0] > self.ema_144[0]:
+                        side = 'up'
+
+                    elif self.ema_9[0] < self.ema_72[0] and self.ema_9[0] < self.ema_144[0]:
+                        side = 'down'
+
+                    elif self.ema_72[0] < self.ema_9[0] < self.ema_144[0]:
+                        side = 'down'
+
+                    if side:
                         if self.rsi[1] < 20 and 30 <= self.rsi[0] <= 80:
                             # [rsi] crossed over 20
-                            side = 'up'
                             stop_loss = min(self.low[:1])
 
-                    if self.ema_9[0] < self.ema_72[0] or self.ema_9[0] < self.ema_144[0]:
-                        # [ema_9] bellow [ema_72] or [ema_144]
-                        if self.rsi[1] > 80 and 70 >= self.rsi[0] >= 20:
+                        elif self.rsi[1] > 80 and 70 >= self.rsi[0] >= 20:
                             # [rsi] crossed under 80
-                            side = 'down'
                             stop_loss = max(self.high[:1])
 
-                if side:
+                if stop_loss:
                     # Setup has been confirmed
                     position = await self.open_position(strategy_id=strategy_id,
                                                         side=side,
